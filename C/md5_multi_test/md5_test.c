@@ -35,8 +35,10 @@ void task_time() {
 	printf("TIME TASK (ID %d) started.\n",CURRENT_TASK_ID);
 	yield();
 	while(true) {
+		uint32_t t = millis();
+		TIL311 = t / 100;
 		lcd_cursor(0,0);
-        lcd_printf("Runtime: %d.%d    ",millis()/1000, (millis()%1000)/100);
+        lcd_printf("Runtime: %d.%d    ",t/1000, (t%1000)/100);
  		sleep_for(100);
     }
 }
@@ -45,6 +47,8 @@ void task_time() {
 
 #define MD5_START 0x10000
 #define MD5_END 0x60000
+
+uint8_t PRINT_ID = 2;
 
 void task_md5() {
 	printf("MD5 TASK (ID %d) started.\n",CURRENT_TASK_ID);
@@ -61,13 +65,34 @@ void task_md5() {
 		md5_finish(&state, digest);
 	
 		yield();
+		
 		putHexChar(CURRENT_TASK_ID);
 		putc(' ');
-		
-		TIL311 = digest[0];
-		
+
 		for (uint8_t i = 0; i < 16; i++) 
 			putHexChar(digest[i]);
+			
+		if (CURRENT_TASK_ID == PRINT_ID) {
+		
+			enter_critical();
+			lcd_cursor(0,1);
+			
+			for (uint8_t p = 0; p < 6; p++) {
+				char ch = digest[p];
+				lcd_data(hexchar[ch >> 4]);
+				lcd_data(hexchar[ch & 0xF]);
+			}
+			
+			lcd_data(' ');
+			lcd_data('#');
+			lcd_data(hexchar[PRINT_ID >> 4]);
+			lcd_data(hexchar[PRINT_ID & 0xF]);
+			
+			leave_critical();
+			
+			if (++PRINT_ID > 30) 
+				PRINT_ID = 2;
+		}
 		
 		putc('\n');
 		
