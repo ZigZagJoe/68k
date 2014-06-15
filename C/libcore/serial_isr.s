@@ -8,6 +8,7 @@
 
 .set TIL311, 0xC8000
 
+.global wait_for_txbuffer
 .global _charRecISR_fast
 .global _charRecISR_safe
 .global _charXmtISR
@@ -100,7 +101,7 @@ _charXmtISR:
    move.b (1, %A0), %D0   | get tail
    
    cmp.b (%a0), %d0
-   beq _no_more_ints
+   beq _end				  | no char, exit now
    
    move.b (2, %A0, %D0.W), (UDR) | UDR = buffer[tail]
    
@@ -108,18 +109,28 @@ _charXmtISR:
    move.b %d0, (1, %A0)
 
 _end:
+   move.b #0xDD, (TIL311)
+    
    move.l (%SP)+,%A0
    move.w (%SP)+,%D0
    rte
    
-_no_more_ints:
-   move.b #0xFF, (TIL311)
-   andi.b #0xFB, (IMRA) | mask future interrupts
-   bra _end
- 
  /*   char ch = rx_buffer.buffer[tx_buffer.tail];
     rec_buffer.tail = tx_buffer.tail + 1;
     return ch;*/
+    
+wait_for_txbuffer:
+	move.l #tx_buffer, %a0
+
+_dowait:
+	move.w (%a0), %d0     		| atomic read of both head and tail
+	move.b %d0, %d1				| d1 = tail
+	lsr.w #8, %d0               | d0 = head
+	add.b #1, %d0
+	cmp.b %d0, %d1
+	beq _dowait
+	
+	rts
       
 /* ##### EQUIVALENT C #####
 // uses about 40% cpu

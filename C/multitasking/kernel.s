@@ -146,7 +146,7 @@ run:
 	move.b #0xC2, (TIL311)
 	
 	| enable 100hz interrupt
-	move.b #183, (TDDR)
+	move.b #184, (TDDR)
 	move.b #0x80, (VR)
 	ori.b #0x7, (TCDCR)
 	ori.b #0x10, (IERB)
@@ -250,11 +250,10 @@ _check_runnable:
 	cmp.b #2, 3(%a0)					| is it in sleep?
 	bne _run_task
 		
-	move.w (millis_counter+2), %d0		| only compare the low order word.
-	cmp.w 10(%a0), %d0                  | saves time; limits max sleep to 11 minutes
+	move.l (millis_counter), %d0		
+	cmp.l 8(%a0), %d0                   
 	
 	bls _run_next_task				    | not time for this process yet, next!
-										| notice: unsigned comparison!
 	
 	move.b #1, 3(%a0)                   | it is time: mark it as runnable
 										| and fall through
