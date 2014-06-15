@@ -1,8 +1,0 @@
-*.o
-*.lst
-*.L68
-*.S68
-/C/lib
-*.bin
-/flashtool/flashtool
-/upload-strapper/upload-strapper
