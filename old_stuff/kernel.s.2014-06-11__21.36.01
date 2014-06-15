@@ -1,0 +1,441 @@
+.text
+.align 2
+
+/* functions */
+.global _start
+.global sleep_for
+.global create_task
+.global yield
+.global exit_task
+
+/* vars */
+.global _active_task
+.global millis_counter
+
+.extern main
+.extern __stack_start
+.extern __bss_start
+.extern __bss_end
+.extern default_interrupts
+ 
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| state variables
+
+.set _active_task,      0x400 | long 
+.set _sleep_ll_head,    0x404 | long 
+.set millis_counter,    0x408 | long 
+.set task_count,        0x412 | word
+.set _next_thread_id,   0x414 | word
+.set _swap_in_progress, 0x416 | byte
+.set _user_yielded,     0x417 | byte
+
+| IO device stuff
+.set IO_BASE,  0xC0000
+.set MFP,      IO_BASE
+.set TIL311,   IO_BASE + 0x8000
+
+| MFP registers
+.set GPDR,     MFP+0x01 | GPIO data reg
+.set DDR,      MFP+0x05 | data direction
+.set IERB,     MFP+0x09 | interrupt enable B
+.set IMRB,     MFP+0x15 | interrupt mask B
+.set VR,       MFP+0x17 | vector register
+.set TCDCR,    MFP+0x1D | Timers C&D control
+.set TDDR,     MFP+0x25 | Timer D data
+.set RSR,      MFP+0x2B | receiver status reg
+.set TSR,      MFP+0x2D | transmitter status reg
+.set UDR,      MFP+0x2F | uart data register
+
+.set TASK_YIELD,   0x00
+.set TASK_EXIT,    0x01
+.set TASK_SLEEP,   0x11
+.set TASK_ENTER,   0xBB
+.set TASK_CREATE,  0xCE
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| macros
+
+.macro sei
+	and.w #0xF8FF, %SR 	
+.endm
+
+.macro cli
+	ori.w #0x700, %SR
+.endm
+
+.macro put_char ch
+	move.w %D0, -(%SP)
+	move.b #\ch, %D0
+	jsr putc
+	move.w (%SP)+, %D0
+.endm
+
+.macro put_str str
+	move.l %A0, -(%SP)
+	move.l #\str, %A0
+	jsr puts
+	move.l (%SP)+,%A0
+.endm
+
+.macro newline 
+	put_char '\n'
+.endm
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| entry point
+_start:
+	cli
+	move.b #0xE1, (TIL311) | what up my glip glops!
+	
+	move.l #__stack_start, %a7
+
+	jsr default_interrupts
+	
+	move.b #0xCE, (TIL311) 
+
+	/* initialize scheduler state */
+	clr.l (millis_counter)
+	clr.w (task_count)
+	clr.b (_swap_in_progress)
+	clr.b (_user_yielded)
+	clr.l (_active_task)
+	clr.w (_next_thread_id)
+	
+	/* initialize task structs */
+ 	move.l #0x460, %a0
+    move.w #30, %d0
+
+zero_structs:
+    clr.b (3,%a0)
+    add.l #96, %a0
+    dbra %d0, zero_structs
+
+	/* clear BSS section */
+	
+	move.l #__bss_start, %d1
+	move.l #__bss_end, %d0
+	
+	cmp.l	%d0, %d1  	                | check if empty bss section
+	jbeq run
+	
+	move.l %d1, %a0 	                | A0 = _bss start
+	sub.l %d1, %d0		                | D0 = num bytes to copy
+	
+cbss:
+	clr.b (%a0)+                        | clear [A0.b]
+	subq.l #1, %d0		                | DBRA uses word size unfortunately
+	jne cbss 			                | D0 != 0
+	
+run:
+    | set up vectors
+    move.l #_kern_millis_count, (0x210)
+    move.l #task_manager, (0x80)
+
+	move.b #TASK_CREATE, %d0            | create the main() task
+	move.l #main, %a0
+	trap #0
+	
+	move.b #0xC2, (TIL311)
+	
+	| enable 100hz interrupt
+	move.b #183, (TDDR)
+	move.b #0x80, (VR)
+	ori.b #0x7, (TCDCR)
+	ori.b #0x10, (IERB)
+	ori.b #0x10, (IMRB)
+
+	ori.b #2, (DDR)                     | set DDR so scheduler can blink LED
+	
+	move.b #TASK_ENTER, %d0
+	move.l #0x460, %a0                  | address of main() task struct
+    trap #0                             | run task (current context is LOST)
+    
+    illegal								| sanity check exception (should never reach)
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| no viable tasks left; nothing for system to do. halt system.
+
+_the_end_times:
+	cli
+	
+	move.l #_system_halted, %a0
+	jsr puts
+	
+_check_cmd:                             | spin until reset command is received
+	btst #7, (RSR)                      | test if buffer full (bit 7) is set.
+    beq _check_cmd                 
+    
+    move.b (UDR), %D1
+    cmp.b #0xCF, %D1
+    bne _check_cmd
+    
+	btst #0, (GPDR)                     | gpio data register - test input 0. Z=!bit
+    bne _check_cmd                      | gpio is 1, not bootoclock
+     
+	jmp 0x80008				            | reset 
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| trap used to manage tasks: exit current, force swap (yield), create new, etc.
+task_manager:
+    cmp.b #TASK_YIELD, %d0
+    beq _user_swap
+    cmp.b #TASK_SLEEP, %d0
+    beq _sleep_for
+    cmp.b #TASK_EXIT, %d0
+    beq _exit_task
+    cmp.b #TASK_ENTER, %d0
+    beq _run_task
+    cmp.b #TASK_CREATE, %d0
+    beq _create_task
+    rte
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| add a count to the millis counter and do a swap
+_kern_millis_count:
+	addi.l #1, (millis_counter)
+	
+	tas.b (_user_yielded)
+	beq _swap_task                      | if user task did not yield, swap now
+	
+	clr.b (_user_yielded)
+	rte	
+
+| swap out the current task 
+_swap_task:
+	cli
+	tas.b (_swap_in_progress)		    | ensure we are not swapping already
+    bne _ret_swap
+    move.b #1, (_swap_in_progress)
+    sei
+
+	move.b #2, (GPDR)				    | turn on the LED
+	
+	| save context into active task struct
+    move.l %a0, -(%sp) 				    | save %a0
+    move.l (_active_task), %a0     
+    move.l (%sp)+,   58(%a0)            | %a0       4 bytes 
+	
+	movem.l %d0-%d7, 26(%a0)            | %d0-d7   32 bytes
+	movem.l %a1-%a6, 62(%a0)            | %a1-%a6  24 bytes
+	
+	move.l %usp, %a1
+	move.l %a1,      86(%a0)            | %sp       4 bytes
+	move.l 2(%sp),   90(%a0)            | PC        4 bytes
+	move.w (%sp),    94(%a0)            | flags     2 bytes
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| find the next runnable task and run it
+_run_next_task:
+    move.l (_active_task), %a0          | first node
+	
+_next_node:
+    move.l 4(%a0), %a0                  | node = node->next
+
+_check_runnable:
+	cmp.b #2, 3(%a0)					| is it in sleep?
+	bne _run_task
+		
+	move.l (millis_counter), %d0
+	
+	cmp.l 8(%a0), %d0
+	blt _next_node					    | not time for this process yet
+	
+	move.b #1, 3(%a0)                   | mark as runnable
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| run the task pointed to by %a0. current context will be overwritten!	
+_run_task:		
+    move.l %a0, (_active_task)
+
+	| restore context from structure pointed by %a0
+    move.w 94(%a0), (%sp)               | flags     2 bytes
+	move.l 90(%a0),2(%sp)               | PC        4 bytes
+	move.l 86(%a0), %a1
+	move.l %a1, %usp                    | %sp       4 bytes
+	movem.l 62(%a0), %a1-%a6            | %a1-%a6  24 bytes
+	movem.l 26(%a0), %d0-%d7            | %d0-d7   32 bytes
+	move.l 58(%a0), %a0                 | %a0       4 bytes
+	
+	clr.b (_swap_in_progress)	
+	
+_ret_swap:
+	sei
+	move.b #0, (GPDR)                   | turn off the LED
+	
+    rte
+
+| ensure the next task will not get less than its fair share of time due 
+| to the task before yielding. instead, cause the next automatic interrupt 
+| to be skipped. the swapped task then gets 10ms + yielding task remaining time
+_user_swap:
+	move.b #1, (_user_yielded)
+    bra _swap_task
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| end the calling task & remove it from linked list
+_exit_task:
+	cli
+ 
+    move.l (_active_task), %a0
+    sub.w #1, (task_count)
+    
+    clr.b 3(%a0)                        | mark task as exited		
+		   
+	cmp.l 4(%a0), %a0                   | if next task is self, we arre the last task
+    beq _the_end_times                  | so take the special case and halt the system
+    
+	move.l %a0, %a2                     | load start of linked list
+               
+_next:  
+    move.l 4(%a2), %a1                  | %a1 = node->next
+    cmp.l %a0, %a1                      | node->next =? current
+    beq _found
+    move.l %a1, %a2                     | node = node->next
+    bra _next
+
+_found:
+    move.l 4(%a0), 4(%a2)
+
+_end_exit:	
+	sei
+	jmp _run_next_task
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||	
+| causes a task to sleep at minimum the interval specified
+_sleep_for:
+	divu.w #10, %d1					    | determine number of millis ticks
+    andi.l #0x0000FFFF, %d1             | remove remainder in upper word
+    add.l (millis_counter), %d1         | time when this thread needs to be run again
+
+    cli									| disable interrupts so an invalid state is not written
+	
+	move.l (_active_task), %a0
+    move.l %d1, 8(%a0)
+    move.b #2, 3(%a0)                   | mark as sleeping
+    
+	sei 
+    bra _user_swap
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||	
+| create a new task using address in %a0
+| return address of struct or 0 on failure in %d0	
+_create_task:
+	move.l %a1, -(%sp)
+	move.l %a2, -(%sp)
+	
+	cli								    | ensure list is not modified while we are working
+    
+	move.l #0x460, %a2                  | beginning of task state structs
+	move.l #__stack_end, %a1            | stack base address
+	
+_check_free:
+    cmp.l #0x1000, %a2
+    bge _cr_failed
+    
+	cmp.b #0, (3, %a2)
+	beq _got_free
+	
+	sub.l #4096, %a1
+	add.l #96, %a2
+	jmp _check_free
+	
+_got_free:
+	add.w #1, (task_count)
+   
+    move.w (_next_thread_id), (%a2)
+	add.w #1, (_next_thread_id)
+	
+	move.l %a0, 58(%a2)                 | load starting address into %a0 in struct
+	move.l #_task_begin, 90(%a2)        | set PC to task begin struct
+	move.l %a1, 86(%a2)				    | set stack pointer
+	move.w #0x0, 94(%a2)			    | set flags (none)
+    move.b #1, (3, %a2)                 | mark as runnable
+	         
+    move.l %a2, %d0                     | return pointer in %d0
+    
+    move.l (_active_task), %a1          | load linked list node
+    
+    cmp.l #0, %a1                       | _active_task =? 0
+    bne _nz                           
+ 
+    move.l %a2, (_active_task)
+    move.l %a2, 4(%a2)                  | me->next = me
+   
+    bra _cr_finished
+
+_nz:
+	move.l (4, %a1), (4, %a2)			| me->next = node->next
+	move.l %a2, (4, %a1)                | node->next = me
+	 
+_cr_finished:
+	sei
+    move.l (%sp)+,%a2
+	move.l (%sp)+,%a1
+    rte
+    
+_cr_failed:
+    move.l #0, %d0
+    bra _cr_finished
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| this is the user mode where a task is started
+| it ensures a task that returns always exits.
+_task_begin:
+	jsr (%a0)
+	move.b #TASK_EXIT, %d0
+	trap #0 | exit_task
+	
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| C function interface
+
+create_task:
+    move.l 4(%sp), %a0
+    move.b #TASK_CREATE, %d0
+    trap #0
+    rts
+    
+sleep_for:
+	move.l 4(%sp), %d1       | argument
+    move.b #TASK_SLEEP, %d0
+    trap #0
+    rts
+    
+yield:
+    move.b #TASK_YIELD, %d0
+    trap #0                  | force a swap
+    rts
+    
+exit_task:
+    move.b #TASK_EXIT, %d0
+    trap #0                  | will never return 
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| utility functions
+
+puts:
+	move.w %D0, -(%SP)
+	move.l %A0, -(%SP)
+
+_read_ch:
+	move.b (%A0)+, %D0
+	
+	cmp.b #0, %D0
+	jeq _str_done
+	
+	jsr putc
+	bra _read_ch
+	
+_str_done:
+	move.l (%SP)+, %A0
+	move.w (%SP)+, %D0
+	rts
+	
+putc:
+	btst #7, (TSR)           | test buffer empty (bit 7)
+    beq putc                 | Z=1 (bit = 0) ? branch
+	move.b %D0, (UDR)		 | write char to buffer
+	rts
+	
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| strings	
+_system_halted: .string "\n\n*** All tasks exited. System halt ***\n";

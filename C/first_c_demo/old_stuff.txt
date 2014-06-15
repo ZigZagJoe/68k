@@ -1,0 +1,85 @@
+#define SD_DEV 	   IO_DEV3
+#define SD_COMMAND MEM(SD_DEV+2)
+#define SD_DATA    MEM(SD_DEV)
+
+#include "/Users/zigzagjoe/Documents/rawAVR/SDCard/SDCard.h"
+
+printf("%d\n",ECHO);
+    while (1) {
+    	while (getc() == -1) ;
+		register uint16_t cnt = 0;
+		for (uint8_t i = 0; i < 255; i++)
+			SD_DATA = i;
+		
+		SD_COMMAND = ECHO;
+		while (SD_COMMAND & 0x1) ++cnt; // busy
+		printf("Command complete in %d counts: %s\n",cnt, uint8_to_bin_str(SD_COMMAND & 0xF));
+		while (SD_COMMAND & 4) {
+			printf("%X ",SD_DATA);
+		}
+	}
+	
+
+
+
+/*
+#include <md5.h>
+
+uint32_t hash( uint32_t a) {
+    a = (a ^ 61) ^ (a >> 16);
+    a = a + (a << 3);
+    a = a ^ (a >> 4);
+    a = a * 0x27d4eb2d;
+    a = a ^ (a >> 15);
+    return a;
+}
+
+	md5_state_t state;
+	uint8_t digest[16];
+	
+	while (true) {
+		//puts("Fill memory\n");
+
+		md5_init(&state);
+	
+		uint32_t ha = 124912341;
+        uint8_t tmp;
+        
+        TIL311 = 0x1A;
+        
+		for (uint32_t i = 0x6000; i < 0x78000; i += 1) {
+			*((uint8_t*)(i)) = ha&0xFF;
+			ha = hash(ha + i);
+		}
+		
+		//puts("Do hash\n");
+	
+		for (uint32_t i = 0x6000; i < 0x78000; i += 64) {
+            TIL311 = (uint8_t*)i;
+			md5_append(&state, (uint8_t*)i, 64);
+		}
+	
+		md5_finish(&state, digest);
+   
+	   // printf("Done\n");
+
+		char *hex_chars = "0123456789ABCDEF";
+	
+		for (uint8_t i = 0; i < 16; i++) {
+			putc(hex_chars[digest[i]>>4]);
+			putc(hex_chars[digest[i]&0xF]);
+		}
+	
+		putc('\n');
+	}
+*/
+	/*for (int i = 80; i < 4000; i++) {
+		beep_start(i);
+		DELAY_MS(5);
+	}*/
+		/*	while(true) {
+		lcd_cursor(0,0);
+        printf("Runtime: %d.%02d ",millis/1000, (millis%1000)/10);
+    }*/
+    //mario();
+    

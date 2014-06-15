@@ -1,0 +1,1 @@
+../multitasking/lksr_kern.ld

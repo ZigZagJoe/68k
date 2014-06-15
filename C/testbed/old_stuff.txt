@@ -1,0 +1,767 @@
+#define SD_DEV 	   IO_DEV3
+#define SD_COMMAND MEM(SD_DEV+2)
+#define SD_DATA    MEM(SD_DEV)
+
+#include "/Users/zigzagjoe/Documents/rawAVR/SDCard/SDCard.h"
+
+printf("%d\n",ECHO);
+    while (1) {
+    	while (getc() == -1) ;
+		register uint16_t cnt = 0;
+		for (uint8_t i = 0; i < 255; i++)
+			SD_DATA = i;
+		
+		SD_COMMAND = ECHO;
+		while (SD_COMMAND & 0x1) ++cnt; // busy
+		printf("Command complete in %d counts: %s\n",cnt, uint8_to_bin_str(SD_COMMAND & 0xF));
+		while (SD_COMMAND & 4) {
+			printf("%X ",SD_DATA);
+		}
+	}
+	
+
+
+
+/*
+#include <md5.h>
+
+uint32_t hash( uint32_t a) {
+    a = (a ^ 61) ^ (a >> 16);
+    a = a + (a << 3);
+    a = a ^ (a >> 4);
+    a = a * 0x27d4eb2d;
+    a = a ^ (a >> 15);
+    return a;
+}
+
+	md5_state_t state;
+	uint8_t digest[16];
+	
+	while (true) {
+		//puts("Fill memory\n");
+
+		md5_init(&state);
+	
+		uint32_t ha = 124912341;
+        uint8_t tmp;
+        
+        TIL311 = 0x1A;
+        
+		for (uint32_t i = 0x6000; i < 0x78000; i += 1) {
+			*((uint8_t*)(i)) = ha&0xFF;
+			ha = hash(ha + i);
+		}
+		
+		//puts("Do hash\n");
+	
+		for (uint32_t i = 0x6000; i < 0x78000; i += 64) {
+            TIL311 = (uint8_t*)i;
+			md5_append(&state, (uint8_t*)i, 64);
+		}
+	
+		md5_finish(&state, digest);
+   
+	   // printf("Done\n");
+
+		char *hex_chars = "0123456789ABCDEF";
+	
+		for (uint8_t i = 0; i < 16; i++) {
+			putc(hex_chars[digest[i]>>4]);
+			putc(hex_chars[digest[i]&0xF]);
+		}
+	
+		putc('\n');
+	}
+*/
+	/*for (int i = 80; i < 4000; i++) {
+		beep_start(i);
+		DELAY_MS(5);
+	}*/
+		/*	while(true) {
+		lcd_cursor(0,0);
+        printf("Runtime: %d.%02d ",millis/1000, (millis%1000)/10);
+    }*/
+    //mario();
+    _test:
+	move.l #0xDEADC0DE, %a0
+	move.l #0xC0FFEE00, %a1
+	move.l #0xCAFEBABE, %a2
+	move.l #0xB00BF00D, %a3
+	move.l #0xF00DBABE, %a4
+	move.l #0xD00C001E, %a5
+	move.l #0xF00DBABE, %a6
+	move.b #'L', (UDR)
+	jsr yield
+	move.b #'R', (UDR)
+	trap #2
+	
+	
+taskA:
+    move.w #4, %d0
+taL:
+	move.b #'h', (UDR)
+	move.l #0,%a0
+	move.l #0,%a2
+	move.l #0,%a1
+	move.l #0,%a3
+	move.l #0,%a4
+	move.l #0,%a5
+	move.l #0,%a6
+    move.l #0xFFFFFF, 0x20000
+    move.b #'l', (UDR)
+  	dbra %d0, taL
+     ; trap #0
+    bra taskA
+    rts
+
+
+	
+
+    
+    void mem_dump(uint8_t *addr, uint32_t cnt) {
+    int c = 0;
+    char ascii[17];
+    ascii[16] = 0;
+    
+    putc('\n');
+    
+    printf("%8X   ", addr);
+    for (uint32_t i = 0; i < cnt; i++) {
+        uint8_t b = *addr;
+        
+        ascii[c] = (b > 31 & b < 127) ? b : '.';
+        
+        printf("%02X ",b);
+        
+        addr++;
+        
+        if (++c == 16) {
+            puts("  ");
+            puts(ascii);
+            putc('\n');
+            if ((i+1) < cnt)
+                printf("%8X   ", addr);
+            c = 0;
+        }
+    }
+    
+    if (c < 15) putc('\n');
+}
+       uint8_t i = 0;
+    
+   	while(true) {
+		lcd_cursor(0,0);
+        printf("Runtime: %d.%02d ",millis()/1000, (millis()%1000)/10);
+        if (i < 255) {
+        	i++;
+        } else if (!(GPDR & 4)) break;
+    }
+  
+  .global memset
+| void * memset ( void *dst, int value, size_t num ) (return *dst)
+memset:
+	move.l 4(%sp), %a1   | dst
+	move.b 11(%sp), %d1  | val
+	move.l 12(%sp), %d0  | count
+
+	cmp.l #65536, %d0
+	bgt _lset
+		
+	sub.l #1, %d0
+	
+_qset:
+	move.b %d1, (%a1)+
+	dbra %d0, _qset
+
+	move.l 4(%sp),%d0
+	rts
+	
+_lset:
+	move.b %d1, (%a1)+
+	subi.l #1, %d0
+	bpl _lset
+	
+	move.l 4(%sp),%d0
+	rts
+
+
+.global _memcpy
+| void *memcpy(void *dst, const void *src, size_t len) (return *dst)
+_memcpy:
+	move.l 4(%sp), %a1   | dst
+	move.l 8(%sp), %a0   | src
+	move.l 12(%sp), %d0  | count
+
+	cmp.l #65536, %d0
+	bgt _lcpy
+	
+	sub.l #1, %d0
+_qcpy:
+	move.b (%a0)+, (%a1)+
+	dbra %d0, _qcpy
+
+	move.l 4(%sp),%d0
+	rts
+	
+_lcpy:
+	move.b (%a0)+, (%a1)+
+	subi.l #1, %d0
+	bpl _lcpy
+	
+	move.l 4(%sp),%d0
+	rts
+  
+    //"move.w #0xD, %SR\n"
+	/*__asm(
+	"trap #0\n");*/
+//__asm("move.b #0, (0xFFFFF)\n");
+	/*__asm("move.l %0, %%D6 \n"
+		  "move.b #0, (0xFFFFF)\n"
+		  ::"i"(0xDEADC0DE));*/
+		  
+	//	  _TRAP(0);
+	 /* DDR |= 1 << 1;
+    
+    __asm volatile ("lb: move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n"
+    					 "bra lb\n");		*/	 
+    while (1) 
+    	if (serial_available())
+    		putc(getc());
+    		   
+       while (GPDR&4);
+    while (!(GPDR&4));
+    
+
+/*void mem_dump(uint8_t *addr, uint32_t cnt) {
+    int c = 0;
+    char ascii[17];
+    ascii[16] = 0;
+    
+    putc('\n');
+    
+    printf("%8X   ", addr);
+    for (uint32_t i = 0; i < cnt; i++) {
+        uint8_t b = *addr;
+        
+        ascii[c] = (b > 31 & b < 127) ? b : '.';
+        
+        printf("%02X ",b);
+        
+        addr++;
+        
+        if (++c == 16) {
+            puts("  ");
+            puts(ascii);
+            putc('\n');
+            if ((i+1) < cnt)
+                printf("%8X   ", addr);
+            c = 0;
+        }
+    }
+    
+    if (c < 15) putc('\n');
+}*/
+
+/*void sleep_for(uint32_t time) {
+	uint32_t start = millis();
+	while ((millis() - start) < time) 
+		yield();
+}*/
+
+/*
+void _sleep_for(uint32_t time) {
+	uint32_t start = millis();
+	while ((millis() - start) < time) ; // yield();
+}*/
+
+/*void task_2() {
+	while(true) {
+		_delay_soft(100);
+		putc('B');
+	}
+}
+
+void task_3() {
+	while(true) {
+		_delay_soft(1000);
+		putc('C');
+	}
+}
+
+void task_5() {
+	while(true) {
+		putc(' ');
+		yield();
+	}
+}
+
+void task_4() {
+	for (int i = 0; i < 10; i++) {
+		_delay_soft(500);
+		putc('#');
+	}
+}*/
+
+	/*create_task(&task_4);
+    create_task(&task_5);
+    create_task(&task_3);
+   */
+    //puts("Done\n");
+	
+	//mem_dump(0x400,384);
+    
+	while(true) {
+   // for (int i = 0; i < 2; i++) {
+		//putc('A');
+		TIL311 = 0xCC;
+		sleep_for(1000);
+
+		TIL311 = 0xC0;
+		sleep_for(1000);
+
+		TIL311 = 0xDE;
+		sleep_for(1000);
+
+		TIL311 = 0x00;
+		sleep_for(1000);
+	}
+	
+	
+	//yield();
+	//puts("Goodbye cruel world!");*/
+	//create_task(&task_4);
+	
+	void a_task() {
+	uint8_t id = CURRENT_TASK_ID;
+	printf("A TASK (ID %d) started.\n",id);
+	//yield();
+	//uint16_t time = rand() % 1000;
+	//printf("%d will sleep for %d\n",id, time);
+	//sleep_for(time);
+	yield();
+	create_task(&a_task);
+	printf("TASK %d exiting\n",id);
+}
+
+void crashy_task() {
+	puts("Crash-o-clock!\n");	
+	MEM(IO_DEV5) = 1;	
+}
+
+  	
+  	for (int i = 0; i < 25; i++) 
+  		create_task(&a_task);
+  	
+  	 	/*task_struct * songTask = create_task(&task_song);
+  	int songID = songTask->ID;
+  	
+  	wait_for_exit(songTask);
+  	
+  	puts("Song task has exited.\n");
+  	
+  	create_task(&task_song);
+  	
+  	if ((songTask->ID == songID) && (songTask->runnable))
+  		puts("Song task appears viable?!");*/
+  		
+#include <md5.h>
+
+void task_md5() {
+	printf("MD5 TASK (ID %d) started.\n", CURRENT_TASK_ID);
+	uint8_t * ptr = 0x8000;
+	
+	yield();
+	while(true) {
+		while (!serial_available()) {
+			if (millis() > 60000) {
+				md5_state_t state;
+				uint8_t digest[16];
+	
+				md5_init(&state);
+				uint8_t *ptr2 = 0x8000;
+				
+				while (ptr != ptr2) {
+					md5_append(&state, ptr2, 1);
+					ptr2++;
+				}
+				
+				md5_finish(&state, digest);
+
+				char *hex_chars = "0123456789ABCDEF";
+	
+				for (uint8_t i = 0; i < 16; i++) {
+					putc(hex_chars[digest[i]>>4]);
+					putc(hex_chars[digest[i]&0xF]);
+				}
+	
+				putc('\n');
+				return;
+			} else yield();
+		}
+		
+		while (serial_available())
+			*ptr++ = getc();
+			
+	}
+}
+
+
+extern uint32_t crc_update_asm (uint32_t inp, uint8_t v);
+//extern uint32_t crc_update_null (uint32_t inp, uint8_t v);
+
+#define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))
+
+
+uint32_t crc_update_C(uint32_t inp, uint8_t v) {
+	return ROL(inp ^ v, 1);
+}
+
+
+
+#include "data.h"
+
+
+#define TEST(name) { printf("%s: ",name); for (int x = 0; x < data_len; x++) { test_arr[x] = data[x]; }; crc = 0xDEADC0DE; }
+
+void crc_test(uint32_t (*crc_update)(uint32_t, uint8_t)) {
+    uint32_t crc;
+    uint8_t a, b;
+   	uint8_t test_arr[data_len];
+  
+    TEST("base CRC");
+    for (int i = 0; i < data_len; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    
+    ///////////////////////////////
+    TEST("skip 10 in middle");
+  
+    for (int i = 0; i < data_len; i++) {
+    	if (i > 1000 && i < 1010) continue;
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    
+    TEST("skip 1 in middle");
+    for (int i = 0; i < data_len; i++) {
+    	if (i == 30000) continue;
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    
+    ///////////////////////////////
+    TEST("skip 1 at end");
+    for (int i = 0; i < data_len-1; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    
+    ///////////////////////////////
+    TEST("skip 10 at end");
+    for (int i = 0; i < data_len-10; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+      printf("0x%X\n", crc);
+    
+    ///////////////////////////////
+    TEST("skip 1 at start");
+    for (int i = 1; i < data_len; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    
+     ///////////////////////////////
+    TEST("skip 10 at start");
+    for (int i = 10; i < data_len; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    
+    ///////////////////////////////
+    TEST("swap two bytes");
+      
+    a = test_arr[1123];
+    b = test_arr[23000];
+    test_arr[1123] = b;
+    test_arr[23000] = a;
+    
+    for (int i = 0; i < data_len; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+
+     ///////////////////////////////
+    TEST("should be same as base");
+    for (int i = 0; i < data_len; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    
+    
+    ///////////////////////////////
+    TEST("zero a byte");
+    test_arr[21323] = 0;
+    for (int i = 0; i < data_len; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    
+    ///////////////////////////////
+    TEST("zero an early byte");
+    test_arr[234] = 0;
+    for (int i = 0; i < data_len; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    
+     ///////////////////////////////
+    TEST("zero a late byte");
+    test_arr[data_len-123] = 0;
+    for (int i = 0; i < data_len; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    
+    ///////////////////////////////
+    TEST("lose a bit");
+    
+    test_arr[23002] = test_arr[23002] ^ 16;
+    for (int i = 0; i < data_len; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    ///////////////////////////////
+    TEST("lose a bit late");
+    test_arr[data_len-10] = test_arr[data_len-10] ^ 8;
+    for (int i = 0; i < data_len; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+    ///////////////////////////////
+    TEST("lose a bit early");
+    test_arr[10] = test_arr[100] ^ 128;
+    for (int i = 0; i < data_len; i++) {
+    	crc = crc_update(crc, test_arr[i]);
+    }
+    
+    printf("0x%X\n", crc);
+}
+
+/*
+void putc_lcd(void*p, char ch) {
+	lcd_data(ch);
+}
+
+void lcd_printf(char *fmt, ...)
+{
+    va_list va;
+    va_start(va,fmt);
+    tfp_format(0,&putc_lcd,fmt,va);
+    va_end(va);
+}
+*/
+
+ /* lcd_init();
+    while(true) {
+		lcd_cursor(0,0);
+        lcd_printf("Runtime: %d.%02d ",millis()/1000, (millis()%1000)/10);
+    }
+    */
+    
+    /*uint32_t crc;
+    
+    crc = 0xDEADC0DE;
+    crc = crc_update_C(crc, 0xDE);
+    crc = crc_update_C(crc, 0xAD);
+    crc = crc_update_C(crc, 0xBE);
+    crc = crc_update_C(crc, 0xEF);
+    
+    printf("CRC_c: %x\n",crc);
+    
+    
+    crc = 0xDEADC0DE;
+    crc = crc_update_asm(crc, 0xDE);
+    crc = crc_update_asm(crc, 0xAD);
+    crc = crc_update_asm(crc, 0xBE);
+    crc = crc_update_asm(crc, 0xEF);
+    
+    printf("CRC_asm: %x\n",crc);*/
+    
+   /* uint32_t start, end;
+
+    
+    start = millis();
+    crc_test(&crc_update_asm);
+    end = millis();
+    
+    printf("asm: Completed in %d ms\n", end-start);
+    
+    
+    start = millis();
+    crc_test(&crc_update_C);
+    end = millis();
+    
+    printf("C: Completed in %d ms\n", end-start);
+    
+    */
+   // millis_start();
+   
+  //  lcd_init();
+	  
+    
+  //  init_printf(null, &putc_lcd);
+  //  init_printf(null, &printf_putc);
+    
+    
+ uint32_t ha = 124912341;
+    uint8_t c = 0;
+	for (uint32_t i = 0x10000; i < 0x20100; i += 1) {
+		*((uint8_t*)(i)) = ha&0xFF;
+		ha = hash(ha + i);
+		//*((uint8_t*)(i)) = c++;
+		//*((uint8_t*)(i + 0x20000)) = c++;
+	}
+	
+	/*puts("Source\n");
+	mem_dump(0x10000, 256);
+	mem_dump(0x1FF00, 384);*/
+	
+	/*puts("Dest org\n");
+	mem_dump(0x30000, 256);
+	mem_dump(0x3FF00, 384);*/
+	/*
+	
+	start = millis();
+	memset(0x30000, 'C', 0x10000);
+	end = millis();
+	
+	memset(0x40000, '#', 128);
+	
+	printf("%d elapsed\n", end-start);*/
+	/*
+	puts("Dest clr\n");
+	mem_dump(0x30000, 256);
+	mem_dump(0x3FF00, 384);
+	*/
+	
+	test(0x10000, 0x30000, 10);
+    test(0x10000, 0x31000, 100);
+	test(0x10000, 0x30300, 1337);
+	test(0x100e1, 0x30100, 1337);
+	test(0x100e0, 0x30001, 213);
+	test(0x100e1, 0x30001, 123);
+	test(0x10000, 0x30000, 3);
+	test(0x10011, 0x30010, 1);
+	test(0x10000, 0x30011, 1);
+	test(0x10009, 0x30011, 4);
+	
+	
+	
+	
+	
+/*	puts("After copy\n");
+	mem_dump(0x30000, 256);
+	mem_dump(0x3FF00, 384);*/
+void test(uint32_t src, uint32_t dest, uint32_t len) {
+	uint32_t start, end;
+	
+	start = millis();
+	_memcpy(dest, src, len);
+	end = millis();
+	
+	printf("\nCopy: %d elapsed\n", end-start);
+	
+	start = millis();
+	if (crc_region(src, len) != crc_region(dest, len)) 
+		printf("ERROR: CRC MISMATCH!\n");
+	end = millis();
+	
+	printf("QCRC: %d elapsed\n", end-start);
+}
+
+uint32_t hash( uint32_t a) {
+    a = (a ^ 61) ^ (a >> 16);
+    a = a + (a << 3);
+    a = a ^ (a >> 4);
+    a = a * 0x27d4eb2d;
+    a = a ^ (a >> 15);
+    return a;
+}
+
+
+/*
+#define BAUD_28800 	(2-1)
+#define BAUD_19200 	(3-1)
+#define BAUD_14400 	(4-1)
+#define BAUD_9600 	(6-1)
+#define BAUD_4800 	(12-1)
+#define BAUD_2400 	(24-1)
+#define BAUD_1200 	(48-1)
+
+	// baud rate generation
+    TCDR = BAUD_28800;
+    TCDCR &= 0xF; 	 // stop C
+    TCDCR |= 1 << 4; // start C with prescaler of 4  
+*/
+
+
+/*
+typedef void(*__task)(void);
+
+typedef uint16_t task_id_t;
+
+// starts in memory from 0x460
+typedef volatile struct __attribute__((packed)) {
+    task_id_t ID;
+    uint8_t __reserved1;
+    uint8_t runnable;
+    uint32_t next_task;
+    uint32_t sleep_time;
+    uint8_t __reserved2[14];
+    uint32_t D[8];
+    uint32_t A[7];
+    uint32_t SP;
+    uint32_t PC;
+    uint16_t FLAGS;
+} task_struct; // 96 bytes
+
+typedef volatile struct __attribute__((packed)) {
+	uint16_t ID;
+	task_struct * data;
+} newTaskStruct;
+
+newTaskStruct create_task(void) {
+	newTaskStruct a;
+	a.ID = 213;
+	a.data = 0x460;
+	return a;
+}
+ newTaskStruct song;
+  
+  song = create_task();
+  putc(song.ID);*/
+
+/*
+void wait_for_exit(task_t task) {
+	task_id_t taskID = get_task_id(task);
+	task_struct_t *taskSt = (task_struct_t *)(task >> 16);
+	
+    while ((taskSt->ID == taskID) && (taskSt->runnable)) 
+  		yield(); // allow other tasks to run
+}*/
