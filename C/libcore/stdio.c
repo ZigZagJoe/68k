@@ -43,14 +43,14 @@ void serial_start(uint8_t fast) {
     IMRA |= INT_REC_FULL | INT_REC_ERR | INT_XMIT_ERR;
   
     // baud rate generation
-    TCDR = 1; // baud 28800
-    TCDCR &= 0xF; 	 // stop C
-    TCDCR |= 1 << 4; // start C with prescaler of 4  
+    TCDR = 1;        // baud 28800
+    TCDCR &= 0xF; 	 // stop timer C
+    TCDCR |= 1 << 4; // start timer C with prescaler of 4  
     
     RXERR = 0;
 	TXERR = 0;
 	
-	UDR = 0;
+	UDR = '\n';  	 // prime the transmitter so that the XMIT_EMPTY interrupt will be pending
 	
 	// set interrupt mask to 0
     // sei();

@@ -61,8 +61,8 @@ void task_md5() {
 		md5_finish(&state, digest);
 	
 		yield();
-		//putHexChar(CURRENT_TASK_ID);
-		//putc(' ');
+		putHexChar(CURRENT_TASK_ID);
+		putc(' ');
 		
 		TIL311 = digest[0];
 		
@@ -107,7 +107,8 @@ int main() {
 	
 	for (int i = 0; i < 29; i++)
 		create_task(&task_md5,0);
-		
+	
+	yield();
   	puts("Tasks started, main() returning.\n");	
 
   	return 0;

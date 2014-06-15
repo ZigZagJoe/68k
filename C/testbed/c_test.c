@@ -17,7 +17,7 @@ int main() {
     sei();
     
     uint32_t i = 0;
-    DDR = 2;
+    
     GPDR = 0;
     
     while(true) {
