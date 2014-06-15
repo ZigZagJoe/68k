@@ -154,7 +154,7 @@ run:
 	ori.b #0x10, (IERB)
 	ori.b #0x10, (IMRB)
 
-	ori.b #2, (DDR)                     | set DDR so scheduler can blink LED
+	bset.b #1, (DDR)                      | set DDR so scheduler can blink LED
 	
 	move.b #TASK_ENTER, %d0
 	move.l #0x460, %a0                  | address of main() task struct
@@ -182,7 +182,7 @@ _check_cmd:                             | spin until reset command is received
 	btst #0, (GPDR)                     | gpio data register - test input 0. Z=!bit
     bne _check_cmd                      | gpio is 1, not bootoclock
      
-	jmp 0x80008				            | reset 
+	jmp 0x80008				            | jump to bootloader 
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | trap used to manage tasks: exit current, force swap (yield), create new, etc.
@@ -219,7 +219,7 @@ _swap_task:
 	tas.b (_swap_in_progress)		    | set swap_in_progress
     bne _ret_swap						| if it was already set; exit.
 
-	move.b #2, (GPDR)				    | turn on the LED
+	bset.b #1, (GPDR)				    | turn on the LED
 	
 	| save context into active task struct
     move.l %a0, -(%sp) 				    | save %a0
@@ -266,7 +266,7 @@ _run_task:
 	move.l 58(%a0), %a0                 | %a0       4 bytes
 	
 	clr.b (_swap_in_progress)	
-	move.b #0, (GPDR)                   | turn off the LED
+	bclr.b #1, (GPDR)                   | turn off the LED
 	
 _ret_swap:
     rte
@@ -457,12 +457,13 @@ exit_task:
     move.b #TASK_EXIT, %d0
     trap #0                  | will never return
   
-| enter a critical section  
+| enter a critical section (prevent swaps)
 enter_critical:
 	move.b #1, (_swap_in_progress)
 	rts
 
 | leave a critical section
+| task termination will also exit critical section
 leave_critical:
 	clr.b (_swap_in_progress)
     rts
