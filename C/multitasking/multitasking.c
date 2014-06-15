@@ -71,8 +71,7 @@ void task_song() {
 
 void task_echo() {
 	printf("ECHO TASK (ID %d) started.\n", CURRENT_TASK_ID);
-	uint8_t * ptr = 0x8000;
-	
+
 	yield();
 	while(true) {
 		while (!serial_available()) 

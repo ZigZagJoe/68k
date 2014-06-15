@@ -123,10 +123,13 @@ _dowait:
 	move.w (%a0), %d0     		 | atomic read of both head and tail
 	move.b %d0, %d1				 | d1 = tail
 	lsr.w #8, %d0                | d0 = head
-	add.b #1, %d0
+	sub.b #1, %d1
 	cmp.b %d0, %d1
-	beq _dowait                  | if head+1 == tail, buffer is full, spin while waiting for tx
+	bne _rdy                     | if head == tail-1, buffer is full, spin while waiting for tx
+	/* yield */					 | note that this is algebraically equivilent to head+1 == tail
+	bra _dowait                  | but it is more efficient because we can use %d0 (head) later
 	
+_rdy:
 	move.b 7(%sp), (2, %a0, %d0) | write char to buffer[head]
 	addi.b #1, (%a0)             | head++
 	

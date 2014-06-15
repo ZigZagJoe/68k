@@ -8,6 +8,8 @@
 .global yield
 .global exit_task
 .global wait_for_exit
+.global enter_critical
+.global leave_critical
 
 /* vars */
 .global _active_task
@@ -194,21 +196,12 @@ task_manager:
     cmp.b #TASK_EXIT, %d0
     beq _exit_task
     cmp.b #TASK_CRIT_ENTER, %d0
-    beq _cli
+    beq enter_critical
     cmp.b #TASK_CRIT_LEAVE, %d0
-    beq _sei
+    beq leave_critical
     cmp.b #TASK_ENTER, %d0
     beq _run_task
     rte
- 
-| extremely simple critical section support.
-_cli:
-	cli
-	rte
-
-_sei:
-	sei
-	rte
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | add a count to the millis counter and do a swap
@@ -466,14 +459,12 @@ exit_task:
   
 | enter a critical section  
 enter_critical:
-	move.b #TASK_CRIT_ENTER, %d0
-	trap #0
+	move.b #1, (_swap_in_progress)
 	rts
 
 | leave a critical section
 leave_critical:
-	move.b #TASK_CRIT_LEAVE, %d0
-	trap #0	
+	clr.b (_swap_in_progress)
     rts
     
 | wait for the task to exit; takes a task_t returned from create_task
