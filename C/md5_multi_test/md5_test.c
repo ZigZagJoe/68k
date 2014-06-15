@@ -72,30 +72,24 @@ void task_md5() {
 		for (uint8_t i = 0; i < 16; i++) 
 			putHexChar(digest[i]);
 			
-		if (CURRENT_TASK_ID == PRINT_ID) {
-		
-			enter_critical();
-			lcd_cursor(0,1);
-			
-			for (uint8_t p = 0; p < 6; p++) {
-				char ch = digest[p];
-				lcd_data(hexchar[ch >> 4]);
-				lcd_data(hexchar[ch & 0xF]);
-			}
-			
-			lcd_data(' ');
-			lcd_data('#');
-			lcd_data(hexchar[PRINT_ID >> 4]);
-			lcd_data(hexchar[PRINT_ID & 0xF]);
-			
-			leave_critical();
-			
-			if (++PRINT_ID > 30) 
-				PRINT_ID = 2;
-		}
-		
 		putc('\n');
 		
+		if (CURRENT_TASK_ID == PRINT_ID) {
+			enter_critical();
+			
+			lcd_cursor(0,1);
+			
+			for (uint8_t p = 0; p < 6; p++) 
+				lcd_printf("%02X",digest[p]);
+			
+			lcd_printf(" #%02X",PRINT_ID);
+
+			if (++PRINT_ID > 30) 
+				PRINT_ID = 2;
+				
+			leave_critical();
+		}
+				
 		yield();
 	}
 }
@@ -119,7 +113,12 @@ int main() {
 
 	create_task(&task_time,0);
   	
-  	puts("Filling memory\n");
+  	enter_critical();
+	lcd_cursor(0,1);
+	lcd_printf("Initializing....");
+	leave_critical();
+	
+  	puts("Initializing memory...\n");
   	
   	uint32_t ha = 124912341;
         
@@ -130,11 +129,17 @@ int main() {
 		ha = hash(ha + i);
 	}
 	
+	enter_critical();
+	
 	for (int i = 0; i < 29; i++)
 		create_task(&task_md5,0);
 	
-	yield();
-  	puts("Tasks started, main() returning.\n");	
-
+	lcd_cursor(0,1);
+	lcd_printf("MD5 in progress.");
+	
+	puts("MD5 tasks started, main() returning.\n");	
+	
+	leave_critical();
+  	
   	return 0;
 }
