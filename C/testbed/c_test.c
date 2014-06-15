@@ -25,13 +25,17 @@ int main() {
    
        // for (char ch = 'a'; ch <= 'z'; ch++)
         //	putc(ch);
-        puts("Hello world.\n");
+       /* puts("Hello world.\n");
         DELAY_MS(1000);
         continue;
         printf("%d\n",i);
        // TIL311 = 0xBB;
    		i++;
         putc('A');
+        putc('\n');*/
+        
+        for (uint8_t i = 'a'; i <= 'z'; i++) 
+        	putc(i);
         putc('\n');
         //TIL311 = 0xCC;
    

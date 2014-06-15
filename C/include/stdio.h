@@ -43,8 +43,9 @@ void serial_stop();
 bool serial_available();
 
 void puts(char *str);
-//void putc(char ch);
-void putc(char ch);
+extern void putc(char ch);
+void putc_sync(char ch);
+
 int16_t getc();
 
 uint8_t isdigit(char ch);

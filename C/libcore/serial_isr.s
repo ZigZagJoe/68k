@@ -8,7 +8,7 @@
 
 .set TIL311, 0xC8000
 
-.global wait_for_txbuffer
+.global putc
 .global _charRecISR_fast
 .global _charRecISR_safe
 .global _charXmtISR
@@ -93,35 +93,30 @@ _charXmtISR:
    move.w %D0, -(%SP)
    move.l %A0, -(%SP)
    
-   move.b #0xEE, (TIL311)
-    
    move.l #tx_buffer, %A0
    clr.w %D0
    
-   move.b (1, %A0), %D0   | get tail
-   
-   cmp.b (%a0), %d0
-   beq _end				  | no char, exit now
-   
+   move.b (1, %A0), %D0          | get tail
    move.b (2, %A0, %D0.W), (UDR) | UDR = buffer[tail]
    
-   addi.b #1, %d0    | tail+1
+   addi.b #1, %d0                | tail+1
    move.b %d0, (1, %A0)
-
+       
+   cmp.b (%a0), %d0
+   bne _end				         | no char, exit now
+   
+   andi.b #0xFB, (IMRA)          | mask interrupts
+   
 _end:
-   move.b #0xDD, (TIL311)
-    
+
    move.l (%SP)+,%A0
    move.w (%SP)+,%D0
    rte
    
- /*   char ch = rx_buffer.buffer[tx_buffer.tail];
-    rec_buffer.tail = tx_buffer.tail + 1;
-    return ch;*/
-    
-wait_for_txbuffer:
+      
+putc:
 	move.l #tx_buffer, %a0
-
+	
 _dowait:
 	move.w (%a0), %d0     		| atomic read of both head and tail
 	move.b %d0, %d1				| d1 = tail
@@ -130,29 +125,12 @@ _dowait:
 	cmp.b %d0, %d1
 	beq _dowait
 	
+	move.b 7(%sp), (2, %a0, %d0)
+	addi.b #1, (%a0)
+	
+	ori.b #4, (IMRA)
+	
 	rts
-      
-/* ##### EQUIVALENT C #####
-// uses about 40% cpu
-
-ISR(ser_char_rec) {
-    uint8_t c = UDR;
-    
-#ifndef NO_SOFT_RESET
-    if ((c == 0xCF) && ((GPDR&1) == 0)) 
-    	_JMP(0x80008);
-#endif
-    
-    store_ch(c, &rec_buffer);
-}
-
-void store_ch(uint8_t c, ser_buffer *buff) {
-    uint8_t i = (buff->head + 1) % SER_BUFFER_SZ;
-    if (i != buff->tail) {
-        buff->buffer[buff->head] = c;
-        buff->head = i;
-    }
-}  */
 
    .bss                  | ser_buffer structure
 rx_buffer: .space 258   | head, tail, 256 bytes of buffer

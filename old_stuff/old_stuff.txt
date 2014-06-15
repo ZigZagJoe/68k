@@ -765,3 +765,52 @@ void wait_for_exit(task_t task) {
     while ((taskSt->ID == taskID) && (taskSt->runnable)) 
   		yield(); // allow other tasks to run
 }*/
+
+/*
+ISR(fuckin_serial) {
+	UDR = tx_buffer.buffer[tx_buffer.tail];
+	tx_buffer.tail++;
+	
+	if (tx_buffer.head == tx_buffer.tail) {
+		IMRA &= ~INT_XMIT_EMPTY;
+	}
+}
+
+void putc(char ch) {  
+	wait_for_txbuffer();
+	//while ((uint8_t)(tx_buffer.head + 1) == tx_buffer.tail); // block until buffer not full
+	
+    tx_buffer.buffer[tx_buffer.head] = ch;
+    tx_buffer.head++;
+    
+    IMRA |= INT_XMIT_EMPTY; 
+}
+
+ISR(fuckin_serial);
+
+    /*   char ch = rx_buffer.buffer[tx_buffer.tail];
+    rec_buffer.tail = tx_buffer.tail + 1;
+    return ch;*/
+/* ##### EQUIVALENT C #####
+// uses about 40% cpu
+
+ISR(ser_char_rec) {
+    uint8_t c = UDR;
+    
+#ifndef NO_SOFT_RESET
+    if ((c == 0xCF) && ((GPDR&1) == 0)) 
+    	_JMP(0x80008);
+#endif
+    
+    store_ch(c, &rec_buffer);
+}
+
+void store_ch(uint8_t c, ser_buffer *buff) {
+    uint8_t i = (buff->head + 1) % SER_BUFFER_SZ;
+    if (i != buff->tail) {
+        buff->buffer[buff->head] = c;
+        buff->head = i;
+    }
+}  */
+*/
+

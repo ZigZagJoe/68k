@@ -9,7 +9,6 @@ extern volatile ser_buffer tx_buffer;
 extern void _charRecISR_fast(void);
 extern void _charRecISR_safe(void);
 extern void _charXmtISR(void);
-extern void wait_for_txbuffer();
 
 uint8_t RXERR;
 uint8_t TXERR;
@@ -29,20 +28,18 @@ ISR(ser_xmt_err)  {
 		(*on_xmit_error)(TXERR);
 }
 
-//ISR(fuckin_serial);
-
 uint8_t isdigit(char ch) {
 	return (ch >= '0') && (ch <= '9');
 }
 
 void serial_start(uint8_t fast) {
     __vectors.user[MFP_INT + MFP_CHAR_RDY - USER_ISR_START] =  fast ? (&_charRecISR_fast) : (&_charRecISR_safe);
-   // __vectors.user[MFP_INT + MFP_XMIT_EMPTY - USER_ISR_START] =  &fuckin_serial;
+    __vectors.user[MFP_INT + MFP_XMIT_EMPTY - USER_ISR_START] =  &_charXmtISR;
     __vectors.user[MFP_INT + MFP_REC_ERR - USER_ISR_START] = &ser_rec_err;
     __vectors.user[MFP_INT + MFP_XMIT_ERR - USER_ISR_START] = &ser_xmt_err;
     
     VR = MFP_INT;
-    IERA |= INT_REC_FULL | INT_REC_ERR | INT_XMIT_ERR/* | INT_XMIT_EMPTY*/;
+    IERA |= INT_REC_FULL | INT_REC_ERR | INT_XMIT_ERR | INT_XMIT_EMPTY;
     IMRA |= INT_REC_FULL | INT_REC_ERR | INT_XMIT_ERR;
   
     // baud rate generation
@@ -52,6 +49,8 @@ void serial_start(uint8_t fast) {
     
     RXERR = 0;
 	TXERR = 0;
+	
+	UDR = 0;
 	
 	// set interrupt mask to 0
     // sei();
@@ -73,36 +72,8 @@ int16_t getc() {
     return rx_buffer.buffer[rx_buffer.tail++];
 }
 
-/*
-ISR(fuckin_serial) {
-	if (tx_buffer.head == tx_buffer.tail) {
-		IMRA &= ~INT_XMIT_EMPTY; 
-		return;
-	}
-	
-	UDR = tx_buffer.buffer[tx_buffer.tail];
-	tx_buffer.tail++;
-}
-
-void putc(char ch) {  
-  	if ((TSR & 0x80) && tx_buffer.head == tx_buffer.tail) {
-		//IMRA |= INT_XMIT_EMPTY; 
-    	UDR = ch;
-		return;
-	}
-	
-	//wait_for_txbuffer();
-	while ((uint8_t)(tx_buffer.head + 1) == tx_buffer.tail); // block until buffer not full
-	
-    tx_buffer.buffer[tx_buffer.head] = ch;
-    tx_buffer.head++;
-    
-    IMRA |= INT_XMIT_EMPTY; 
-}
-*/
-
 // wait for transmitter idle, then send character
-void putc(char ch) {
+void putc_sync(char ch) {
     while (!(TSR & 0x80));
     UDR = ch; 
 }
