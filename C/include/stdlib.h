@@ -9,16 +9,13 @@ extern uint32_t __heap_end;
 extern uint32_t __stack_start;
 extern uint32_t __stack_end;
 
-//48 + (x-1) * 26
-// approx count of cycles for this loop on 68008
-// 170665 should be approx half a second @ 6.144mhz
 #define DELAY(X) __asm volatile("move.l %0,%%d0\n" \
-                                "1: sub.l #1, %%d0\n" \
-                                "jne 1b\n" \
+                                "1: subi.l #1, %%d0\n" \ 
+                                "bne 1b\n" \
                                 ::"i"(X):"d0");
 
-
-#define MILLISECOND_DELAY 205
+// @ 8mhz, on 68008
+#define MILLISECOND_DELAY 174
 #define DELAY_S(x) DELAY_MS(x*1000);
 #define DELAY_MS(x) DELAY(x*MILLISECOND_DELAY)
 #define DELAY_HALF_SECOND DELAY_MS(500);
