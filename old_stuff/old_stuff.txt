@@ -814,3 +814,30 @@ void store_ch(uint8_t c, ser_buffer *buff) {
 }  */
 */
 
+DDR |= 1 << 1;
+    
+    __asm volatile ("lb: move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n" 
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n" " move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n"
+    					 "bra lb\n");
+    					 
+    

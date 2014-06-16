@@ -17,9 +17,8 @@
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | fast routine. no checks, absolute least amount of time spent in ISR
-| will use approximately 19% of cpu time at max throughput
-| given clock of 6.144mhz and 38400 baud on 68008
-
+| 19% cpu at 6.144mhz and 38400 baud on 68008
+| 11% cpu at 8mhz and 28800 baud on 68008
 | intentional bug: it will clobber the entire buffer, if the buffer 
 | contains 255 chars and another character is received. 
 | solution: dont let that happen, or use the 'safe' routine.
@@ -44,7 +43,8 @@ _charRecISR_fast:
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | safe routine: if buffer is full, only new bytes will be discarded
 | additionally supports soft-reset by sending 0xCF with MFP GPIO 0 low
-| will use approximately 29% cpu time given above same considerations
+| 29% cpu at 6.144mhz and 38400 baud on 68008
+| 15% cpu at 8mhz and 28800 baud on 68008
 
 _charRecISR_safe:
    move.w %D2, -(%SP)
