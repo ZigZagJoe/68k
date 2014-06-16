@@ -28,10 +28,6 @@ ISR(ser_xmt_err)  {
 		(*on_xmit_error)(TXERR);
 }
 
-uint8_t isdigit(char ch) {
-	return (ch >= '0') && (ch <= '9');
-}
-
 void serial_start(uint8_t fast) {
     __vectors.user[MFP_INT + MFP_CHAR_RDY - USER_ISR_START] =  fast ? (&_charRecISR_fast) : (&_charRecISR_safe);
     __vectors.user[MFP_INT + MFP_XMIT_EMPTY - USER_ISR_START] =  &_charXmtISR;
@@ -57,7 +53,7 @@ void serial_start(uint8_t fast) {
 }
 
 void serial_stop() {
-	IERA &= ~(INT_REC_FULL | INT_REC_ERR | INT_XMIT_ERR | INT_XMIT_EMPTY);
+	//IERA &= ~(INT_REC_FULL | INT_REC_ERR | INT_XMIT_ERR | INT_XMIT_EMPTY);
     IMRA &= ~(INT_REC_FULL | INT_REC_ERR | INT_XMIT_ERR | INT_XMIT_EMPTY);
 }
 

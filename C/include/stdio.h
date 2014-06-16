@@ -21,7 +21,8 @@ typedef struct __attribute__((packed)) {
 // will not clobber the entire buffer if a character is
 // received and the buffer contains 255 bytes already 
 // instead, the new character is discarded
-// will use around 30% CPU at 38400 baud (maxed out)
+// 29% cpu at 6.144mhz and 38400 baud on 68008
+// 15% cpu at 8mhz and 28800 baud on 68008
 #define SERIAL_SAFE 0
 
 // Use an unsafe routine that uses less CPU time than the 
@@ -29,11 +30,15 @@ typedef struct __attribute__((packed)) {
 // and will clobber the ENITRE buffer if the buffer is full
 // when another character is received. instead, the buffer 
 // will then be seen as empty.
+// 19% cpu at 6.144mhz and 38400 baud on 68008
+// 11% cpu at 8mhz and 28800 baud on 68008
 #define SERIAL_FAST 1
 
+// nonzero if an error occurs
 extern uint8_t RXERR;
 extern uint8_t TXERR;
 
+// handlers called if an error occurs
 extern __serial_handler *on_rcvr_error;
 extern __serial_handler *on_xmit_error;
 
@@ -47,8 +52,5 @@ extern void putc(char ch);
 void putc_sync(char ch);
 
 int16_t getc();
-
-uint8_t isdigit(char ch);
-
 
 #endif
