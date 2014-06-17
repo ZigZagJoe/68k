@@ -83,14 +83,14 @@ void task_echo() {
 	}
 }
 
-volatile uint8_t exit = 0;
+volatile uint8_t kill = 0;
 
 void task_quiet() {
 	printf("QUIET TASK (ID %d) started.\n", CURRENT_TASK_ID);
 	yield();
 	puts("A wild QUIET TASK has appeared.\n");
 	
-	while(!exit)
+	while(!kill)
 		yield();
 	
 	puts("It's super effective! QUIET TASK has fainted!\n");
@@ -112,15 +112,15 @@ void task_time() {
 void task_a_random() {
 	printf("Go, random task! (%d)\n",CURRENT_TASK_ID);
 	yield();
-	if (exit == 0) {
+	if (kill == 0) {
 		yield();
 		puts("Random task uses HYPER BEAM.\n");
-		exit = 1;
+		kill = 1;
 	} else {
 		puts("Random task loafs around.\n");
 		sleep_for(1000);
 		if (((rand() % 4) == 2)) {
-			exit = 0;
+			kill = 0;
 			create_task(&task_quiet,0);
 		} else
 			puts("Come back, random task!\n");
@@ -175,5 +175,7 @@ int main() {
   	   
   	puts("Tasks started, main() returning.\n");	
 
+	abort();
+	
   	return 0;
 }

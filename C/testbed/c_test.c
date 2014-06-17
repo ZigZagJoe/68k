@@ -22,7 +22,7 @@ int main() {
     
     while(true) {
     	if (serial_available()) 
-    		putc(getc());
+    		putc_sync(getc());
     	//TIL311 = 0xAA;
    
        // for (char ch = 'a'; ch <= 'z'; ch++)

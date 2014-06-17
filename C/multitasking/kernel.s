@@ -10,6 +10,7 @@
 .global wait_for_exit
 .global enter_critical
 .global leave_critical
+.global exit
 
 /* vars */
 .global _active_task
@@ -31,7 +32,7 @@
 .set task_count,        0x412 | word
 .set _next_thread_id,   0x414 | word
 .set _swap_in_progress, 0x416 | byte
-.set _skip_next_tick,     0x417 | byte
+.set _skip_next_tick,   0x417 | byte
 
 | IO device declartions
 .set IO_BASE,  0xC0000
@@ -58,6 +59,7 @@
 .set TASK_CREATE,  0xCE
 .set TASK_CRIT_ENTER, 0xCA
 .set TASK_CRIT_LEAVE, 0xC1
+.set SYSTEM_EXIT,  0xEF
 
 .set USER_STACK_SIZE, 4096
 
@@ -164,26 +166,39 @@ run:
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | no viable tasks left; nothing for system to do. halt system.
-
+	
 _the_end_times:
 	cli
 	
 	move.l #_system_halted, %a0
 	jsr puts
-	
-_check_cmd:                             | spin until reset command is received
+
+_exit_cmd_check:                        | spin until reset command is received
 	btst #7, (RSR)                      | test if buffer full (bit 7) is set.
-    beq _check_cmd                 
+    beq _exit_cmd_check                 
     
     move.b (UDR), %D1
     cmp.b #0xCF, %D1
-    bne _check_cmd
+    bne _exit_cmd_check
     
 	btst #0, (GPDR)                     | gpio data register - test input 0. Z=!bit
-    bne _check_cmd                      | gpio is 1, not bootoclock
+    bne _exit_cmd_check                 | gpio is 1, not bootoclock
      
 	jmp 0x80008				            | jump to bootloader 
 
+| user initiated exit
+_exit:
+	cli
+	
+	move.l #_system_exit, %a0
+	jsr puts
+	move.b %d1, %d0
+	jsr puthexbyte
+	move.l #_system_exit_2, %a0
+	jsr puts
+		
+	bra _exit_cmd_check
+	
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | trap used to manage tasks: exit current, force swap (yield), create new, etc.
 task_manager:
@@ -201,6 +216,8 @@ task_manager:
     beq leave_critical
     cmp.b #TASK_ENTER, %d0
     beq _run_task
+    cmp.b #SYSTEM_EXIT, %d0
+    beq _exit
     rte
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -456,7 +473,12 @@ yield:
 exit_task:
     move.b #TASK_EXIT, %d0
     trap #0                  | will never return
-  
+
+exit:
+    move.b #SYSTEM_EXIT, %d0
+    move.b (7,%sp), %d1
+    trap #0                  | will never return
+    
 | enter a critical section (prevent swaps)
 enter_critical:
 	move.b #1, (_swap_in_progress)
@@ -513,7 +535,30 @@ putc:
 	move.b %D0, (UDR)		 | write char to buffer
 	rts
 	
+puthexbyte:
+	move.l %A0, -(%SP)
+	move.w %D0, -(%SP)
+	
+	movea #_hexchars, %A0
+	
+	lsr #4, %D0				    | shift top 4 bits over
+	and.w #0xF, %D0
+	move.b (%A0, %D0.W), %D0    | look up char
+	jsr putc
+	
+	move.w (%SP), %D0			
+	and.w #0xF, %D0			    | take bottom 4 bits
+	move.b (%A0, %D0.W), %D0	| look up char
+	jsr putc
+	
+	move.w (%SP)+, %D0		    | restore byte
+	move.l (%SP)+, %A0		    | restore address
+	
+	rts
+	
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | strings	
-_system_halted: .string "\n\n*** All tasks exited. System halt. ***\n";
-
+_system_halted: .string "\n\n*** All tasks exited. System halted. ***\n"
+_system_exit: .string "\n\n*** Program exited with code 0x"
+_system_exit_2: .string ". System halted. ***\n"
+_hexchars: .ascii "0123456789ABCDEF"

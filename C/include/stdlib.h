@@ -34,11 +34,10 @@ extern void sleep_for(uint32_t time);
 
 #define true 1
 #define false 0
-#define null 0
 
 #define TRUE 1
 #define FALSE 0
-#define NULL 0
+
 
 #define bv(BIT) (1 << BIT)
 #define bset(X,BIT) (X |= bv(BIT))

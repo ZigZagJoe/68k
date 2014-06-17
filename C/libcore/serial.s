@@ -6,7 +6,6 @@
 .set UDR, MFP_BASE + 0x2F | uart data register
 .set IMRA, MFP_BASE + 0x13
 .set TSR, MFP_BASE + 0x2D | transmitter status reg
-.set TIL311, 0xC8000
 
 .global _charRecISR_fast
 .global _charRecISR_safe
@@ -16,9 +15,8 @@
 .global putc_sync
 .global serial_available
 
-
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| fast routine. no checks, absolute least amount of time spent in ISR
+| fast serial ISR: read a byte from UART, save in rx_buffer
 | 19% cpu at 6.144mhz and 38400 baud on 68008
 | 11% cpu at 8mhz and 28800 baud on 68008
 | intentional bug: it will clobber the entire buffer, if the buffer 
@@ -43,7 +41,7 @@ _charRecISR_fast:
    rte                            | return from interrupt
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
-| safe routine: if buffer is full, only new bytes will be discarded
+| safe serial ISR: read a byte from UART, save in rx_buffer
 | additionally supports soft-reset by sending 0xCF with MFP GPIO 0 low
 | 29% cpu at 6.144mhz and 38400 baud on 68008
 | 15% cpu at 8mhz and 28800 baud on 68008
@@ -92,7 +90,7 @@ drop_byte:
    rte                          | return from interrupt
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| transmit a char from the tx buffer
+| transmit a char from the tx buffer (ISR)
 _charXmtISR:
    move.w %D0, -(%SP)
    move.l %A0, -(%SP)
@@ -143,7 +141,7 @@ _rdy:
 | synchronous putc
 putc_sync:
 	btst #7, (TSR)               | test buffer empty (bit 7)
-    beq putc                     | Z=1 (bit = 0) ? branch
+    beq putc_sync                | Z=1 (bit = 0) ? branch
 	move.b (7,%sp), (UDR)		 | write char to buffer
 	rts	
 	
@@ -163,7 +161,7 @@ serial_available:
 getc:
 	jsr serial_available
 	cmp.b #0, %d0
-	jeq getc
+	beq getc
 	
 	clr.w %d0
 	move.l #rx_buffer, %a0
@@ -172,7 +170,6 @@ getc:
 	addi.b #1, (1, %a0)
 	rts
 	
-
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | Variables
 

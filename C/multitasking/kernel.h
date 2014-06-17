@@ -25,6 +25,7 @@ typedef volatile struct __attribute__((packed)) {
 extern task_struct_t * _active_task;
 
 #define CURRENT_TASK_ID (_active_task->ID)
+#define abort() exit(0)
 
 // create a new task. returns 0 on failure or a task_struct
 task_t create_task(void *task, uint16_t argc, ...);
@@ -47,6 +48,9 @@ void wait_for_exit(task_t task);
 // simple critical section support (disables interrupts)
 void enter_critical();
 void leave_critical();
+
+// stops execution with code 
+void exit(uint8_t code);
 
 // utility functions
 task_id_t get_task_id(task_t task);
