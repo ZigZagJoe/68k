@@ -10,7 +10,7 @@ extern uint32_t __stack_start;
 extern uint32_t __stack_end;
 
 #define DELAY(X) __asm volatile("move.l %0,%%d0\n" \
-                                "1: subi.l #1, %%d0\n" \ 
+                                "1: subi.l #1, %%d0\n" \
                                 "bne 1b\n" \
                                 ::"i"(X):"d0");
 

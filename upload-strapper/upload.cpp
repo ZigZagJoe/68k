@@ -25,7 +25,7 @@ uint8_t has_data(int fd);
 #define IOSSDATALAT    _IOW('T', 0, unsigned long)
 #define IOSSIOSPEED    _IOW('T', 2, speed_t)
 
-char port_def[] ="/dev/cu.usbserial-FTWEI2UY";
+char port_def[] ="/dev/cu.usbserial-M68KV1BB";
 const int pin_rts = TIOCM_RTS;
 
 void command(int fd, uint8_t instr) {
