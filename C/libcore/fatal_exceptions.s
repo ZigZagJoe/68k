@@ -453,7 +453,7 @@ _ADDR: .string " ADDR: "
 _INST: .string " INST: "
 
 _READ: .string "  Read "
-_WRITE: .string "  Write"
+_WRITE: .string "  Write "
 _INSTR: .string "instruction "
 _NOT: .string ""
 _USR: .string "user "

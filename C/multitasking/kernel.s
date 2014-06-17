@@ -343,9 +343,8 @@ _create_task:
 
 	cli								    | ensure list is not modified while we are working
     
-    move.l %a1, %a3                     | address of top of arguments
-	move.l #0x460, %a2                  | beginning of task state structs
-	move.l #__stack_end, %a1            | stack base address
+    move.l #0x460, %a2                  | beginning of task state structs
+	move.l #__stack_end, %a3            | stack base address
 	
 _check_free:
     cmp.l #0x1000, %a2                  | no room available; fail.
@@ -354,7 +353,7 @@ _check_free:
 	cmp.b #0, (3, %a2)
 	beq _got_free
 	
-	sub.l #USER_STACK_SIZE, %a1
+	sub.l #USER_STACK_SIZE, %a3
 	add.l #96, %a2
 	jmp _check_free
 	
@@ -365,7 +364,7 @@ _got_free:                              | copy the arguments to the new stack
 	subi.w #1, %d1
 	
 _copy_args:
-	move.l -(%a3), -(%a1)
+	move.l -(%a1), -(%a3)
 	dbra %d1, _copy_args
 	
 _no_args:
@@ -373,7 +372,7 @@ _no_args:
 	move.l %a0, 58(%a2)                 | load starting address into %a0 in struct
 	move.l #_task_entry, 90(%a2)        | set PC to task begin struct
 	
-	move.l %a1, 86(%a2)				    | set stack pointer
+	move.l %a3, 86(%a2)				    | set stack pointer
 	move.w #0, 94(%a2)			        | set flags (none)
     move.b #1, (3, %a2)                 | mark as runnable
 	         
@@ -383,6 +382,7 @@ _no_args:
     
     add.w #1, (task_count)
     add.w #1, (_next_thread_id)
+    
 	
     move.l (_active_task), %a1          | load linked list node
     

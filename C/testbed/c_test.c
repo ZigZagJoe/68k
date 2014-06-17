@@ -17,11 +17,12 @@ int main() {
     sei();
     
     uint32_t i = 0;
-    DDR = 2;
-    GPDR = 0;
+ //   DDR = 2;
+  //  GPDR = 0;
     
     while(true) {
-
+    	if (serial_available()) 
+    		putc(getc());
     	//TIL311 = 0xAA;
    
        // for (char ch = 'a'; ch <= 'z'; ch++)
@@ -35,9 +36,10 @@ int main() {
         putc('A');
         putc('\n');*/
         
-        for (uint8_t i = 'a'; i <= 'z'; i++) 
+       /* for (uint8_t i = 'a'; i <= 'z'; i++) 
         	putc(i);
-        putc('\n');
+        putc('\n');*/
+        
         //TIL311 = 0xCC;
    
     }

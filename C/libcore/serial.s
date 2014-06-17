@@ -5,15 +5,17 @@
 .set GPDR, MFP_BASE + 0x1 | gpio data register
 .set UDR, MFP_BASE + 0x2F | uart data register
 .set IMRA, MFP_BASE + 0x13
-
+.set TSR, MFP_BASE + 0x2D | transmitter status reg
 .set TIL311, 0xC8000
 
-.global putc
 .global _charRecISR_fast
 .global _charRecISR_safe
 .global _charXmtISR
-.global rx_buffer
-.global tx_buffer
+.global getc
+.global putc
+.global putc_sync
+.global serial_available
+
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | fast routine. no checks, absolute least amount of time spent in ISR
@@ -107,7 +109,7 @@ _charXmtISR:
    cmp.b (%a0), %d0
    bne _end				         | no char, exit now
    
-   andi.b #0xFB, (IMRA)          | mask next interrupt as there is no data to send
+   andi.b #~4, (IMRA)            | mask next interrupt as there is no data to send
    
 _end:
    move.l (%SP)+,%A0
@@ -120,7 +122,7 @@ putc:
 	move.l #tx_buffer, %a0
 	
 _dowait:
-	move.w (%a0), %d0     		 | atomic read of both head and tail
+	move.w (%a0), %d0     		 | atomic read of head and tail
 	move.b %d0, %d1				 | d1 = tail
 	lsr.w #8, %d0                | d0 = head
 	sub.b #1, %d1
@@ -136,6 +138,40 @@ _rdy:
 	ori.b #4, (IMRA)             | unmask interrupt (which will fire immediately)
 	
 	rts
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| synchronous putc
+putc_sync:
+	btst #7, (TSR)               | test buffer empty (bit 7)
+    beq putc                     | Z=1 (bit = 0) ? branch
+	move.b (7,%sp), (UDR)		 | write char to buffer
+	rts	
+	
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| does the rx buffer have a char ready?	
+serial_available:
+	clr.l %d0
+	move.w (rx_buffer), %d0		 | atomic read of head and tail
+	move.b %d0, %d1				 | d1 = tail
+	lsr.w #8, %d0                | d0 = head
+	cmp.b %d0, %d1
+	sne.b %d0
+	rts
+	
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| block until char available then return char
+getc:
+	jsr serial_available
+	cmp.b #0, %d0
+	jeq getc
+	
+	clr.w %d0
+	move.l #rx_buffer, %a0
+	move.b (1, %a0), %d0         | get tail
+	move.b (2, %a0, %d0), %d0    | %d0 = buffer[tail]
+	addi.b #1, (1, %a0)
+	rts
+	
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | Variables
