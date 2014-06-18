@@ -204,17 +204,16 @@ regs:
 	cmp.b #0xBE, 65(%SP)
 	beq _group0
 	
-	put_str _PC
+	put_str _PC | put PC off stack
 	move.l 68(%SP), %D0
 	jsr puthexlong
 
 	| flags
 	move.w 66(%SP), %D1
 	
-	bra _contp
+	bra _contp | continue on
 	
-_group0:
-
+_group0:       | different, larger set of info on stack
 	put_str _PC
 	move.l 76(%SP), %D0
 	jsr puthexlong
@@ -267,7 +266,7 @@ _pgm:
 	newline
 	newline
 	
-_contp:
+_contp: 
 	put_str _usersp
 	move.l %USP, %A0
 	move.l %A0, %D0
@@ -294,12 +293,10 @@ _contp:
 	newline
 	
 	cmp.l #0xFFFFFFFF, (0x400)
-	
 	jne end
 	jsr print_kern_status
 	
 end:
-	
 	move.l #_end, %A0
 	jsr puts
 	newline
@@ -338,8 +335,7 @@ retu:
 	
 	
 print_kern_status:
-
-	
+	| print out the status of the kernel
 	rts
 	
 | ############## BEGIN FUNCTIONS ###############

@@ -21,7 +21,7 @@ int main() {
     
     char * str2 = "embedded str";
    
-	simp_printf("hello world\nhex= 0x%x\nstring= %s\nbinary= %b\npercent %%\n", 0xDEADBEEF, str2, 0xCAFEBABE);
+	simp_printf("hello world\nhex= 0x%x\nstring= %s\nbinary= %b\npercent %%\nchar= '%c'\n", 0xDEADBEEF, str2, 0xCAFEBABE, 'h');
 	
  	while(true);
 }

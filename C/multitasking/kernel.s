@@ -27,12 +27,11 @@
 | state variables
 
 .set _active_task,      0x400 | long 
-.set _sleep_ll_head,    0x404 | long 
-.set millis_counter,    0x408 | long 
-.set task_count,        0x412 | word
-.set _next_thread_id,   0x414 | word
-.set _swap_in_progress, 0x416 | byte
-.set _skip_next_tick,   0x417 | byte
+.set millis_counter,    0x404 | long 
+.set task_count,        0x408 | word
+.set _next_thread_id,   0x412 | word
+.set _swap_in_progress, 0x414 | byte
+.set _skip_next_tick,   0x415 | byte
 
 | IO device declartions
 .set IO_BASE,  0xC0000

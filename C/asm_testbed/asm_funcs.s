@@ -47,6 +47,8 @@ _perc:
 	jeq _bin
 	cmp.b #'S', %d2
 	jeq _str
+	cmp.b #'C', %d2
+	jeq _ch
 	
 	move.b #'%', %d0     | not a recognized escape
 	sub.l #1, %a2
@@ -56,6 +58,12 @@ _perc:
 _hex:
 	move.l %d1, %d0
 	jsr puthexlong
+	bra _get_ch
+	
+| hex case
+_ch:
+	move.b %d1, %d0
+	jsr _putc
 	bra _get_ch
 	
 | binary case
