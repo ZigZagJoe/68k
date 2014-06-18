@@ -292,6 +292,14 @@ _contp:
 	
 	newline
 	newline
+	
+	cmp.l #0xFFFFFFFF, (0x400)
+	
+	jne end
+	jsr print_kern_status
+	
+end:
+	
 	move.l #_end, %A0
 	jsr puts
 	newline
@@ -326,6 +334,12 @@ check_boot:
      
 	jmp 0x80008
 retu:
+	rts
+	
+	
+print_kern_status:
+
+	
 	rts
 	
 | ############## BEGIN FUNCTIONS ###############

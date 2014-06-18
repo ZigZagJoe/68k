@@ -156,7 +156,7 @@ run:
 	ori.b #0x10, (IERB)
 	ori.b #0x10, (IMRB)
 
-	bset.b #1, (DDR)                      | set DDR so scheduler can blink LED
+	bset.b #1, (DDR)                    | set DDR so scheduler can blink LED
 	
 	move.b #TASK_ENTER, %d0
 	move.l #0x460, %a0                  | address of main() task struct

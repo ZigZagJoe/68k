@@ -130,7 +130,7 @@ _dowait:
 	bra _dowait                  | but it is more efficient because we can use %d0 (head) later
 	
 _rdy:
-	move.b 7(%sp), (2, %a0, %d0) | write char to buffer[head]
+	move.b 7(%sp), (2, %a0, %d0.w)| write char to buffer[head]
 	addi.b #1, (%a0)             | head++
 	
 	ori.b #4, (IMRA)             | unmask interrupt (which will fire immediately)
@@ -166,7 +166,7 @@ getc:
 	clr.w %d0
 	move.l #rx_buffer, %a0
 	move.b (1, %a0), %d0         | get tail
-	move.b (2, %a0, %d0), %d0    | %d0 = buffer[tail]
+	move.b (2, %a0, %d0.w), %d0  | %d0 = buffer[tail]
 	addi.b #1, (1, %a0)
 	rts
 	

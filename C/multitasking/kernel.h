@@ -20,12 +20,12 @@ typedef volatile struct __attribute__((packed)) {
     uint32_t SP;			 // 86
     uint32_t PC;			 // 90
     uint16_t FLAGS;			 // 94
-} task_struct_t;               // total: 96
+} task_struct_t;             // total: 96
 
 extern task_struct_t * _active_task;
 
 #define CURRENT_TASK_ID (_active_task->ID)
-#define abort() exit(0)
+#define abort() exit(0xAB)
 
 // create a new task. returns 0 on failure or a task_struct
 task_t create_task(void *task, uint16_t argc, ...);

@@ -4,10 +4,10 @@
 #include <stdint.h>
 #include <binary.h>
 
-extern uint32_t __heap_start;
-extern uint32_t __heap_end;
-extern uint32_t __stack_start;
-extern uint32_t __stack_end;
+extern uint8_t *__heap_start;
+extern uint8_t *__heap_end;
+extern uint8_t *__stack_start;
+extern uint8_t *__stack_end;
 
 #define DELAY(X) __asm volatile("move.l %0,%%d0\n" \
                                 "1: subi.l #1, %%d0\n" \
@@ -38,7 +38,6 @@ extern void sleep_for(uint32_t time);
 #define TRUE 1
 #define FALSE 0
 
-
 #define bv(BIT) (1 << BIT)
 #define bset(X,BIT) (X |= bv(BIT))
 #define bclr(X,BIT) (X &= ~bv(BIT))
@@ -49,4 +48,6 @@ extern void sleep_for(uint32_t time);
 #define abs(x) ((x)>0?(x):-(x))
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
   
+uint32_t rand(void);
+
 #endif

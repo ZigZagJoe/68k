@@ -38,19 +38,6 @@ int main();
 /*char * songs[];
 #define songcount 24*/
 
-uint32_t x = (uint32_t)__DATE__;
-uint32_t y = (uint32_t)__TIME__;
-uint32_t z = (uint32_t)&main;
-uint32_t w = (uint32_t)__LINE__;
- 
-uint32_t rand(void) {
-    uint32_t t;
- 
-    t = x ^ (x << 11);
-    x = y; y = z; z = w;
-    return w = w ^ (w >> 19) * 3120909123 ^ t ^ (t >> 8);
-}
-
 /*for (int i = 0; i < songcount; i++) {
 			play_rtttl(songs[i]);
 			sleep_for(1000);

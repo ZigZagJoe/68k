@@ -14,7 +14,8 @@
 
  _start:
 	move.b #0xCC, (TIL311) | what up my glip glops!
-
+	move.l #0xFFFFFFFF, (0x400) | kernel not active
+	
 	move.l #__stack_start, %a7
 
 	/* clear BSS section */
