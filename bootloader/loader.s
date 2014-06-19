@@ -19,19 +19,18 @@
 .set TCDR,  MFP + 0x23         | timer c data
 .set UCR,   MFP + 0x29         | uart ctrl
 
-| stack pointer. grows down in RAM
+| default stack pointer. grows down in RAM!
 .set stack_pointer, 0x80000
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | boot stack pointer and program counter
-| comment these out if testing in RAM
+| comment these out if testing in RAM...
 
 _isp: .long stack_pointer      | initial spvr stack pointer
-_ipc: .long 0x80008            | initial program counter 
+_ipc: .long _boot              | initial program counter 
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| actual bootloader code
-
+| bootloader entry point
 _boot:
     move.b #0x10, (TIL311)     | display greeting
     move.l #stack_pointer, %sp | set stack pointer (maybe we were soft reset)
@@ -40,10 +39,10 @@ _boot:
     reset
     
     | relocate into RAM
-    lea (reloc, %pc), %a0	   | load address of reloc into %a0, position indep.
+    lea (reloc, %pc), %a0      | load address of reloc into %a0, position indep.
     movea.l #0x1000, %a1       | load relocation address into %a1
- 	move.w #(reloc_sz/4), %d0  | load number of longs to copy (+1) into %d0 
-            		   
+    move.w #(reloc_sz/4), %d0  | load number of longs to copy (+1) into %d0 
+                     
     move.b #0x1C, (TIL311)     | debugging message
    
 cpy_reloc:
@@ -56,7 +55,6 @@ cpy_reloc:
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader code in RAM
-
 reloc: 
     move.b #0xC0, (TIL311)     | debugging message
     
@@ -74,6 +72,8 @@ reset:
     movea #0x2000, %a0         | load base address into %a0
     move.b #0xB1, (TIL311)     | display greeting
 
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| main bootloader loop
 loop:
     | see if there is a byte pending
     btst #7, (RSR)             | test if buffer full (bit 7) is set
@@ -84,8 +84,16 @@ loop:
     
     | check to see if the GPIO for command byte is low
     btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
-    bne wrb                    | gpio is 1| not a command byte
+    beq cmd_byte               | gpio is 0; command byte!
     
+    move.b %d0, (UDR)          | not a command, echo it back
+    move.b %d0, (%a0)+         | store to address, postincrement
+
+    bra loop                   | and back to start we go
+    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| execute commmand byte in %d0
+cmd_byte:
     cmp.b #0xCB, %d0           | is it the command to boot?
     beq boot
 
@@ -95,17 +103,14 @@ loop:
     move.b #0xBC, (TIL311)     | not a recognized command
     bra loop
     
-wrb:  
-    move.b %d0, (UDR)          | echo it back to sender
-    move.b %d0, (%a0)+         | store to address, postincrement
-
-    bra loop                   | relative jump
-    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
+| boot command
 boot:
     move.b #0xBB, (TIL311)     | display char for debugging
     jmp 0x2000                 | jump to the code loaded into RAM
-    
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
 | get size of relocated section
 .set reloc_sz, . - reloc
 
-| EOF loader.s
+# EOF loader.s
