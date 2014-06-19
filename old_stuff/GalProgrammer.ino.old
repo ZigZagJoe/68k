@@ -1,0 +1,87 @@
+#define SCLK 10
+#define SDIN 11
+#define STB 12
+#define SDOUT 13
+#define PV 14
+
+//http://www.armory.com/~rstevew/Public/Pgmrs/GAL/program.htm
+/*
+ ,"GAL22V10",
+        5892, // fuses
+        24, // pins
+       
+        ,5828 // ues fuse,
+      
+        ,61, // erase row
+        60, // erase all row
+      
+       ,cfg22V10 // *cfg
+        ,sizeof(cfg22V10)/sizeof(int) // cfgbits*/
+        
+#define rows 44, // rows
+#define bitsperrow 132 // bits,
+#define ues 44 // ues row
+#define uesbits (8*8) // ues bytes
+#define pes 58 // pes row
+#define pesbits (10*8) // pes bytes
+#define cfg 16 // cfg row
+#define cfgbits 
+ 
+void setup() {
+  pinMode(PV, OUTPUT);
+  pinMode(SCLK, OUTPUT);
+  pinMode(SDIN, OUTPUT);
+  pinMode(STB, OUTPUT);
+  pinMode(SDOUT, INPUT);
+  
+  digitalWrite(PV, 0);
+  digitalWrite(SCLK, 0);
+  digitalWrite(SDIN, 0);
+  digitalWrite(STB, 1);
+  
+  DDRD = 255;
+  PORTD = 0;
+}
+
+void readrow(byte addr, byte count) {
+  PORTD = addr;
+  delayMicroseconds(10);
+  
+  digitalWrite(STB,0);
+  delayMicroseconds(15);
+  digitalWrite(STB,1);
+  delayMicroseconds(10);
+  
+  if (addr < 10) 
+    Serial.print(' ');
+    
+  Serial.print(addr);
+  Serial.print(' ');
+  
+  for (int i = 0; i < count; i++) {
+    if ((i%8) == 0) Serial.print(' ');
+    int i = digitalRead(SDOUT);
+    Serial.print(i);
+    digitalWrite(SCLK,1);
+    delayMicroseconds(15);
+    digitalWrite(SCLK,0);
+    delayMicroseconds(15);
+  }
+  
+  Serial.println();
+}
+
+
+void loop() {
+  for (byte addr = 0; addr < rows; addr++) {
+     readrow(addr,bitsperrow);
+  }
+  
+  readrow(cfg,cfgbits);
+  readrow(pes,pesbits);
+  readrow(ues,uesbits);
+  
+  
+  Serial.println();
+  while(Serial.read() == -1); 
+}

@@ -1,0 +1,55 @@
+Name     68008 Glue logic, external flip flop;
+PartNo   00;
+Date     5/21/2014;
+Revision 01;
+Designer zigzagjoe;
+Company  ;
+Assembly ;
+Location ;
+Device   g22v10;
+
+$define ~ !
+$define | #
+
+/* *************** INPUT PINS *********************/
+PIN    1 = DS                        ; /*                                 */ 
+PIN    2 = AS                        ; /*                                 */ 
+PIN    3 = RW                        ; /*                                 */ 
+PIN    4 = A19                        ; /*                                 */ 
+PIN    5 = A18                        ; /*                                 */ 
+PIN    6 = A2                        ; /*                                 */ 
+PIN    7 = FC0                        ; /*                                 */ 
+PIN    8 = FC1                        ; /*                                 */ 
+PIN    9 = FC2                        ; /*                                 */ 
+PIN    10 = BOOTED                         ; /*                                 */ 
+PIN    11 = DTACKIN                         ; /*                                 */ 
+
+/* PIN 12 = GROUND */
+/* PIN 24 = VCC */
+
+/* *************** OUTPUT PINS *********************/
+PIN    14 = R; /*                                 */ 
+PIN    15 = W                        ; /*                                 */ 
+PIN    16 = ROMCS                        ; /*                                 */ 
+PIN    17 = RAMCS                        ; /*                                 */ 
+PIN    18 = IOCS                        ; /*                                 */ 
+PIN    19 = IACK                        ; /*                                 */ 
+PIN    20 = DTACK                                                ;                                 
+PIN    21 = BOOTED_SET;
+
+PIN    13 = SLOW_DTACK_CS;
+PIN    22 = SLOW_DTACK_T;
+
+SLOW_DTACK = DTACK_GEN_CS | ~DTACK_GEN_D;
+
+BOOTED_SET = ~(A19 & ~AS);
+
+R = DS | ~RW;
+W = DS | RW;
+
+IOCS = AS | ~(A19 & A18);
+RAMCS = AS | A19 | ~BOOTED;
+ROMCS = AS | (BOOTED & ~A19) | (A19 & A18);
+IACK = AS | ~(FC0 & FC1 & FC2 & A2);
+DTACK = DS | (RAMCS & ROMCS & DTACKIN & SLOW_DTACK);
+

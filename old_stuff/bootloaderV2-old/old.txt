@@ -1,0 +1,47 @@
+		
+puthexlong:
+	move.l D0, -(SP)
+
+	swap D0
+	jsr puthexword
+	
+	move.l (SP), D0
+	and.l #$FFFF, D0
+	jsr puthexword
+
+	move.l (SP)+, D0
+	rts
+		
+puthexword:
+	move.w D0, -(SP)
+
+	lsr.w #8, D0
+	jsr puthexbyte
+	
+	move.w (SP), D0
+	and.w #$FF, D0
+	jsr puthexbyte
+
+	move.w (SP)+, D0
+	rts
+
+puthexbyte:
+	move.w D0, -(SP)
+	
+	movea #hexchars, A0
+	
+	lsr #4, D0				; shift top 4 bits over
+	and.w #$F, D0
+	move.b (A0,D0.W), D0    ; look up char
+	jsr putb
+	
+	move.w (SP), D0			
+	and.w #$F, D0			; take bottom 4 bits
+	move.b (A0,D0.W), D0	; look up char
+	jsr putb
+	
+	move.w (SP)+, D0		; restore byte
+	
+	rts
+	
+hexchars dc.b "0123456789ABCDEF"
