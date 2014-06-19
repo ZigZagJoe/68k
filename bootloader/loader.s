@@ -7,13 +7,13 @@
 
 | display a constant byte
 .macro TILDBG byte
-     move.b #\byte, (TIL311)
+     move.b #0x\byte, (TIL311)
 .endm    
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | addresses of IO devices 
 .set MFP,    0xC0000           | MFP address
-.set TIL311, 0xC8000           | TILDBG311 address
+.set TIL311, 0xC8000           | TIL311 address
 
 | MFP registers
 .set GPDR,  MFP + 0x01         | gpio data
@@ -39,7 +39,7 @@ _ipc: .long _boot              | initial program counter
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader entry point
 _boot:
-    TILDBG 0x10                | display greeting
+    TILDBG 10                | display greeting
     move.l #stack_pointer, %sp | set stack pointer (maybe we were soft reset)
     
     | reset UART and any other devices attached to /RESET
@@ -50,20 +50,20 @@ _boot:
     movea.l #reloc_addr, %a1   | load relocation address into %a1
     move.w #(reloc_sz/4), %d0  | load number of longs to copy (+1) into %d0 
                      
-    TILDBG 0x1C                | debugging message
+    TILDBG 1C                | debugging message
    
 cpy_reloc:
     move.l (%a0)+, (%a1)+      | *a1++ = *a0++
     dbra %d0, cpy_reloc        | branch if (--d0) != -1
 
-    TILDBG 0xCD                | debugging message
+    TILDBG CD                | debugging message
    
     jmp reloc_addr             | jump to relocated code
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader code in RAM
 reloc: 
-    TILDBG 0xC0                | debugging message
+    TILDBG C0                | debugging message
     
     | enable baud rate generator at 28800
     move.b #1, (TCDR)
@@ -76,7 +76,7 @@ reloc:
     move.b #1, (TSR)           | transmitter enable
 
 reset_addr:
-    TILDBG 0xB1                | display greeting
+    TILDBG B1                | display greeting
     movea #boot_addr, %a0      | load boot address into %a0
 
     movea.l %a0, %a6           | save boot address
@@ -111,13 +111,13 @@ cmd_byte:
     cmp.b #0xCF, %d0           | is it the command to reset address?
     beq reset_addr
     
-    TILDBG 0xBC                | not a recognized command
+    TILDBG BC                | not a recognized command
     bra loop
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | boot command
 boot:
-    TILDBG 0xBB                | display boot code
+    TILDBG BB                | display boot code
     jmp (%a6)                  | jump to the code loaded into RAM
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
