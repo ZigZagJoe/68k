@@ -51,7 +51,7 @@
 .global _soft_reset
 
 _soft_reset:
-	move.l 0, %sp
+	move.l 0x80000, %sp
 	jmp 0x80008
 
 exception_address_err:

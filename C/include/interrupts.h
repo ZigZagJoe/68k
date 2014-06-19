@@ -63,7 +63,8 @@ void soft_reset();
 // supervisor mode soft reset
 extern void _soft_reset();
 
-// vector table at base of RAM
+// vector table, at base of RAM
+// actually defined in link script as 0
 extern __vector_table __vectors __attribute__ ((aligned (2)));
 
 #endif
