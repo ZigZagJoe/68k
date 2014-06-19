@@ -10,7 +10,7 @@
 uint8_t failures[20];
 
 uint32_t crc_update (uint32_t inp, uint8_t v) {
-	return ROL(inp ^ v, (v&1)+1);
+	return ROL(inp ^ v, 1);
 }
 
 uint32_t base;

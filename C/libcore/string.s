@@ -15,9 +15,7 @@ qcrc_update:
 	move.b 11(%sp), %d1
 	
 	eor.b %d1, %d0
-	andi.b #1, %d1
-	addi.b #1, %d1
-	rol.l %d1, %d0
+	rol.l #1, %d0
 	
 	rts
 	

@@ -29,6 +29,10 @@
 .set reloc_addr, 0x1000
 .set boot_addr, 0x2000
 
+| command codes
+.set CMD_BOOT, 0xCB
+.set CMT_RESET, 0xCF
+
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | boot stack pointer and program counter
 | comment these out if testing in RAM...
@@ -41,9 +45,9 @@ _ipc: .long _boot              | initial program counter
 _boot:
     TILDBG BA
     
-	ori.w #0x700, %sr		   | disable external interrupts 
-	                           | may die here if not supervisor (user program jumped)
-	
+    ori.w #0x700, %sr          | disable external interrupts 
+                               | may die here if not supervisor (user program jumped)
+    
     TILDBG 10                  | display greeting
     move.l #stack_pointer, %sp | set stack pointer (maybe we were soft reset)
     
@@ -82,10 +86,12 @@ reloc:
 
 reset_addr:
     TILDBG B1                  | bootloader ready!
-  
+   
+    | initialize bootloader state
     movea #boot_addr, %a0      | load boot address into %a0
     movea.l %a0, %a6           | save boot address
-    clr.l %d7                  | bytecount = 0
+    clr.l %d6                  | bytecount = 0
+    move.l #0xDEADC0DE, %d7    | init qcrc
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | main bootloader loop
@@ -104,16 +110,20 @@ loop:
     move.b %d0, (UDR)          | not a command, echo it back
     move.b %d0, (%a0)+         | store to address, postincrement
 
-    addi.l #1, %d7             | bytecount ++
+    addi.l #1, %d6             | bytecount ++
+    
+    eor.b %d0, %d7             | qcrc update
+    rol.l #1, %d7
+    
     bra loop                   | and back to start we go
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | execute commmand byte in %d0
 cmd_byte:
-    cmp.b #0xCB, %d0           | is it the command to boot?
+    cmp.b #CMD_BOOT, %d0       | is it the command to boot?
     beq boot
 
-    cmp.b #0xCF, %d0           | is it the command to reset address?
+    cmp.b #CMD_RESET, %d0      | is it the command to reset address?
     beq reset_addr
     
     TILDBG BC                  | not a recognized command
