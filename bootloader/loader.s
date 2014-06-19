@@ -34,7 +34,7 @@ _ipc: .long 0x80008            | initial program counter
 
 _boot:
     move.b #0x10, (TIL311)     | display greeting
-    move.l #stack_pointer, %sp | set stack pointer (maybe soft reset)
+    move.l #stack_pointer, %sp | set stack pointer (maybe we were soft reset)
     
     | reset UART and any other devices attached to /RESET
     reset
@@ -42,10 +42,8 @@ _boot:
     | relocate into RAM
     lea (reloc, %pc), %a0	   | load address of reloc into %a0, position indep.
     movea.l #0x1000, %a1       | load relocation address into %a1
-    
- 	| put number of longs to copy into %d0 
-    move.w #((reloc_sz / 4) - 1), %d0            
-    						   
+ 	move.w #(reloc_sz/4), %d0  | load number of longs to copy (+1) into %d0 
+            		   
     move.b #0x1C, (TIL311)     | debugging message
    
 cpy_reloc:
@@ -57,7 +55,8 @@ cpy_reloc:
     jmp 0x1000                 | jump to relocated code
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| bootloader code in RAM. Use relative jumps only.
+| bootloader code in RAM
+
 reloc: 
     move.b #0xC0, (TIL311)     | debugging message
     
@@ -90,7 +89,7 @@ loop:
     cmp.b #0xCB, %d0           | is it the command to boot?
     beq boot
 
-    cmp.b #0xCF, %d0            | is it the command to reset address?
+    cmp.b #0xCF, %d0           | is it the command to reset address?
     beq reset
     
     move.b #0xBC, (TIL311)     | not a recognized command
