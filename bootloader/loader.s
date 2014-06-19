@@ -5,10 +5,14 @@
 .align 2
 .global _boot
 
+.macro TILDBG byte
+	 move.b #\byte, (TIL311)     | display greeting
+.endm	
+
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | addresses of IO devices 
 .set MFP,    0xC0000           | MFP address
-.set TIL311, 0xC8000           | til311 address
+.set TIL311, 0xC8000           | TILDBG311 address
 
 | MFP registers
 .set GPDR,  MFP + 0x01         | gpio data
@@ -19,8 +23,10 @@
 .set TCDR,  MFP + 0x23         | timer c data
 .set UCR,   MFP + 0x29         | uart ctrl
 
-| default stack pointer. grows down in RAM!
+| default stack pointer. grows down in RAM
 .set stack_pointer, 0x80000
+.set reloc_addr, 0x1000
+.set boot_addr, 0x2000
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | boot stack pointer and program counter
@@ -32,7 +38,7 @@ _ipc: .long _boot              | initial program counter
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader entry point
 _boot:
-    move.b #0x10, (TIL311)     | display greeting
+    TILDBG 0x10                   | display greeting
     move.l #stack_pointer, %sp | set stack pointer (maybe we were soft reset)
     
     | reset UART and any other devices attached to /RESET
@@ -40,23 +46,23 @@ _boot:
     
     | relocate into RAM
     lea (reloc, %pc), %a0      | load address of reloc into %a0, position indep.
-    movea.l #0x1000, %a1       | load relocation address into %a1
+    movea.l #reloc_addr, %a1   | load relocation address into %a1
     move.w #(reloc_sz/4), %d0  | load number of longs to copy (+1) into %d0 
                      
-    move.b #0x1C, (TIL311)     | debugging message
+    TILDBG 0x1C                   | debugging message
    
 cpy_reloc:
     move.l (%a0)+, (%a1)+      | *a1++ = *a0++
     dbra %d0, cpy_reloc        | branch if (--d0) != -1
 
-    move.b #0xCD, (TIL311)     | debugging message
+    TILDBG 0xCD                   | debugging message
    
-    jmp 0x1000                 | jump to relocated code
+    jmp reloc_addr             | jump to relocated code
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader code in RAM
 reloc: 
-    move.b #0xC0, (TIL311)     | debugging message
+    TILDBG 0xC0                   | debugging message
     
     | enable baud rate generator at 28800
     move.b #1, (TCDR)
@@ -68,10 +74,13 @@ reloc:
     move.b #1, (RSR)           | receiver enable
     move.b #1, (TSR)           | transmitter enable
 
-reset:
-    movea #0x2000, %a0         | load base address into %a0
-    move.b #0xB1, (TIL311)     | display greeting
-
+reset_addr:
+    TILDBG 0xB1                   | display greeting
+ 	movea #boot_addr, %a0      | load boot address into %a0
+ 	
+    movea.l %a0, %a6           | save boot address
+	clr.l %d7                  | bytecount = 0
+	
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | main bootloader loop
 loop:
@@ -89,6 +98,7 @@ loop:
     move.b %d0, (UDR)          | not a command, echo it back
     move.b %d0, (%a0)+         | store to address, postincrement
 
+	addi.l #1, %d7			   | bytecount ++
     bra loop                   | and back to start we go
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -98,16 +108,16 @@ cmd_byte:
     beq boot
 
     cmp.b #0xCF, %d0           | is it the command to reset address?
-    beq reset
+    beq reset_addr
     
-    move.b #0xBC, (TIL311)     | not a recognized command
+    TILDBG 0xBC                   | not a recognized command
     bra loop
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | boot command
 boot:
-    move.b #0xBB, (TIL311)     | display char for debugging
-    jmp 0x2000                 | jump to the code loaded into RAM
+    TILDBG 0xBB                   | display boot code
+    jmp (%a6)                  | jump to the code loaded into RAM
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
 | get size of relocated section
