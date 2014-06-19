@@ -48,6 +48,11 @@
 .global exception_generic
 .global exception_privilege
 .global user_dump
+.global _soft_reset
+
+_soft_reset:
+	move.l 0, %sp
+	jmp 0x80008
 
 exception_address_err:
 	move.w #0xAE, -(%SP)
@@ -329,7 +334,7 @@ check_boot:
 	btst #0, (GPDR)          | gpio data register - test input 0. Z=!bit
     bne retu              	 | gpio is 1, not bootoclock
      
-	jmp 0x80008
+	bra _soft_reset
 retu:
 	rts
 	

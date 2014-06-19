@@ -183,6 +183,7 @@ _exit_cmd_check:                        | spin until reset command is received
 	btst #0, (GPDR)                     | gpio data register - test input 0. Z=!bit
     bne _exit_cmd_check                 | gpio is 1, not bootoclock
      
+    move.l 0, %sp						| restore SP
 	jmp 0x80008				            | jump to bootloader 
 
 | user initiated exit

@@ -57,6 +57,12 @@ extern void exception_privilege(void);
 // sets up addr, bus, illegal inst, bad isr, spurious int, trap 0 exceptions
 void default_interrupts();
 
+// user mode soft reset (calls _soft_reset via trap 14)
+void soft_reset();
+
+// supervisor mode soft reset
+extern void _soft_reset();
+
 // vector table at base of RAM
 extern __vector_table __vectors __attribute__ ((aligned (2)));
 

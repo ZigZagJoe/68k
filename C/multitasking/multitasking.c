@@ -162,5 +162,7 @@ int main() {
   	   
   	puts("Tasks started, main() returning.\n");	
 	
+	soft_reset();
+	
   	return 0;
 }

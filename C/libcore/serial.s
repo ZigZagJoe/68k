@@ -15,6 +15,8 @@
 .global putc_sync
 .global serial_available
 
+.extern _soft_reset
+
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | fast serial ISR: read a byte from UART, save in rx_buffer
 | 19% cpu at 6.144mhz and 38400 baud on 68008
@@ -63,7 +65,7 @@ _charRecISR_safe:
    btst #0, (GPDR)              | is GPIO 0 low?
    bne _not_reset
    
-   jmp 0x80008                  | return to bootloader
+   jmp soft_reset               | return to bootloader
    
 _not_reset:
    move.l #rx_buffer, %A0
