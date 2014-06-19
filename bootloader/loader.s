@@ -39,6 +39,11 @@ _ipc: .long _boot              | initial program counter
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader entry point
 _boot:
+    TILDBG BA
+    
+	ori.w #0x700, %sr		   | disable external interrupts 
+	                           | may die here if not supervisor (user program jumped)
+	
     TILDBG 10                  | display greeting
     move.l #stack_pointer, %sp | set stack pointer (maybe we were soft reset)
     
@@ -65,7 +70,7 @@ cpy_reloc:
 reloc: 
     TILDBG C0                  | debugging message
     
-    | enable baud rate generator at 28800
+    | set up timer C as baud rate generator at 28800 (3.6864mhz crystal)
     move.b #1, (TCDR)
     andi.b #0xF, (TCDCR)
     ori.b #0x16, (TCDCR)
@@ -76,9 +81,9 @@ reloc:
     move.b #1, (TSR)           | transmitter enable
 
 reset_addr:
-    TILDBG B1                  | display greeting
+    TILDBG B1                  | bootloader ready!
+  
     movea #boot_addr, %a0      | load boot address into %a0
-
     movea.l %a0, %a6           | save boot address
     clr.l %d7                  | bytecount = 0
     
