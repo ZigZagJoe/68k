@@ -520,7 +520,7 @@ _read_ch:
 	cmp.b #0, %D0
 	jeq _str_done
 	
-	jsr putc
+	jsr putc_sync
 	bra _read_ch
 	
 _str_done:
@@ -528,7 +528,7 @@ _str_done:
 	move.w (%SP)+, %D0
 	rts
 	
-putc:
+putc_sync:
 	btst #7, (TSR)           | test buffer empty (bit 7)
     beq putc                 | Z=1 (bit = 0) ? branch
 	move.b %D0, (UDR)		 | write char to buffer
@@ -543,12 +543,12 @@ puthexbyte:
 	lsr #4, %D0				    | shift top 4 bits over
 	and.w #0xF, %D0
 	move.b (%A0, %D0.W), %D0    | look up char
-	jsr putc
+	jsr putc_sync
 	
 	move.w (%SP), %D0			
 	and.w #0xF, %D0			    | take bottom 4 bits
 	move.b (%A0, %D0.W), %D0	| look up char
-	jsr putc
+	jsr putc_sync
 	
 	move.w (%SP)+, %D0		    | restore byte
 	move.l (%SP)+, %A0		    | restore address

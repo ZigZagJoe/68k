@@ -139,7 +139,7 @@ void breeder_task() {
 }
 
 void test_task(int arg1, int arg2, int arg3) {
-	printf("Test task: %x %x %x\n",arg1,arg2,arg3);
+	printf("Test task: %x %x %x\n", arg1, arg2, arg3);
 }
 
 int main() {
@@ -150,7 +150,7 @@ int main() {
 	
 	puts("Hello! Starting tasks.\n");
 
-	create_task(&test_task,3, 0x8BADC0DE, 0xDEADBEEF, 0x12345678);	
+	create_task(&test_task, 3, 0x8BADC0DE, 0xDEADBEEF, 0x12345678);	
 	create_task(&task_time,0);
     create_task(&task_echo,0);
     create_task(&task_quiet,0);
@@ -161,8 +161,6 @@ int main() {
   		create_task(&breeder_task,0);*/
   	   
   	puts("Tasks started, main() returning.\n");	
-
-	abort();
 	
   	return 0;
 }

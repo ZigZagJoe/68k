@@ -58,6 +58,6 @@ extern void exception_privilege(void);
 void default_interrupts();
 
 // vector table at base of RAM
-extern __vector_table __vectors;
+extern __vector_table __vectors __attribute__ ((aligned (2)));
 
 #endif

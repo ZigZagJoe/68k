@@ -27,7 +27,7 @@ extern task_struct_t * _active_task;
 #define CURRENT_TASK_ID (_active_task->ID)
 #define abort() exit(0xAB)
 
-// create a new task. returns 0 on failure or a task_struct
+// create a new task. returns NULL on failure or a task_t
 task_t create_task(void *task, uint16_t argc, ...);
 
 // voluntarily yield control to next task

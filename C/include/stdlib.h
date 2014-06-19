@@ -8,6 +8,7 @@ extern uint8_t *__heap_start;
 extern uint8_t *__heap_end;
 extern uint8_t *__stack_start;
 extern uint8_t *__stack_end;
+extern uint8_t *__data_start;
 
 #define DELAY(X) __asm volatile("move.l %0,%%d0\n" \
                                 "1: subi.l #1, %%d0\n" \
