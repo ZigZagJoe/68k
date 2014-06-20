@@ -1,0 +1,88 @@
+Name     REV5-B-68008-Glue;
+PartNo   00;
+Date     6/19/2014;
+Revision 5b;
+Designer zigzagjoe;
+Company  ;
+Assembly ;
+Location ;
+Device   g22v10;
+
+$define ~ !
+$define | #
+
+/* input pins */
+PIN    1 = DS                         ; /* /DS from 68008                  */ 
+PIN    2 = AS                         ; /* /AS from 68008                  */ 
+PIN    3 = RW                         ; /* R/W- from 68008                 */ 
+PIN    4 = A19                        ; /* Address bus bit 19              */ 
+PIN    5 = A18                        ; /* Address bus bit 18              */ 
+PIN    6 = A2                         ; /* Address bus bit 2               */ 
+PIN    7 = A3                         ; /* Address bus bit 3               */ 
+PIN    8 = FC0                        ; /* Processor status 1              */ 
+PIN    9 = FC1                        ; /* Processor status 2              */ 
+PIN    10 = FC2                       ; /* Processor status 3              */ 
+PIN    11 = BOOT_R                    ; /* /RESET from TL7705 for BOOTED   */ 
+/* PIN 12 GROUND */
+PIN    13 = DTACKIN                   ; /* DTACK input, 68901 and others'  */ 
+
+/* output pins */
+PIN    14 = RD						  ; /* /RD strobe (memory, io devices) */ 
+PIN    15 = WR                        ; /* /WR strobe (memory, io devices) */ 
+PIN    16 = ROMCS                     ; /* CS to FLASH ROM                 */ 
+PIN    17 = RAMCS                     ; /* CS to RAM                       */ 
+PIN    18 = IOCS                      ; /* CS to 74LS138 IO decoder        */ 
+PIN    19 = IACK2                     ; /* IACK for IRQ 2 (68901 MFP)      */ 
+PIN    20 = IACK5                     ; /* IACK for IRQ 5                  */ 
+PIN    21 = IACK7                     ; /* IACK for IRQ 7 - NMI            */ 
+PIN    22 = BOOTED                    ; /* BOOTED (internal use only)      */
+PIN    23 = DTACK                     ; /* DTACK out to 68008              */                             
+/* PIN 24 VCC 	*/
+
+/* ############## EQUATIONS ############## */
+
+/* ##### BOOTED flip flop ##### */
+/* /BOOT_S is set, /BOOT_R is reset, and BOOTED is output */
+/* BOOTED is not used outside of the GAL, but you can't 
+   have a recursive equation without the feedback path 
+   from an output pin into the input logic matrix
+   
+   This generates the BOOTED signal, which is used for having the ROM respond
+   to the 68008 reading the initial SP and PC from addresses 0 and 4. As the 
+   initial PC will always be located in flash, a read using address line 19
+   will always be generated, and thus will suffice as a trigger for setting 
+   the BOOTED flag, until the next external reset by the TL7705.   */
+   
+BOOT_S = ~(A19 & ~AS);
+BOOTED   = ~(BOOT_S & BOOTED_I);
+BOOTED_I = ~(BOOT_R & BOOTED);
+
+/* ##### Interrupt ACKnowledge for 68901 ##### */
+/* FC0-2 all being low with AS asserted indicates interrupt being services
+   The 68000/8 will have emitted the interrupt number on address lines A1-3
+   As the 68901 is always going to be A2, just check that. This could easily
+   be expanded to support a second exclusive interrupt like this, just take A3
+   as an input for IRQ5_IACK and connect its /IRQ to IPL0/2 - irq 5 when asserted */
+   
+IACK2 = AS | ~(FC0 & FC1 & FC2 & ~A3 &  A2);
+IACK5 = AS | ~(FC0 & FC1 & FC2 &  A3 & ~A2);
+IACK7 = AS | ~(FC0 & FC1 & FC2 &  A3 &  A2);
+
+/* ##### read/write strobes ##### */
+/* these are read/write strobes for intel-bus devices and memory */
+
+RD = DS | ~RW;
+WR = DS | RW;
+
+/* ##### CS decoding ##### */
+/* categorizes accesses into either RAM, ROM, or IO accesses, taking into account 
+   the BOOTED flag which makes the ROM respond to addresses 0-8 on initial boot */
+   
+IOCS = AS | ~(A19 & A18);
+RAMCS = AS | A19 | ~BOOTED;
+ROMCS = AS | (BOOTED & ~A19) | (A19 & A18);
+
+/* ##### DTACK generation ##### */
+
+/* RAM and ROM have no wait states */
+DTACK = DS | (RAMCS & ROMCS & DTACKIN);

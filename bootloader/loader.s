@@ -31,7 +31,7 @@
 
 | command codes
 .set CMD_BOOT, 0xCB
-.set CMT_RESET, 0xCF
+.set CMD_RESET, 0xCF
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | boot stack pointer and program counter
