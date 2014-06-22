@@ -245,7 +245,7 @@ int main (int argc, char ** argv) {
                 	return 1;
                 }
             
-            if ((((float)(clock() - start)) / CLOCKS_PER_SEC) > 0.25F) 
+            if ((((float)(clock() - start)) / CLOCKS_PER_SEC) > 0.25F || (rbi > size*2)) 
             	break;
         }
         
