@@ -19,7 +19,7 @@
 
 | default stack pointer. grows down in RAM
 .set stack_pointer, 0x80000
-.set reloc_addr, 0x1000
+.set reloc_addr,    0x1000
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | boot stack pointer and program counter
@@ -30,6 +30,7 @@
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader entry point
+| this code must run in a PIC manner
 _boot:
     TILDBG BA
 
@@ -42,8 +43,8 @@ _boot:
     | reset UART and any other devices attached to /RESET
     reset
     
-    | load address of relocated section into ram, relative to %PC (PIC code)
-    lea (relocated, %pc), %a0 
+    | load address of start of program, relative to %PC (PIC code)
+    lea (_boot, %pc), %a0 
                                        
     movea.l #reloc_addr, %a1   | load relocation target address into %a1
     move.w #__reloc_size, %d0
@@ -56,5 +57,5 @@ cpy_reloc:
 
     TILDBG CD                  | debugging message
                
-    jmp reloc_addr             | jump to relocated code
+    jmp relocated              | absolute jump to relocated code
     

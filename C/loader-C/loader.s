@@ -110,7 +110,7 @@ cmd_byte:
 do_parse:
     TILDBG D1
     
-    move.l #0xD0E88100, %d0    | tell host we are initiating write
+    move.l #0xD0E881CC, %d0    | tell host we are initiating write
     jsr putl
     
     move.b %d5, %d0            | write mode
@@ -119,7 +119,7 @@ do_parse:
     | push arguments
     move.l %d5, -(%sp)         | write mode
     move.l %d6, -(%sp)         | byte count
-    move.l %a6, -(%sp)         | byte addr
+    move.l %a5, -(%sp)         | byte addr
     
     jsr parse_srec             | enter c
     
@@ -127,14 +127,14 @@ do_parse:
     add.l #12, %sp
     
     move.w %d0, %d1            | save return code
-    move.w #0xDDE2, %d0        | write sync word #2
+    move.w #0xC0DE, %d0        | write sync word #2
     jsr putw            
     
-    move.w %d1, %d0            | write return code
-    jsr putw
-    
-    clr.b %d0                  | trailing null
+    move.b %d1, %d0            | write return code
     jsr putc
+    
+    move.w #0xEF00, %d0        | trailing null
+    jsr putw
     
     bra loop
     
@@ -171,7 +171,7 @@ get_qcrc:
 | boot command
 boot:
     TILDBG BB                  | display boot code
-    jmp (%a6)                  | jump to the code loaded into RAM
+    jmp (%a5)                  | jump to the code loaded into RAM
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | functions
@@ -179,7 +179,7 @@ boot:
 | initialize registers with load address in %d0
 init_vars:
     movea.l %d0, %a0           | set address to load to
-    movea.l %d0, %a6           | save boot address
+    movea.l %d0, %a5           | save boot address
     clr.l %d6                  | bytecount = 0
     clr.l %d5                  | flash writes disallowed
     move.l #0xDEADC0DE, %d7    | init qcrc

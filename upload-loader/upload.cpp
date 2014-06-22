@@ -190,6 +190,7 @@ int main (int argc, char ** argv) {
         
         // reset board
         command(fd, CMD_RESET);
+        msleep(200);
         serflush(fd);
         
         if (go_hiram) {

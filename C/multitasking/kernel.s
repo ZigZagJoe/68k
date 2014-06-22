@@ -241,15 +241,14 @@ _swap_task:
 	| save context into active task struct
     move.l %a0, -(%sp) 				    | save %a0
     move.l (_active_task), %a0     
-    move.l (%sp)+,   58(%a0)            | %a0       4 bytes 
-	
-	movem.l %d0-%d7, 26(%a0)            | %d0-%d7  32 bytes
-	movem.l %a1-%a6, 62(%a0)            | %a1-%a6  24 bytes
+   
+	movem.l %d0-%d7/%a0-%a6, 26(%a0)    | %d0-%d7, %a0-%a6  60 bytes   NOTE: %a0 is invalid
+	move.l (%sp)+,   58(%a0)            | %a0                4 bytes 
 	
 	move.l %usp, %a1
-	move.l %a1,      86(%a0)            | %sp       4 bytes
-	move.l 2(%sp),   90(%a0)            | PC        4 bytes
-	move.w (%sp),    94(%a0)            | flags     2 bytes
+	move.l %a1,      86(%a0)            | %sp                4 bytes
+	move.l 2(%sp),   90(%a0)            | PC                 4 bytes
+	move.w (%sp),    94(%a0)            | flags              2 bytes
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | find the next runnable task and run it 
@@ -274,14 +273,12 @@ _run_task:
     move.l %a0, (_active_task)
 
 	| restore context from structure pointed by %a0
-    move.w 94(%a0), (%sp)               | flags     2 bytes
-	move.l 90(%a0),2(%sp)               | PC        4 bytes
+    move.w 94(%a0), (%sp)               | flags              2 bytes
+	move.l 90(%a0),2(%sp)               | PC                 4 bytes
 	move.l 86(%a0), %a1
-	move.l %a1, %usp                    | %sp       4 bytes
-	movem.l 62(%a0), %a1-%a6            | %a1-%a6  24 bytes
-	movem.l 26(%a0), %d0-%d7            | %d0-%d7  32 bytes
-	move.l 58(%a0), %a0                 | %a0       4 bytes
-	
+	move.l %a1, %usp                    | %sp                4 bytes
+	movem.l 26(%a0), %d0-%d7/%a0-%a6    | %d0-%d7, %a0-%a6  60 bytes
+
 	clr.b (_swap_in_progress)	
 	bclr.b #1, (GPDR)                   | turn off the LED
 	

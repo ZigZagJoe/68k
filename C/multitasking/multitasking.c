@@ -148,6 +148,8 @@ int main() {
 	lcd_init();
 	serial_start(SERIAL_SAFE);
 	
+	while(true);
+	
 	puts("Hello! Starting tasks.\n");
 
 	create_task(&test_task, 3, 0x8BADC0DE, 0xDEADBEEF, 0x12345678);	

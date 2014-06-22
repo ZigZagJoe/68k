@@ -7,21 +7,16 @@ MEMORY {
 }
 
 SECTIONS {
-	.text (0x2000) : {
+	.text (0x1000) : {
 		reloc.o(.text)
 	} > RAM
 	
-	.text (0x1000) : ALIGN(0x2) {
+	.body : ALIGN(0x10) {
 	    __payload_start = .;
 		loader.o(.text)
-	} > RAM
-	
-	.text : ALIGN(0x2) {
 		*(.text)
-	} > RAM
-
-	.data : ALIGN(0x2) {
 		*(.data)
+		*(.rodata.*)
 		__payload_end = .;	
 	} > RAM
 }

@@ -32,10 +32,11 @@ SRC_C=$(wildcard *.c)
 SRC_S=$(wildcard *.s)
 
 OBJS=$(SRC_C:.c=.o) $(SRC_S:.s=.o)
+LSTS=$(SRC_C:.c=.lst)
 
 # clear suffixes
 .SUFFIXES:
-.SUFFIXES: .s .o .c
+.SUFFIXES: .s .o .c .lst
 
 ####### TARGETS ########
 
@@ -62,6 +63,8 @@ $(BIN): $(OBJS)
 	@echo -n 'Binary size: '
 	@stat -f %z $(PRJ).bin | sed 's/$$/ bytes/'
 	
+listing: $(LSTS)
+
 .s.o:
 	$(AS) $(ASFLAGS) -o $@ $<
 	
