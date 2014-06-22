@@ -7,7 +7,7 @@ MEMORY {
 }
 
 SECTIONS {
-	.text (0x80000) : {
+	.text (0x2000) : {
 		loader.o(.text)
-	} > ROM
+	} > RAM
 }

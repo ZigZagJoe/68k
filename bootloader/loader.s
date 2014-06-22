@@ -32,13 +32,14 @@
 | command codes
 .set CMD_BOOT, 0xCB
 .set CMD_RESET, 0xCF
+.set CMD_QCRC, 0xCC
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | boot stack pointer and program counter
 | comment these out if testing in RAM...
 
-_isp: .long stack_pointer      | initial spvr stack pointer
-_ipc: .long _boot              | initial program counter 
+|_isp: .long stack_pointer      | initial spvr stack pointer
+|_ipc: .long _boot              | initial program counter 
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader entry point
@@ -83,7 +84,7 @@ reloc:
     move.b #0b10001000, (UCR)  | /16, 8 bits, 1 stop bit, no parity
     move.b #1, (RSR)           | receiver enable
     move.b #1, (TSR)           | transmitter enable
-
+    
 reset_addr:
     TILDBG B1                  | bootloader ready!
    
@@ -126,17 +127,69 @@ cmd_byte:
     cmp.b #CMD_RESET, %d0      | is it the command to reset address?
     beq reset_addr
     
+    cmp.b #CMD_QCRC, %d0
+    beq get_qcrc
+    
     TILDBG BC                  | not a recognized command
     bra loop
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
+| boot command
+get_qcrc:
+    TILDBG CC                  | display code
     
+    move.w #0xFCAC, %d0        | intro
+    jsr putw
+    
+    move.l %d7, %d0            | crc data
+    jsr putl                  
+    
+    clr.b %d0                  | tail
+    jsr putc
+    
+    bra loop
+
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | boot command
 boot:
     TILDBG BB                  | display boot code
     jmp (%a6)                  | jump to the code loaded into RAM
 
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
-| get size of relocated section
-.set reloc_sz, . - reloc
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
+| functions
 
+| write long function
+putl:
+	swap %d0
+	jsr putw
+	swap %d0
+	jsr putw
+	rts
+
+| write word function
+putw:
+	move.w %d0, -(%sp)
+
+	lsr.w #8, %d0
+	jsr putc
+	
+	move.w (%sp)+, %d0
+	jsr putc
+
+	rts
+	
+| write byte function
+putc:
+	btst #7, (TSR)           | test buffer empty (bit 7)
+    beq putc                 | Z=1 (bit = 0) ? branch
+	move.b %d0, (UDR)		 | write char to buffer
+	rts
+
+| hang function	
+busyloop:
+    bra busyloop
+	
+#################################################################### 
+# get size of relocated section
+.set reloc_sz, . - reloc
 # EOF loader.s
