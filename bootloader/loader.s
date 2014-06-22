@@ -35,6 +35,7 @@
 .set CMD_RESET, 0xCF
 .set CMD_QCRC, 0xCC
 .set CMD_HIRAM, 0xCE
+.set CMD_SREC, 0xCD
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | boot stack pointer and program counter
@@ -58,7 +59,7 @@ _boot:
     reset
     
     | relocate into RAM
-    lea (reloc, %pc), %a0      | load address of reloc into %a0, position indep.
+    lea (reloc, %pc), %a0      | load address of reloc into %a0, PIC
     movea.l #reloc_addr, %a1   | load relocation address into %a1
     move.w #(reloc_sz/4), %d0  | load number of longs to copy (+1) into %d0 
                      
@@ -72,7 +73,7 @@ cpy_reloc:
    
     jmp reloc_addr             | jump to relocated code
     
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+#####################################################################
 | bootloader code in RAM
 reloc: 
     TILDBG C0                  | debugging message
@@ -122,7 +123,7 @@ loop:
 | execute commmand byte in %d0
 cmd_byte:
     cmp.b #CMD_BOOT, %d0       | is it the command to boot?
-    beq boot
+    beq do_parse
 
     cmp.b #CMD_RESET, %d0      | is it the command to reset address?
     beq reset_addr
@@ -133,9 +134,36 @@ cmd_byte:
     cmp.b #CMD_HIRAM, %d0
     beq go_hiram
     
+    cmp.b #CMD_SREC, %d0
+    beq do_parse
+    
     TILDBG BC                  | not a recognized command
     bra loop
 
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
+| get crc command
+do_parse:
+    TILDBG D1
+    
+    move.l #0xD0E88100, %d0    | tell host we are initiating write
+    jsr putl
+    
+    move.b %d5, %d0            | write mode
+    jsr putc
+
+
+
+    move.w %d0, %d1            | save return code
+    move.w #0xDDE2, %d0        | write sync word #2
+    jsr putw            
+    
+    move.w %d1, %d0            | write return code
+    jsr putw
+    
+    clr.b %d0                  | trailing null
+    jsr putc
+    
+    bra loop
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | get crc command
 go_hiram:
@@ -208,8 +236,7 @@ putc:
     beq putc                 | Z=1 (bit = 0) ? branch
 	move.b %d0, (UDR)		 | write char to buffer
 	rts
-
-	
+    
 #################################################################### 
 # get size of relocated section
 .set reloc_sz, . - reloc

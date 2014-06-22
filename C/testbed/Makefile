@@ -25,7 +25,7 @@ LIBPATHS=-L ../lib -L /Users/zigzagjoe/Documents/68008/deploy/lib/gcc/m68k-elf/4
 CFLAGS  =  -nostartfiles -nostdinc -nostdlib -m68000 -std=c99 -fno-builtin $(INCPATHS)
 
 LDFLAGS =  -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) $(LIBPATHS) --oformat srec
-ASFLAGS = 
+ASFLAGS =  -march=68000 -mcpu=68000
 
 LIBS =  -lcore  -ltime -lgcc
 # -lbeep -lhd44780 -lprintf -lhd44780

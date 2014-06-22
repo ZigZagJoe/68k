@@ -25,19 +25,21 @@ LIBPATHS=-L ../lib -L /Users/zigzagjoe/Documents/68008/deploy/lib/gcc/m68k-elf/4
 CFLAGS  = -O -nostartfiles -nostdinc -nostdlib -m68000 -std=c99 -fno-builtin $(INCPATHS)
 
 LDFLAGS = -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) $(LIBPATHS) --oformat srec
-ASFLAGS = 
+ASFLAGS = -march=68000 -mcpu=68000
 
 LIBS =  -lcore -lgcc -lhd44780 -lbeep
 
 # List of source files
 
-SRCS=$(wildcard *.c)
-OBJS=$(SRCS:.c=.o) startup.o
-LSTS=$(SRCS:.c=.S)
+SRC_C=$(wildcard *.c)
+SRC_S=$(wildcard *.s)
+
+OBJS=$(SRC_C:.c=.o) $(SRC_S:.s=.o) startup.o
+LSTS=$(SRC_C:.c=.lst)
 
 # clear suffixes
 .SUFFIXES:
-.SUFFIXES: .c .o .S
+.SUFFIXES: .c .o .lst .s
 
 ####### TARGETS ########
 
@@ -72,8 +74,11 @@ $(BIN): $(OBJS)
 startup.o:
 	$(AS) $(ASFLAGS) ../startup_ram.S -o startup.o
 	
+.s.o:
+	$(AS) $(ASFLAGS) -o $@ $<
+	
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $<
 	
-.c.S:
+.c.lst:
 	$(CC) $(CFLAGS) -c -S -o $@ $<

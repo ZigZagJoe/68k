@@ -10,4 +10,16 @@ SECTIONS {
 	.text (0x2000) : {
 		loader.o(.text)
 	} > RAM
+	
+	.text : ALIGN(0x2) {
+		__text_start = .;
+		*(.text)
+		__text_end = .;
+	} > RAM
+
+	.data : ALIGN(0x2) {
+		__data_start = .;
+		*(.data)
+		__data_end = .;
+	} > RAM
 }

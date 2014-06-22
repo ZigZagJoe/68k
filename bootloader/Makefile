@@ -18,6 +18,7 @@ OBJCOPY = m68k-elf-objcopy
 
 # Compiler and linker flags
 
+ULFLAGS = -n
 LDFLAGS = -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) --oformat srec
 ASFLAGS = 
 
@@ -45,7 +46,7 @@ open:
 	-open $(SRCS) 
 	
 run:	$(BIN)
-	upload-strapper $(PRJ).bin
+	upload-strapper $(ULFLAGS) $(PRJ).bin
 	
 $(BIN): $(OBJS) 
 	$(LD)  $(OBJS) $(LDFLAGS) $(LIBS) -o $(BIN)

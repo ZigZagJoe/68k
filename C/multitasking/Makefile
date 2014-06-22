@@ -22,7 +22,7 @@ OBJCOPY = m68k-elf-objcopy
 INCPATHS=-I . -I ../include -I /Users/zigzagjoe/Documents/68008/deploy/lib/gcc/m68k-elf/4.2.4/include/
 LIBPATHS=-L ../lib -L /Users/zigzagjoe/Documents/68008/deploy/lib/gcc/m68k-elf/4.2.4/m68000
 
-CFLAGS  = -fno-pic -O3 -nostartfiles -nostdinc -nostdlib -m68000 -std=c99 -fno-builtin $(INCPATHS)
+CFLAGS  = -O3 -nostartfiles -nostdinc -nostdlib -m68000 -std=c99 -fno-builtin $(INCPATHS)
 
 LDFLAGS = -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) $(LIBPATHS) --oformat srec
 ASFLAGS = -march=68000 -mcpu=68000
@@ -74,6 +74,9 @@ $(BIN): $(OBJS)
 	
 startup.o:
 	$(AS) $(ASFLAGS) ../startup_ram.S -o startup.o
+	
+.s.o:
+	$(AS) $(ASFLAGS) -o $@ $<
 	
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $<

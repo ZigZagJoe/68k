@@ -286,7 +286,8 @@ void monitor(int fd) {
             if (isprint(ch) || ch == '\n') {
                 putchar(ch);
             } else {
-                printf("ʘ");
+               // printf("ʘ");
+                 printf ("[0x%02X]", ch&0xFF);
                // fprintf(stderr, "%d\n",ch);
             }
         }

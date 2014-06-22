@@ -23,6 +23,7 @@ uint8_t has_data(int fd);
 #define CMD_BOOT 0xCB
 #define CMD_GETCRC 0xCC
 #define CMD_HIRAM 0xCE
+#define CMD_SREC 0xCD
 
 #define IOSSDATALAT    _IOW('T', 0, unsigned long)
 #define IOSSIOSPEED    _IOW('T', 2, speed_t)
@@ -70,6 +71,7 @@ int main (int argc, char ** argv) {
     bool verbose = false;
     bool term_only = false;
     bool program_reset = false;
+    bool go_hiram = false;
     
     int BAUD_RATE = 28000;
     int BAUD_DELAY = 200;
@@ -190,18 +192,22 @@ int main (int argc, char ** argv) {
         command(fd, CMD_RESET);
         serflush(fd);
         
-        printf("Setting HIRAM... ");
-        fflush(stdout);
+        if (go_hiram) {
         
-        command(fd, CMD_HIRAM);
-        uint32_t ok = readl();
+            printf("Setting HIRAM... ");
+            fflush(stdout);
         
-        if (ok != 0xCE110C00) {
-            printf("Sync error setting HIRAM. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xCE110C00);
-            return 1;
+            command(fd, CMD_HIRAM);
+            uint32_t ok = readl();
+        
+            if (ok != 0xCE110C00) {
+                printf("Sync error setting HIRAM. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xCE110C00);
+                return 1;
+            }
+        
+            printf("OK.\n");
+        
         }
-        
-        printf("OK.\n");
         
         //sergetc(fd); // first junk char from uart
 
@@ -305,7 +311,7 @@ int main (int argc, char ** argv) {
             printf("Verification FAILED with %d errors. Retrying.\n\n",errors);
         } else {
             printf("Upload verified.\nBooting program.\n\n");
-            command(fd, CMD_BOOT);
+            command(fd, CMD_SREC);
         }
     }
     
@@ -348,7 +354,8 @@ void monitor(int fd) {
             if (isprint(ch) || ch == '\n') {
                 putchar(ch);
             } else {
-                printf("ʘ");
+               // printf("ʘ");
+               printf ("[0x%02X]", ch&0xFF);
                // fprintf(stderr, "%d\n",ch);
             }
         }
