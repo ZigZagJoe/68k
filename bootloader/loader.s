@@ -27,12 +27,14 @@
 | default stack pointer. grows down in RAM
 .set stack_pointer, 0x80000
 .set reloc_addr, 0x1000
-.set boot_addr, 0x2000
+.set loram_addr, 0x2000
+.set hiram_addr, 0x40000
 
 | command codes
 .set CMD_BOOT, 0xCB
 .set CMD_RESET, 0xCF
 .set CMD_QCRC, 0xCC
+.set CMD_HIRAM, 0xCE
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | boot stack pointer and program counter
@@ -88,11 +90,9 @@ reloc:
 reset_addr:
     TILDBG B1                  | bootloader ready!
    
-    | initialize bootloader state
-    movea #boot_addr, %a0      | load boot address into %a0
-    movea.l %a0, %a6           | save boot address
-    clr.l %d6                  | bytecount = 0
-    move.l #0xDEADC0DE, %d7    | init qcrc
+    | initialize variables
+    move.l #loram_addr, %d0
+    jsr init_vars
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | main bootloader loop
@@ -130,11 +130,27 @@ cmd_byte:
     cmp.b #CMD_QCRC, %d0
     beq get_qcrc
     
+    cmp.b #CMD_HIRAM, %d0
+    beq go_hiram
+    
     TILDBG BC                  | not a recognized command
     bra loop
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
-| boot command
+| get crc command
+go_hiram:
+    TILDBG 1A
+    
+    move.l #hiram_addr, %d0
+    jsr init_vars
+    
+    move.l #0xCE110C00, %d0
+    jsr putl
+    
+    bra loop
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
+| get crc command
 get_qcrc:
     TILDBG CC                  | display code
     
@@ -158,7 +174,15 @@ boot:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | functions
 
-| write long function
+| initialize registers with load address in %d0
+init_vars:
+    movea.l %d0, %a0           | set address to load to
+    movea.l %d0, %a6           | save boot address
+    clr.l %d6                  | bytecount = 0
+    move.l #0xDEADC0DE, %d7    | init qcrc
+    rts
+    
+| write long to serial
 putl:
 	swap %d0
 	jsr putw
@@ -166,7 +190,7 @@ putl:
 	jsr putw
 	rts
 
-| write word function
+| write word to serial
 putw:
 	move.w %d0, -(%sp)
 
@@ -178,16 +202,13 @@ putw:
 
 	rts
 	
-| write byte function
+| write byte to serial
 putc:
 	btst #7, (TSR)           | test buffer empty (bit 7)
     beq putc                 | Z=1 (bit = 0) ? branch
 	move.b %d0, (UDR)		 | write char to buffer
 	rts
 
-| hang function	
-busyloop:
-    bra busyloop
 	
 #################################################################### 
 # get size of relocated section

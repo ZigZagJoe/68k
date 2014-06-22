@@ -19,9 +19,10 @@ uint8_t has_data(int fd);
 
 #define msleep(x) usleep((x) * 1000)
 
-#define RESET 0xCF
-#define BOOT 0xCB
-#define GETCRC 0xCC
+#define CMD_RESET 0xCF
+#define CMD_BOOT 0xCB
+#define CMD_GETCRC 0xCC
+#define CMD_HIRAM 0xCE
 
 #define IOSSDATALAT    _IOW('T', 0, unsigned long)
 #define IOSSIOSPEED    _IOW('T', 2, speed_t)
@@ -134,9 +135,9 @@ int main (int argc, char ** argv) {
     if (program_reset) {
     	printf("Resetting program...\n");
     	
-    	command(fd, RESET);
+    	command(fd, CMD_RESET);
         serflush(fd);
-        command(fd, BOOT);
+        command(fd, CMD_BOOT);
         
         if (!no_terminal)
        		monitor(fd);
@@ -186,8 +187,22 @@ int main (int argc, char ** argv) {
         programmedOK = true;
         
         // reset board
-        command(fd, RESET);
+        command(fd, CMD_RESET);
         serflush(fd);
+        
+        printf("Setting HIRAM... ");
+        fflush(stdout);
+        
+        command(fd, CMD_HIRAM);
+        uint32_t ok = readl();
+        
+        if (ok != 0xCE110C00) {
+            printf("Sync error setting HIRAM. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xCE110C00);
+            return 1;
+        }
+        
+        printf("OK.\n");
+        
         //sergetc(fd); // first junk char from uart
 
         printf("Uploading...\n");
@@ -255,15 +270,15 @@ int main (int argc, char ** argv) {
             return 1;
         }
         
-        command(fd, GETCRC);
+        command(fd, CMD_GETCRC);
         
         uint16_t intro = readw();
         uint32_t crc = readl();
         uint8_t nul = readb();
         
         if (intro != 0xFCAC || nul != 0) { 
-            printf("Sync error reading CRC. Reset board and try again.\n\n");
-            printf("Error: %s\n",(nul != 0)?"Intro invalid.":"Tail invalid."); 
+            printf("Sync error reading CRC. Reset board and try again.\n");
+            printf("Error: %s\n\n",(nul != 0)?"Intro invalid.":"Tail invalid."); 
             return 1;
         }
         
@@ -290,7 +305,7 @@ int main (int argc, char ** argv) {
             printf("Verification FAILED with %d errors. Retrying.\n\n",errors);
         } else {
             printf("Upload verified.\nBooting program.\n\n");
-            command(fd, BOOT);
+            command(fd, CMD_BOOT);
         }
     }
     

@@ -411,7 +411,7 @@ puthexbyte:
 	move.l %A0, -(%SP)
 	move.w %D0, -(%SP)
 	
-	movea #_hexchars, %A0
+	movea.l #_hexchars, %A0
 	
 	lsr #4, %D0				    | shift top 4 bits over
 	and.w #0xF, %D0
