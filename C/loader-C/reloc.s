@@ -43,11 +43,10 @@ _boot:
     | reset UART and any other devices attached to /RESET
     reset
     
-    | load address of start of program, relative to %PC (PIC code)
-    lea (_boot, %pc), %a0 
+    lea (_boot, %pc), %a0      | load address of start of loader, relative to %PC
                                        
     movea.l #reloc_addr, %a1   | load relocation target address into %a1
-    move.w #__reloc_size, %d0
+    move.w #1023, %d0          | copy full 4kb of bootloader area ((1023+1) * 4)
 
     TILDBG 1C                  | debugging message
    

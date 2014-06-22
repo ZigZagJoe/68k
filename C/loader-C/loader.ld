@@ -12,13 +12,9 @@ SECTIONS {
 	} > RAM
 	
 	.body : ALIGN(0x10) {
-	    __payload_start = .;
-		loader.o(.text)
+	    loader.o(.text)
 		*(.text)
 		*(.data)
 		*(.rodata.*)
-		__payload_end = .;	
 	} > RAM
 }
-
-__reloc_size = (__payload_end - __payload_start) / 4;
