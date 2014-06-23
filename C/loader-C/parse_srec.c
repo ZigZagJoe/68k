@@ -129,7 +129,11 @@ uint8_t write(uint32_t addr, uint8_t byte) {
     return 0;
 }
 
-uint8_t parseSREC(bool armed) {
+uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed) {
+    sz = buffer_len;
+    flags = fl;
+    ptr = buffer;
+    
     pos = 0;
     errno = 0;
     entry_point = 0;
@@ -156,7 +160,7 @@ uint8_t parseSREC(bool armed) {
     // number of address bytes for each record type
     const uint8_t addr_len[] = {2,2,3,4,0,2,3,4,3,2};
     
-    while(true) {
+    while(1) {
         rec_cnt++;
         
         Sc = readch();  // if not a S, bad news
@@ -246,17 +250,14 @@ uint8_t handle_srec(uint8_t * start, uint32_t len, uint8_t fl) {
     //mem_dump(start, len);
      
     //printf("start=0x%x, len=0x%x, flags=0x%x\n", start, len, flags);
-    sz = len;
-    flags = fl;
-    ptr = start;
    
     // do sanity check parse run
-    uint8_t ret = parseSREC(false);
+    uint8_t ret = parseSREC(start,len,fl,0);
     if (ret) 
         return ret;
     
     // if no errors, do programming
-    ret = parseSREC(true);
+    ret = parseSREC(start,len,fl,1);
     if (ret) 
         return ret | PROG_FAILURE;
     

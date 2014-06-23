@@ -14,7 +14,7 @@ CC   = gcc
 
 # Compiler and linker flags
 
-CXXFLAGS =
+CXXFLAGS =  -I ../C/loader-C -I . -fpermissive
 LDFLAGS  =
 LIBS = -lstdc++
 
@@ -32,6 +32,7 @@ clean:
 
 zip:	clean all
 #	./$(BIN) > output.txt
+
 	zip -vr $(BIN).zip . -x $(BIN).zip
 
 # Grab-n-go: cleans, builds, runs output.

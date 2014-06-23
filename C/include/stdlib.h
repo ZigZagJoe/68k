@@ -17,8 +17,8 @@ extern uint8_t *__data_start;
 
 // @ 8mhz, on 68008
 #define MILLISECOND_DELAY 174
-#define DELAY_S(x) DELAY_MS(x*1000);
 #define DELAY_MS(x) DELAY(x*MILLISECOND_DELAY)
+#define DELAY_S(x) DELAY_MS(x*1000);
 #define DELAY_HALF_SECOND DELAY_MS(500);
 
 extern void sleep_for(uint32_t time);

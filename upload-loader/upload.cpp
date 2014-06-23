@@ -9,7 +9,7 @@
 #include <ctype.h>
 #include <sys/time.h>
 
-#include "../C/loader-C/loader.h"
+#include <loader.h>
 
 #define msleep(x) usleep((x) * 1000)
 
@@ -28,7 +28,7 @@ void monitor(int fd);
 uint8_t has_data(int fd);
 bool SET_FLAG(const char * name, uint8_t value, uint32_t magic) ;
 uint32_t crc_update (uint32_t inp, uint8_t v);
-uint8_t parseSREC(uint8_t * start, uint32_t len, uint8_t fl);
+uint8_t parseSREC(uint8_t * start, uint32_t len, uint8_t fl, uint8_t armed);
 void command(int fd, uint8_t instr);
 
 uint8_t readb();
@@ -52,7 +52,6 @@ int main (int argc, char ** argv) {
     bool term_only = false;
     bool program_reset = false;
     
-    bool set_boot_srec = false;
     bool go_hiram = false;
     bool srec = false;
     
@@ -179,9 +178,10 @@ int main (int argc, char ** argv) {
         flags |= ALLOW_LOADER;
             
     if (srec) {
-        uint8_t ret = parseSREC(data, size, flags);
+        printf("Validating S-record... ");
+        uint8_t ret = parseSREC(data, size, flags, false);
         if (ret) {
-            printf("Failed to validate S-record.\n");
+            printf("FAILED!\n");
             printf("Error: ");
             for (int i = 7; i >= 0; i--) {
                 printf ("%c",((ret >> i) & 0x1) + '0');
@@ -196,9 +196,10 @@ int main (int argc, char ** argv) {
                 
             printf("\nProgramming aborted.\n"); 
             return 1;
-        }
+        } else 
+            printf("OK.\n");
+            
         go_hiram = true;
-        set_boot_srec = true;
     }
     
     if (loader_wr && flash_wr) {
@@ -331,7 +332,7 @@ int main (int argc, char ** argv) {
         if (errors) {
             printf("Verification FAILED with %d errors. Retrying.\n\n",errors);
         } else {
-            printf("Upload verified.\nBooting program.\n\n");
+            printf("Upload verified.\n\n");
             if (srec) {
             
                 if (boot_srec && !SET_FLAG("run from SREC", CMD_SET_BOOT, BOOT_MAGIC))
@@ -370,22 +371,20 @@ int main (int argc, char ** argv) {
                 }*/
                 
                 uint32_t c0de = readw();
-    
+                uint64_t end = millis();
+                
                 if (c0de != 0xC0DE) {
                     printf("\nSync error executing srec (bad c0de). Reset board and try again.\nGot %04X, expected %04X\n\n", c0de, 0xC0DE);
                     return 1;
                 }
                 
                 uint8_t ret_code = readb();
-                
                 uint16_t tail_magic = readw();
                 
                 if (tail_magic != 0xEF00) {
                     printf("\nSync error executing srec (bad tail). Reset board and try again.\nGot %04X, expected %04X\n\n", tail_magic, 0xEF00);
                     return 1;
                 }    
-                
-                uint64_t end = millis();
                 
                 if (ret_code) {
                     printf("Failed. Error %hhx: ", ret_code);
@@ -402,6 +401,7 @@ int main (int argc, char ** argv) {
                 break;
 
             } else {
+                printf("Booting program.\n\n");
                 command(fd, CMD_BOOT);
                 break;
             }
@@ -425,11 +425,11 @@ bool SET_FLAG(const char * name, uint8_t value, uint32_t magic) {
 
     if (ok != magic) {
         printf("Sync error setting %s. Reset board and try again.\nGot %08X, expected %08X\n\n", name, ok, magic);
-        return 1;
+        return 0;
     }
 
     printf("OK.\n");
-    return 0;
+    return 1;
 }
 
 uint8_t has_data(int fd) {
