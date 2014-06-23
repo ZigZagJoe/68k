@@ -3,10 +3,10 @@
 #include <stdint.h>
 #include <string.h>
 
-
-// flag bits
-#define ALLOW_FLASH   (1)
-#define ALLOW_LOADER  (2)
+//
+#define BOOT_SREC       (1)
+#define ALLOW_FLASH     (2)
+#define ALLOW_LOADER    (4)
 
 // errno bits
 #define BAD_HEX_CHAR  (1)

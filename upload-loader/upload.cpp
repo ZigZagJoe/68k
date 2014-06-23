@@ -19,22 +19,10 @@ uint8_t has_data(int fd);
 
 #define msleep(x) usleep((x) * 1000)
 
-#define CMD_RESET 0xCF
-#define CMD_BOOT 0xCB
-#define CMD_GETCRC 0xCC
-#define CMD_HIRAM 0xCE
-#define CMD_SREC 0xCD
-#define CMD_SET_BOOT 0xC1
-#define CMD_SET_FLWR 0xC2
-#define CMD_SET_LDWR 0xC3
-
 #define IOSSDATALAT    _IOW('T', 0, unsigned long)
 #define IOSSIOSPEED    _IOW('T', 2, speed_t)
 
-// flag bits
-#define ALLOW_FLASH   (1)
-#define ALLOW_LOADER  (2)
-
+#include "../C/loader-C/loader.h"
 
 char port_def[] ="/dev/cu.usbserial-M68KV1BB";
 const int pin_rts = TIOCM_RTS;
@@ -97,6 +85,7 @@ int main (int argc, char ** argv) {
     bool go_hiram = false;
     bool srec = false;
     
+    bool boot_srec = false;
     bool flash_wr = false;
     bool loader_wr = false;
     
@@ -121,6 +110,7 @@ int main (int argc, char ** argv) {
                     case 's': srec = true; break;
                     case 'l': loader_wr = true; break;
                     case 'f': flash_wr = true; break;
+                    case 'b': boot_srec = true; break;
                 }
             } else
                 filename = arg;
@@ -220,19 +210,36 @@ int main (int argc, char ** argv) {
     if (srec) {
         uint8_t ret = parseSREC(data, size, flags);
         if (ret) {
-            printf("Failed to validate file as S-record.\n");
-            printf("Error %x: ", ret);
+            printf("Failed to validate S-record.\n");
+            printf("Error: ");
             for (int i = 7; i >= 0; i--) {
                 printf ("%c",((ret >> i) & 0x1) + '0');
                 if (i == 4) printf(" ");
             }
         
             printf("\n");
-            printf("Programming aborted.\n"); 
+            if (ret & INVALID_WRITE)
+                printf("\nVerify that flash and loader writes are enabled.\n");
+            if (ret & BAD_HEX_CHAR || ret & FORMAT_ERROR)
+                printf("\nVerify that the file is not corrupt.\n");
+                
+            printf("\nProgramming aborted.\n"); 
             return 1;
         }
         go_hiram = true;
         set_boot_srec = true;
+    }
+    
+    if (loader_wr && flash_wr) {
+        printf("\nWARNING: Loader write and Flash write have both been enabled.\n");
+        printf("Please confirm that you want to execute a bootloader update\n");
+        printf("by pressing SHIFT+1, then enter. Press any other key to abort.\n");
+        if (getchar() != '!') {
+            printf("\nAborting!\n");
+            return 1;
+        }
+        
+        printf("\nContinuing.\n");
     }
     
     ////////////////////////////////
@@ -333,7 +340,7 @@ int main (int argc, char ** argv) {
             return 1;
         }
         
-        command(fd, CMD_GETCRC);
+        command(fd, CMD_QCRC);
         
         uint16_t intro = readw();
         uint32_t crc = readl();
@@ -369,18 +376,21 @@ int main (int argc, char ** argv) {
         } else {
             printf("Upload verified.\nBooting program.\n\n");
             if (srec) {
-                printf("Setting boot from SREC... ");
-                fflush(stdout);
+                uint32_t ok;
+                if (boot_srec) {
+                    printf("Setting boot from SREC... ");
+                    fflush(stdout);
         
-                command(fd, CMD_SET_BOOT);
-                uint32_t ok = readl();
+                    command(fd, CMD_SET_BOOT);
+                    ok = readl();
     
-                if (ok != 0xD0B07CDE) {
-                    printf("Sync error setting boot from srec. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0B07CDE);
-                    return 1;
-                }
+                    if (ok != 0xD0B07CDE) {
+                        printf("Sync error setting boot from srec. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0B07CDE);
+                        return 1;
+                    }
                 
-                printf("OK\n");
+                    printf("OK\n");
+                }
                 
                 if (flash_wr) {
                     printf("Setting flash write... ");
@@ -417,10 +427,10 @@ int main (int argc, char ** argv) {
                 
                 command(fd, CMD_SREC);
                 
-                uint32_t greet = readl();
+                ok = readl();
                 
-                if (greet != 0xD0E881CC) {
-                    printf("\nSync error executing srec (bad greeting). Reset board and try again.\nGot %08X, expected %08X\n\n", greet, 0xD0E881CC);
+                if (ok != 0xD0E881CC) {
+                    printf("\nSync error executing srec (bad greeting). Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0E881CC);
                     return 1;
                 } else {
                     printf(" in progress... ");

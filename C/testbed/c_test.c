@@ -8,6 +8,36 @@
 #include <lcd.h>
 #include <time.h>
 
+void mem_dump(uint8_t *addr, uint32_t cnt) {
+    int c = 0;
+    char ascii[17];
+    ascii[16] = 0;
+    
+    putc('\n');
+    
+    printf("%8X   ", addr);
+    for (uint32_t i = 0; i < cnt; i++) {
+        uint8_t b = *addr;
+        
+        ascii[c] = (b > 31 & b < 127) ? b : '.';
+        
+        printf("%02X ",b);
+        
+        addr++;
+        
+        if (++c == 16) {
+            puts("  ");
+            puts(ascii);
+            putc('\n');
+            if ((i+1) < cnt)
+                printf("%8X   ", addr);
+            c = 0;
+        }
+    }
+    
+    if (c < 15) putc('\n');
+}
+
 int main() {
    // TIL311 = 0x01;
 
@@ -16,13 +46,16 @@ int main() {
    // millis_start();
     sei();
     
-    uint32_t i = 0;
+    
+    mem_dump(0x80000, 2500);
+    
+  //  uint32_t i = 0;
  //   DDR = 2;
   //  GPDR = 0;
     
-    while(true) {
+    /*while(true) {
     	if (serial_available()) 
-    		putc_sync(getc());
+    		putc_sync(getc());*
     	//TIL311 = 0xAA;
    
        // for (char ch = 'a'; ch <= 'z'; ch++)
@@ -42,7 +75,7 @@ int main() {
         
         //TIL311 = 0xCC;
    
-    }
+   // }
     
     
         /* TIL311 = 0xCC;

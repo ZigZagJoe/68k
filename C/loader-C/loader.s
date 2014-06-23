@@ -63,7 +63,7 @@ loader_start:
     move.b #1, (TSR)           | transmitter enable
     
 reset_addr:
-    TILDBG CB                  | bootloader ready!
+    TILDBG B2                  | bootloader ready!
    
     | initialize variables
     move.l #loram_addr, %d0
@@ -148,7 +148,7 @@ set_loader_wr:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | get crc command
 do_parse:
-    TILDBG D1
+    TILDBG DC
     
     move.l #0xD0E881CC, %d0    | tell host we are initiating write
     jsr putl
@@ -161,7 +161,7 @@ do_parse:
     move.l %d6, -(%sp)         | byte count
     move.l %a5, -(%sp)         | byte addr
     
-    jsr handle_srec             | enter c
+    jsr handle_srec            | enter c
     
     | dealloc arguments
     add.l #12, %sp
@@ -178,6 +178,8 @@ do_parse:
     
     cmp.b #0, %d1
     bne bad_srec
+    
+    TILDBG 0C
     
     and.b #FLAG_BOOT, %d5
     beq loop                   | not set as bootable

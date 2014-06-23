@@ -7,7 +7,7 @@ MEMORY {
 }
 
 SECTIONS {
-	.text (0x1000) : {
+	.text (0x1000) : AT (0x80000) {
 		reloc.o(.text)
 	} > RAM
 	

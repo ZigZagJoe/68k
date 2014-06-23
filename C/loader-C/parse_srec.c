@@ -2,21 +2,9 @@
 #include <stdint.h>
 #include <io.h>
 
-void printf(char * fmt, ...);
+//void printf(char * fmt, ...);
 
-// flag bits
-#define ALLOW_FLASH     (1)
-#define ALLOW_LOADER    (2)
-
-// errno bits
-#define BAD_HEX_CHAR    (1)
-#define INVALID_WRITE   (2)
-#define FAILED_WRITE    (4)
-#define FORMAT_ERROR    (8)
-#define EARLY_EOF      (16)
-#define INVALID_CHAR   (32)
-#define CRC_ERROR      (64)
-#define PROG_FAILURE  (128)
+#include <loader.h>
 
 // important addresses
 #define FLASH_START 0x80000
@@ -85,7 +73,7 @@ void flash_write(uint32_t addr, uint8_t byte) {
     uint8_t sector = ADDR_TO_SECTOR(addr);
     
 #ifdef WR_DEBUG   
-    printf("%X flWrite %X (sect %x)\n", addr, byte, sector);
+    //printf("%X flWrite %X (sect %x)\n", addr, byte, sector);
 #endif
 
     if (!erased_sectors[sector]) {
