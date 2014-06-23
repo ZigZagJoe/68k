@@ -8,7 +8,7 @@
 #include <sys/poll.h>
 #include <ctype.h>
 #include <wchar.h>
-#include <time.h>
+#include <sys/time.h>
 #include <string.h>
 
 int sergetc(int fd);
@@ -24,10 +24,17 @@ uint8_t has_data(int fd);
 #define CMD_GETCRC 0xCC
 #define CMD_HIRAM 0xCE
 #define CMD_SREC 0xCD
-#define CMD_SET_BOOT 0xBD
+#define CMD_SET_BOOT 0xC1
+#define CMD_SET_FLWR 0xC2
+#define CMD_SET_LDWR 0xC3
 
 #define IOSSDATALAT    _IOW('T', 0, unsigned long)
 #define IOSSIOSPEED    _IOW('T', 2, speed_t)
+
+// flag bits
+#define ALLOW_FLASH   (1)
+#define ALLOW_LOADER  (2)
+
 
 char port_def[] ="/dev/cu.usbserial-M68KV1BB";
 const int pin_rts = TIOCM_RTS;
@@ -65,7 +72,18 @@ uint32_t readl() {
 
 uint8_t parseSREC(uint8_t * start, uint32_t len, uint8_t fl);
 
+
+uint64_t millis() {
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+    
+    return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
+}
+
+
 int main (int argc, char ** argv) {
+ 
     // vars n shit bitches
     char * filename = 0;
     char * port = (char*)&port_def;
@@ -78,6 +96,9 @@ int main (int argc, char ** argv) {
     bool set_boot_srec = false;
     bool go_hiram = false;
     bool srec = false;
+    
+    bool flash_wr = false;
+    bool loader_wr = false;
     
     int BAUD_RATE = 28000;
     int BAUD_DELAY = 200;
@@ -97,7 +118,9 @@ int main (int argc, char ** argv) {
                     case 'n': no_terminal = true; break;
                     case 'v': verbose = true; break;
 					case 'r': program_reset = true; break;
-                    case 's': srec = true;
+                    case 's': srec = true; break;
+                    case 'l': loader_wr = true; break;
+                    case 'f': flash_wr = true; break;
                 }
             } else
                 filename = arg;
@@ -185,9 +208,15 @@ int main (int argc, char ** argv) {
     
     data[size] = 0;
     size++;
-    
+
     uint8_t flags = 0;
     
+    if (flash_wr)
+        flags |= ALLOW_FLASH;
+        
+    if (loader_wr)
+        flags |= ALLOW_LOADER;
+            
     if (srec) {
         uint8_t ret = parseSREC(data, size, flags);
         if (ret) {
@@ -281,20 +310,20 @@ int main (int argc, char ** argv) {
         
         printf("%6.2f %%\n\n",((float)100));
         
-        clock_t start = clock();
+        uint64_t start = millis();
         
         while (1) {
             if (has_data(fd))
             	if(read(fd, &ch, 1) == 1) {
 					readback[rbi] = ch;
-					start = clock();
+					start = millis();
 					rbi++;
             	} else {
                 	printf("Serial read error.\n");
                 	return 1;
                 }
             
-            if ((((float)(clock() - start)) / CLOCKS_PER_SEC) > 0.25F || (rbi > size*2)) 
+            if ((millis() - start) > 250 || (rbi > size*2)) 
             	break;
         }
         
@@ -351,30 +380,65 @@ int main (int argc, char ** argv) {
                     return 1;
                 }
                 
-                printf("OK\n, Programming SREC... ");
+                printf("OK\n");
+                
+                if (flash_wr) {
+                    printf("Setting flash write... ");
+                    fflush(stdout);
+        
+                    command(fd, CMD_SET_FLWR);
+                    ok = readl();
+    
+                    if (ok != 0xF1A5C0DE) {
+                        printf("Sync error setting flash write. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0B07CDE);
+                        return 1;
+                    }
+                
+                    printf("OK\n");
+                
+                }
+        
+                if (loader_wr) {
+                    printf("Setting loader write... ");
+                    fflush(stdout);
+        
+                    command(fd, CMD_SET_LDWR);
+                    ok = readl();
+    
+                    if (ok != 0x10ADC0DE) {
+                        printf("Sync error setting loader write. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0x10ADC0DE);
+                        return 1;
+                    }
+                
+                    printf("OK\n");
+                }
+                
+                printf("Programming SREC");
                 
                 command(fd, CMD_SREC);
                 
                 uint32_t greet = readl();
                 
                 if (greet != 0xD0E881CC) {
-                    printf("Sync error executing srec (bad greeting). Reset board and try again.\nGot %08X, expected %08X\n\n", greet, 0xD0E881CC);
+                    printf("\nSync error executing srec (bad greeting). Reset board and try again.\nGot %08X, expected %08X\n\n", greet, 0xD0E881CC);
                     return 1;
                 } else {
-                    printf(" started... ");
+                    printf(" in progress... ");
                     fflush(stdout);
                 }
                 
+                uint64_t started = millis();
+                
                 uint8_t wr_flags = readb();
     
-                char ch;
+                /*char ch;
                 
                 while ((ch = sergetc(fd)) != 0xC0) {
                     printf("%c",ch);
                     fflush(stdout);
-                }
+                }*/
                 
-                uint32_t c0de = 0xC000 | readw();
+                uint32_t c0de = readw();
     
                 if (c0de != 0xC0DE) {
                     printf("\nSync error executing srec (bad c0de). Reset board and try again.\nGot %08X, expected %08X\n\n", c0de, 0xC0DE);
@@ -386,16 +450,24 @@ int main (int argc, char ** argv) {
                 uint16_t tail = readw();
                 
                 if (tail != 0xEF00) {
-                    printf("Sync error executing srec (bad tail). Reset board and try again.\nGot %08X, expected %08X\n\n", tail, 0xEF00);
+                    printf("\nSync error executing srec (bad tail). Reset board and try again.\nGot %08X, expected %08X\n\n", tail, 0xEF00);
                     return 1;
                 }    
- 
-                if (ret_code) {
-                    
-                    
-                }
                 
-                printf("OK!\n");
+                uint64_t end = millis();
+                
+                if (ret_code) {
+                    printf("Failed. Error %hhx: ", ret_code);
+                    for (int i = 7; i >= 0; i--) {
+                        printf ("%c",((ret_code >> i) & 0x1) + '0');
+                        if (i == 4) printf(" ");
+                    }
+        
+                    printf("\n\n");
+                    return 1;
+                }
+              
+                printf(" completed successfully in %d ms.\n\n", end-start);
                 break;
 
             } else {

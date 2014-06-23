@@ -88,8 +88,6 @@ void flash_write(uint32_t addr, uint8_t byte) {
     printf("%X flWrite %X (sect %x)\n", addr, byte, sector);
 #endif
 
-    return;
-    
     if (!erased_sectors[sector]) {
          //printf("Flash erase sector %x\n", sector);
          erased_sectors[sector] = 1;

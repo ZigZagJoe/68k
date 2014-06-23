@@ -38,7 +38,9 @@
 .set CMD_QCRC, 0xCC
 .set CMD_HIRAM, 0xCE
 .set CMD_SREC, 0xCD
-.set CMD_SET_BOOT, 0xBD
+.set CMD_SET_BOOT, 0xC1
+.set CMD_SET_FLWR, 0xC2
+.set CMD_SET_LDWR, 0xC3
 
 | srec flags
 .set FLAG_BOOT, 1
@@ -112,6 +114,12 @@ cmd_byte:
     cmp.b #CMD_SET_BOOT, %d0
     beq set_boot
     
+    cmp.b #CMD_SET_FLWR, %d0
+    beq set_flash_wr
+    
+    cmp.b #CMD_SET_LDWR, %d0
+    beq set_loader_wr
+    
     TILDBG BC                  | not a recognized command
     bra loop
     
@@ -121,6 +129,20 @@ set_boot:
     move.l #0xD0B07CDE, %d0
     jsr putl
     ori #FLAG_BOOT, %d5
+    bra loop
+    
+| set to allow s record to write flash
+set_flash_wr:
+    move.l #0xF1A5C0DE, %d0
+    jsr putl
+    ori #FLAG_WR_FLASH, %d5
+    bra loop
+    
+| set to allow s record to write loader
+set_loader_wr:
+    move.l #0x10ADC0DE, %d0
+    jsr putl
+    ori #FLAG_WR_LOADER, %d5
     bra loop
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
