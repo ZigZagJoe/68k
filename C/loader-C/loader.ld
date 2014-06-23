@@ -8,7 +8,8 @@ MEMORY {
 
 SECTIONS {
 	.text (0x1000) : AT (0x80000) {
-		reloc.o(.text)
+		__begin = .;
+        reloc.o(.text)
 	} > RAM
 	
 	.body : ALIGN(0x10) {

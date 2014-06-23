@@ -1,13 +1,13 @@
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| 68k bootloader
+| 68k bootloader - relocation code
 
 .text
 .align 2
-__the_start:
 
 .global _boot
-.extern parse_srec
+
 .extern loader_start
+.extern __begin
 
 | display a constant byte
 .macro TILDBG byte
@@ -16,7 +16,7 @@ __the_start:
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | addresses of IO devices 
-.set TIL311,    0xC8000
+.set TIL311,        0xC8000
 
 | default stack pointer. grows down in RAM
 .set stack_pointer, 0x80000
@@ -31,7 +31,7 @@ _ipc: .long 0x80008            | initial program counter
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader entry point
-| this code must run in a PIC manner
+| this code must run in a PIC manner!
 _boot:
     TILDBG BA
 
@@ -44,7 +44,7 @@ _boot:
     | reset UART and any other devices attached to /RESET
     reset
     
-    lea (__the_start, %pc), %a0 | load address of start of loader, relative to %PC
+    lea (__begin, %pc), %a0    | load address of start of loader, relative to %PC
                                        
     movea.l #reloc_addr, %a1   | load relocation target address into %a1
     move.w #1023, %d0          | copy full 4kb of bootloader area ((1023+1) * 4)

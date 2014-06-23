@@ -14,27 +14,30 @@
 #define SECTOR_COUNT     64
 
 // global vars
-uint8_t *ptr;
+uint8_t *srec;
 uint32_t pos;
-uint32_t sz;
-uint8_t flags;
+uint32_t srec_sz;
+
+uint32_t entry_point;
+uint8_t wr_flags;
 uint8_t errno;
 uint8_t erased_sectors[SECTOR_COUNT];
 uint8_t write_armed;
-uint8_t chk;
-uint32_t entry_point;
+uint8_t checksum;
 
 #define RETURN_IF_ERROR()    if (errno) return errno
 
 uint8_t readch() {
-    if (pos >= sz) {
+    if (pos >= srec_sz) {
         errno |= EARLY_EOF;
+        //printf("EOF encountered in readch\n");
         return 0;
     }
     
-    char ch = ptr[pos++];
+    char ch = srec[pos++];
     
     if ((ch < '0' || ch > 'z') && ch !='\n' && ch != '\r') {
+        //printf("Invalid character encountered\n");
         errno |= INVALID_CHAR;
         return 0;
     }
@@ -52,19 +55,20 @@ uint8_t getn() {
     if (ch >= '0' && ch <= '9')
         return ch - '0';
         
+    //printf("Expected valid hex char, got %c.\n",ch);
     errno |= BAD_HEX_CHAR;
     return 0;        
 }
 
 uint8_t getb() {
     uint8_t b = (getn() << 4) | getn();
-    chk += b;
+    checksum += b;
     return b;
 }
 
-uint32_t readAddr(uint8_t sz) {
+uint32_t readAddr(uint8_t srec_sz) {
     uint32_t i = 0;
-    while (sz-- > 0)
+    while (srec_sz-- > 0)
         i = (i << 8) | getb();
     return i;
 }
@@ -105,15 +109,18 @@ void ram_write(uint32_t addr, uint8_t byte) {
 uint8_t write(uint32_t addr, uint8_t byte) {
     if (addr >= IO_START) {
         errno |= INVALID_WRITE;
+        //printf("Attempted to write to IO address space (or higher).\n");
         return 1;
     } else if (addr >= FLASH_START && addr < IO_START) {
-        if (!(flags & ALLOW_FLASH)) {
+        if (!(wr_flags & ALLOW_FLASH)) {
             errno |= INVALID_WRITE;
+            //printf("Attempted to write to flash without allow_flash flag set.\n");
             return 1;
         }
         
-        if (addr < LOADER_END && !(flags & ALLOW_LOADER)) {
+        if (addr < LOADER_END && !(wr_flags & ALLOW_LOADER)) {
             errno |= INVALID_WRITE;
+            //printf("Attempted to write to loader region without allow_loader flag set.\n");
             return 1;
         }
         
@@ -122,6 +129,7 @@ uint8_t write(uint32_t addr, uint8_t byte) {
         ram_write(addr, byte);
     
     if (write_armed && MEM(addr) != byte) {
+        //printf("Write to %X of value %X failed.\n",addr,byte&0xFF);
         errno |= FAILED_WRITE;
         return 1;
     }
@@ -130,9 +138,9 @@ uint8_t write(uint32_t addr, uint8_t byte) {
 }
 
 uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed) {
-    sz = buffer_len;
-    flags = fl;
-    ptr = buffer;
+    srec_sz = buffer_len;
+    wr_flags = fl;
+    srec = buffer;
     
     pos = 0;
     errno = 0;
@@ -151,9 +159,9 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
     for (uint8_t i = 0; i < SECTOR_COUNT; i++)
         erased_sectors[i] = 0;    
     
-    if (ptr[sz-1] != 0) {
+    if (srec[srec_sz-1] != 0) {
         errno |= FORMAT_ERROR;
-        //printf("Record is missing trailing null - %c\n", ptr[sz]);
+        //printf("Record is missing trailing null - %c\n", srec[srec_sz]);
         return errno;
     }
  
@@ -177,10 +185,11 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
         
         if (typ > 9) {
             errno |= FORMAT_ERROR;
+            //printf("Record of invalid type\n");
             break;
         }
         
-        chk = 0;              // reset checksum
+        checksum = 0;              // reset checksum
         len = getb() - addr_len[typ] - 1;
        
         address = readAddr(addr_len[typ]);
@@ -226,7 +235,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
              return errno;
         }
         
-        loc_crc = ~chk;
+        loc_crc = ~checksum;
         file_crc = getb();
         
         if (loc_crc != file_crc) {
@@ -239,7 +248,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
             
         RETURN_IF_ERROR();
         
-        if (ptr[pos] == 0) 
+        if (srec[pos] == 0) 
             break;        
     }
 
@@ -249,15 +258,17 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
 uint8_t handle_srec(uint8_t * start, uint32_t len, uint8_t fl) { 
     //mem_dump(start, len);
      
-    //printf("start=0x%x, len=0x%x, flags=0x%x\n", start, len, flags);
+    //printf("start=0x%x, len=0x%x, wr_flags=0x%x\n", start, len, wr_flags);
    
     // do sanity check parse run
     uint8_t ret = parseSREC(start,len,fl,0);
+    
     if (ret) 
         return ret;
     
     // if no errors, do programming
     ret = parseSREC(start,len,fl,1);
+    
     if (ret) 
         return ret | PROG_FAILURE;
     

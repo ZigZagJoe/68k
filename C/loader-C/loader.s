@@ -1,5 +1,5 @@
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| 68k bootloader
+| 68k bootloader - main code
 
 .text
 .align 2
@@ -29,7 +29,7 @@
 .set TCDR,  MFP + 0x23         | timer c data
 .set UCR,   MFP + 0x29         | uart ctrl
 
-.set loram_addr, 0x2000
+.set loram_addr,  0x2000
 .set hiram_addr, 0x40000
 
 | command codes
@@ -43,9 +43,9 @@
 .set CMD_SET_HIRAM, 0xC4
 
 | srec flags
-.set FLAG_BOOT, 1
-.set FLAG_WR_FLASH, 2
-.set FLAG_WR_LOADER, 4
+.set FLAG_BOOT,        1
+.set FLAG_WR_FLASH,    2
+.set FLAG_WR_LOADER,   4
 
 #####################################################################
 | entry point of bootloader code in RAM
@@ -104,12 +104,12 @@ cmd_byte:
     
     cmp.b #CMD_QCRC, %d0
     beq get_qcrc
-    
-    cmp.b #CMD_SET_HIRAM, %d0
-    beq go_hiram
-    
+
     cmp.b #CMD_SREC, %d0
     beq do_parse
+    
+    cmp.b #CMD_SET_HIRAM, %d0
+    beq set_hiram
     
     cmp.b #CMD_SET_BOOT, %d0
     beq set_boot
@@ -123,7 +123,9 @@ cmd_byte:
     TILDBG BC                  | not a recognized command
     bra loop
     
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||  
+| flag setting handlers
+ 
 | set to boot from s-record
 set_boot:
     move.l #0xD0B07CDE, %d0
@@ -144,9 +146,21 @@ set_loader_wr:
     jsr putl
     ori #FLAG_WR_LOADER, %d5
     bra loop
-
+    
+| use an address in high ram to load at
+set_hiram:
+    TILDBG 1A
+    
+    move.l #0xCE110C00, %d0
+    jsr putl
+    
+    move.l #hiram_addr, %d0
+    jsr init_vars
+    
+    bra loop
+    
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
-| get crc command
+| command to handle s-record loaded into RAM
 do_parse:
     TILDBG DC
     
@@ -185,27 +199,15 @@ do_parse:
     beq loop                   | not set as bootable
 
     | boot from the s-record address
-    | ought to check this is nonzero...
+    | ought to check this is nonzero...!
     move.l (entry_point), %a5
     bra boot
 
+| an error occured, do not boot.
 bad_srec:
-    TILDBG EE
+    TILDBG EC
     bra loop
         
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
-| get crc command
-go_hiram:
-    TILDBG 1A
-    
-    move.l #hiram_addr, %d0
-    jsr init_vars
-    
-    move.l #0xCE110C00, %d0
-    jsr putl
-    
-    bra loop
-
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | get crc command
 get_qcrc:
