@@ -7,68 +7,39 @@
 #include <termios.h>
 #include <sys/poll.h>
 #include <ctype.h>
-#include <wchar.h>
 #include <sys/time.h>
-#include <string.h>
 
-int sergetc(int fd);
-int serputc(int fd, char c);
-void serflush(int fd);
-void monitor(int fd);
-uint8_t has_data(int fd);
+#include "../C/loader-C/loader.h"
 
 #define msleep(x) usleep((x) * 1000)
 
 #define IOSSDATALAT    _IOW('T', 0, unsigned long)
 #define IOSSIOSPEED    _IOW('T', 2, speed_t)
 
-#include "../C/loader-C/loader.h"
+#define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))
 
 char port_def[] ="/dev/cu.usbserial-M68KV1BB";
 const int pin_rts = TIOCM_RTS;
 
-#define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))
+int sergetc(int fd);
+int serputc(int fd, char c);
+void serflush(int fd);
+void monitor(int fd);
+uint8_t has_data(int fd);
+bool SET_FLAG(const char * name, uint8_t value, uint32_t magic) ;
+uint32_t crc_update (uint32_t inp, uint8_t v);
+uint8_t parseSREC(uint8_t * start, uint32_t len, uint8_t fl);
+void command(int fd, uint8_t instr);
 
-uint32_t crc_update (uint32_t inp, uint8_t v) {
-	return ROL(inp ^ v, 1);
-}
+uint8_t readb();
+uint16_t readw();
+uint32_t readl();
+uint64_t millis();
 
-void command(int fd, uint8_t instr) {
-    
-    ioctl(fd, TIOCMBIS, &pin_rts); // assert RTS
-    usleep(100*1000);
-    serputc(fd, instr);
-    usleep(100*1000);
-    ioctl(fd, TIOCMBIC, &pin_rts); // deassert RTS
-    usleep(100*1000);
-
-}
-
+// file descriptor
 int fd;
 
-uint8_t readb() {
-    return sergetc(fd);
-}
-
-uint16_t readw() {
-    return (((uint16_t)readb()) << 8) | readb();
-}
-
-uint32_t readl() {
-    return (((uint32_t)readw()) << 16) | readw();
-}
-
-uint8_t parseSREC(uint8_t * start, uint32_t len, uint8_t fl);
-
-
-uint64_t millis() {
-    struct timeval tv;
-
-    gettimeofday(&tv, NULL);
-    
-    return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
-}
-
+/// MAIN CODE
 
 int main (int argc, char ** argv) {
  
@@ -256,23 +227,9 @@ int main (int argc, char ** argv) {
         msleep(200);
         serflush(fd);
         
-        if (go_hiram) {
-        
-            printf("Setting HIRAM... ");
-            fflush(stdout);
-        
-            command(fd, CMD_HIRAM);
-            uint32_t ok = readl();
-        
-            if (ok != 0xCE110C00) {
-                printf("Sync error setting HIRAM. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xCE110C00);
-                return 1;
-            }
-        
-            printf("OK.\n");
-        
-        }
-        
+        if (go_hiram) 
+            SET_FLAG("HIRAM", CMD_SET_HIRAM, HIRAM_MAGIC);
+
         //sergetc(fd); // first junk char from uart
 
         printf("Uploading...\n");
@@ -376,58 +333,22 @@ int main (int argc, char ** argv) {
         } else {
             printf("Upload verified.\nBooting program.\n\n");
             if (srec) {
-                uint32_t ok;
-                if (boot_srec) {
-                    printf("Setting boot from SREC... ");
-                    fflush(stdout);
-        
-                    command(fd, CMD_SET_BOOT);
-                    ok = readl();
-    
-                    if (ok != 0xD0B07CDE) {
-                        printf("Sync error setting boot from srec. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0B07CDE);
-                        return 1;
-                    }
-                
-                    printf("OK\n");
-                }
-                
-                if (flash_wr) {
-                    printf("Setting flash write... ");
-                    fflush(stdout);
-        
-                    command(fd, CMD_SET_FLWR);
-                    ok = readl();
-    
-                    if (ok != 0xF1A5C0DE) {
-                        printf("Sync error setting flash write. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0B07CDE);
-                        return 1;
-                    }
-                
-                    printf("OK\n");
-                
-                }
-        
-                if (loader_wr) {
-                    printf("Setting loader write... ");
-                    fflush(stdout);
-        
-                    command(fd, CMD_SET_LDWR);
-                    ok = readl();
-    
-                    if (ok != 0x10ADC0DE) {
-                        printf("Sync error setting loader write. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0x10ADC0DE);
-                        return 1;
-                    }
-                
-                    printf("OK\n");
-                }
-                
+            
+                if (boot_srec && !SET_FLAG("run from SREC", CMD_SET_BOOT, BOOT_MAGIC))
+                    return 1;
+                    
+                if (flash_wr   && !SET_FLAG("flash write", CMD_SET_FLWR, FLWR_MAGIC))
+                    return 1;
+                    
+                if (loader_wr && !SET_FLAG("loader write", CMD_SET_LDWR, LDWR_MAGIC))
+                    return 1;
+                           
                 printf("Programming SREC");
+                fflush(stdout);
                 
                 command(fd, CMD_SREC);
                 
-                ok = readl();
+                uint32_t ok = readl();
                 
                 if (ok != 0xD0E881CC) {
                     printf("\nSync error executing srec (bad greeting). Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0E881CC);
@@ -451,16 +372,16 @@ int main (int argc, char ** argv) {
                 uint32_t c0de = readw();
     
                 if (c0de != 0xC0DE) {
-                    printf("\nSync error executing srec (bad c0de). Reset board and try again.\nGot %08X, expected %08X\n\n", c0de, 0xC0DE);
+                    printf("\nSync error executing srec (bad c0de). Reset board and try again.\nGot %04X, expected %04X\n\n", c0de, 0xC0DE);
                     return 1;
                 }
                 
                 uint8_t ret_code = readb();
                 
-                uint16_t tail = readw();
+                uint16_t tail_magic = readw();
                 
-                if (tail != 0xEF00) {
-                    printf("\nSync error executing srec (bad tail). Reset board and try again.\nGot %08X, expected %08X\n\n", tail, 0xEF00);
+                if (tail_magic != 0xEF00) {
+                    printf("\nSync error executing srec (bad tail). Reset board and try again.\nGot %04X, expected %04X\n\n", tail_magic, 0xEF00);
                     return 1;
                 }    
                 
@@ -492,6 +413,22 @@ int main (int argc, char ** argv) {
     
     close(fd);
     
+    return 0;
+}
+
+bool SET_FLAG(const char * name, uint8_t value, uint32_t magic) {
+    printf("Setting %s... ",name);
+    fflush(stdout);
+
+    command(fd, value);
+    uint32_t ok = readl();
+
+    if (ok != magic) {
+        printf("Sync error setting %s. Reset board and try again.\nGot %08X, expected %08X\n\n", name, ok, magic);
+        return 1;
+    }
+
+    printf("OK.\n");
     return 0;
 }
 
@@ -527,7 +464,7 @@ void monitor(int fd) {
                 putchar(ch);
             } else {
                // printf("ʘ");
-               printf ("[0x%02X]", ch&0xFF);
+               printf ("[ʘx%02X]", ch&0xFF);
                // fprintf(stderr, "%d\n",ch);
             }
         }
@@ -578,3 +515,39 @@ void serprintf(int fd, const char *fmt, ... ){
         exit (1);
     }
 }
+
+
+uint32_t crc_update (uint32_t inp, uint8_t v) {
+	return ROL(inp ^ v, 1);
+}
+
+void command(int fd, uint8_t instr) {
+    ioctl(fd, TIOCMBIS, &pin_rts); // assert RTS
+    usleep(50*1000);
+    serputc(fd, instr);
+    usleep(50*1000);
+    ioctl(fd, TIOCMBIC, &pin_rts); // deassert RTS
+    usleep(50*1000);
+}
+
+
+uint8_t readb() {
+    return sergetc(fd);
+}
+
+uint16_t readw() {
+    return (((uint16_t)readb()) << 8) | readb();
+}
+
+uint32_t readl() {
+    return (((uint32_t)readw()) << 16) | readw();
+}
+
+uint64_t millis() {
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+    
+    return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
+}
+

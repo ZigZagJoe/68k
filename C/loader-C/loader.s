@@ -33,14 +33,14 @@
 .set hiram_addr, 0x40000
 
 | command codes
-.set CMD_BOOT, 0xCB
-.set CMD_RESET, 0xCF
-.set CMD_QCRC, 0xCC
-.set CMD_HIRAM, 0xCE
-.set CMD_SREC, 0xCD
-.set CMD_SET_BOOT, 0xC1
-.set CMD_SET_FLWR, 0xC2
-.set CMD_SET_LDWR, 0xC3
+.set CMD_BOOT,      0xCB
+.set CMD_RESET,     0xCF
+.set CMD_QCRC,      0xCC
+.set CMD_SREC,      0xCD
+.set CMD_SET_BOOT,  0xC1
+.set CMD_SET_FLWR,  0xC2
+.set CMD_SET_LDWR,  0xC3
+.set CMD_SET_HIRAM, 0xC4
 
 | srec flags
 .set FLAG_BOOT, 1
@@ -105,7 +105,7 @@ cmd_byte:
     cmp.b #CMD_QCRC, %d0
     beq get_qcrc
     
-    cmp.b #CMD_HIRAM, %d0
+    cmp.b #CMD_SET_HIRAM, %d0
     beq go_hiram
     
     cmp.b #CMD_SREC, %d0

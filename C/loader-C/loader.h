@@ -20,10 +20,16 @@
 #define CMD_BOOT	    0xCB
 #define CMD_RESET	    0xCF
 #define CMD_QCRC	    0xCC
-#define CMD_HIRAM	    0xCE
 #define CMD_SREC	    0xCD
 #define CMD_SET_BOOT	0xC1
 #define CMD_SET_FLWR	0xC2
 #define CMD_SET_LDWR	0xC3
+#define CMD_SET_HIRAM   0xC4
+
+// magic flag values
+#define BOOT_MAGIC      0xD0B07CDE
+#define FLWR_MAGIC      0xF1A5C0DE
+#define LDWR_MAGIC      0x10ADC0DE
+#define HIRAM_MAGIC     0xCE110C00
 
 #endif
