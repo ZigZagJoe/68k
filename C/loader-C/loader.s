@@ -4,10 +4,11 @@
 .text
 .align 2
 
-.global relocated
+.global loader_start
 .global putc
+.global entry_point
 
-.extern parse_srec
+.extern handle_srec
 
 | display a constant byte
 .macro TILDBG byte
@@ -37,10 +38,16 @@
 .set CMD_QCRC, 0xCC
 .set CMD_HIRAM, 0xCE
 .set CMD_SREC, 0xCD
+.set CMD_SET_BOOT, 0xBD
+
+| srec flags
+.set FLAG_BOOT, 1
+.set FLAG_WR_FLASH, 2
+.set FLAG_WR_LOADER, 4
 
 #####################################################################
 | entry point of bootloader code in RAM
-relocated: 
+loader_start: 
     TILDBG C0                  | debugging message
     
     | set up timer C as baud rate generator at 28800 (3.6864mhz crystal)
@@ -88,7 +95,7 @@ loop:
 | execute commmand byte in %d0
 cmd_byte:
     cmp.b #CMD_BOOT, %d0       | is it the command to boot?
-    beq do_parse
+    beq boot
 
     cmp.b #CMD_RESET, %d0      | is it the command to reset address?
     beq reset_addr
@@ -102,7 +109,18 @@ cmd_byte:
     cmp.b #CMD_SREC, %d0
     beq do_parse
     
+    cmp.b #CMD_SET_BOOT, %d0
+    beq set_boot
+    
     TILDBG BC                  | not a recognized command
+    bra loop
+    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
+| set to boot from s-record
+set_boot:
+    move.l #0xD0B07CDE, %d0
+    jsr putl
+    ori #FLAG_BOOT, %d5
     bra loop
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
@@ -121,7 +139,7 @@ do_parse:
     move.l %d6, -(%sp)         | byte count
     move.l %a5, -(%sp)         | byte addr
     
-    jsr parse_srec             | enter c
+    jsr handle_srec             | enter c
     
     | dealloc arguments
     add.l #12, %sp
@@ -136,8 +154,21 @@ do_parse:
     move.w #0xEF00, %d0        | trailing null
     jsr putw
     
-    bra loop
+    cmp.b #0, %d1
+    bne bad_srec
     
+    and.b #FLAG_BOOT, %d5
+    beq loop                   | not set as bootable
+
+    | boot from the s-record address
+    | ought to check this is nonzero...
+    move.l (entry_point), %a5
+    bra boot
+
+bad_srec:
+    TILDBG EE
+    bra loop
+        
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | get crc command
 go_hiram:

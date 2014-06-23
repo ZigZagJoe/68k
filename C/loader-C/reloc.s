@@ -6,7 +6,7 @@
 
 .global _boot
 .extern parse_srec
-.extern __reloc_size
+.extern loader_start
 
 | display a constant byte
 .macro TILDBG byte
@@ -56,5 +56,5 @@ cpy_reloc:
 
     TILDBG CD                  | debugging message
                
-    jmp relocated              | absolute jump to relocated code
+    jmp loader_start           | absolute jump to relocated code
     

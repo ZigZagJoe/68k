@@ -53,7 +53,7 @@ open:
 	-open $(SRCS) 
 	
 run:	$(BIN)
-	upload-strapper  $(PRJ).bin
+	upload-strapper -n $(PRJ).bin
 	
 $(BIN): $(OBJS) 
 	$(LD)  $(OBJS) $(LDFLAGS) $(LIBS) -o $(BIN)

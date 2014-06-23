@@ -24,6 +24,7 @@ uint8_t has_data(int fd);
 #define CMD_GETCRC 0xCC
 #define CMD_HIRAM 0xCE
 #define CMD_SREC 0xCD
+#define CMD_SET_BOOT 0xBD
 
 #define IOSSDATALAT    _IOW('T', 0, unsigned long)
 #define IOSSIOSPEED    _IOW('T', 2, speed_t)
@@ -62,6 +63,8 @@ uint32_t readl() {
     return (((uint32_t)readw()) << 16) | readw();
 }
 
+uint8_t parseSREC(uint8_t * start, uint32_t len, uint8_t fl);
+
 int main (int argc, char ** argv) {
     // vars n shit bitches
     char * filename = 0;
@@ -71,7 +74,10 @@ int main (int argc, char ** argv) {
     bool verbose = false;
     bool term_only = false;
     bool program_reset = false;
+    
+    bool set_boot_srec = false;
     bool go_hiram = false;
+    bool srec = false;
     
     int BAUD_RATE = 28000;
     int BAUD_DELAY = 200;
@@ -91,14 +97,12 @@ int main (int argc, char ** argv) {
                     case 'n': no_terminal = true; break;
                     case 'v': verbose = true; break;
 					case 'r': program_reset = true; break;
-
+                    case 's': srec = true;
                 }
             } else
                 filename = arg;
         }
     }
-    
-    int flags;
     
     printf("Open serial... ");
     fd = open(port,O_RDWR);
@@ -164,10 +168,10 @@ int main (int argc, char ** argv) {
     
     fprintf(stderr, "Program size: %d\n", size);
     
-    uint8_t *data = (uint8_t*)malloc(size);
-    uint8_t *readback = (uint8_t*)malloc(size);
+    uint8_t *data = (uint8_t*)malloc(size+1);
+    uint8_t *readback = (uint8_t*)malloc(size+1);
     
-    if (!data) {
+    if (!data || !readback) {
         printf("Failed to allocate memory\n");
         return 1;
     }
@@ -178,6 +182,29 @@ int main (int argc, char ** argv) {
     }
     
     fclose(in);
+    
+    data[size] = 0;
+    size++;
+    
+    uint8_t flags = 0;
+    
+    if (srec) {
+        uint8_t ret = parseSREC(data, size, flags);
+        if (ret) {
+            printf("Failed to validate file as S-record.\n");
+            printf("Error %x: ", ret);
+            for (int i = 7; i >= 0; i--) {
+                printf ("%c",((ret >> i) & 0x1) + '0');
+                if (i == 4) printf(" ");
+            }
+        
+            printf("\n");
+            printf("Programming aborted.\n"); 
+            return 1;
+        }
+        go_hiram = true;
+        set_boot_srec = true;
+    }
     
     ////////////////////////////////
     
@@ -312,7 +339,69 @@ int main (int argc, char ** argv) {
             printf("Verification FAILED with %d errors. Retrying.\n\n",errors);
         } else {
             printf("Upload verified.\nBooting program.\n\n");
-            command(fd, CMD_SREC);
+            if (srec) {
+                printf("Setting boot from SREC... ");
+                fflush(stdout);
+        
+                command(fd, CMD_SET_BOOT);
+                uint32_t ok = readl();
+    
+                if (ok != 0xD0B07CDE) {
+                    printf("Sync error setting boot from srec. Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0B07CDE);
+                    return 1;
+                }
+                
+                printf("OK\n, Programming SREC... ");
+                
+                command(fd, CMD_SREC);
+                
+                uint32_t greet = readl();
+                
+                if (greet != 0xD0E881CC) {
+                    printf("Sync error executing srec (bad greeting). Reset board and try again.\nGot %08X, expected %08X\n\n", greet, 0xD0E881CC);
+                    return 1;
+                } else {
+                    printf(" started... ");
+                    fflush(stdout);
+                }
+                
+                uint8_t wr_flags = readb();
+    
+                char ch;
+                
+                while ((ch = sergetc(fd)) != 0xC0) {
+                    printf("%c",ch);
+                    fflush(stdout);
+                }
+                
+                uint32_t c0de = 0xC000 | readw();
+    
+                if (c0de != 0xC0DE) {
+                    printf("\nSync error executing srec (bad c0de). Reset board and try again.\nGot %08X, expected %08X\n\n", c0de, 0xC0DE);
+                    return 1;
+                }
+                
+                uint8_t ret_code = readb();
+                
+                uint16_t tail = readw();
+                
+                if (tail != 0xEF00) {
+                    printf("Sync error executing srec (bad tail). Reset board and try again.\nGot %08X, expected %08X\n\n", tail, 0xEF00);
+                    return 1;
+                }    
+ 
+                if (ret_code) {
+                    
+                    
+                }
+                
+                printf("OK!\n");
+                break;
+
+            } else {
+                command(fd, CMD_BOOT);
+                break;
+            }
         }
     }
     
