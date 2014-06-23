@@ -19,6 +19,7 @@ uint32_t pos;
 uint32_t srec_sz;
 
 uint32_t entry_point;
+uint32_t program_sz;
 uint8_t wr_flags;
 uint8_t errno;
 uint8_t erased_sectors[SECTOR_COUNT];
@@ -145,6 +146,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
     pos = 0;
     errno = 0;
     entry_point = 0;
+    program_sz = 0;
     
     write_armed = armed;
        
@@ -161,7 +163,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
     
     if (srec[srec_sz-1] != 0) {
         errno |= FORMAT_ERROR;
-        //printf("Record is missing trailing null - %c\n", srec[srec_sz]);
+        //printf("Record is missing trailing null\n", srec[srec_sz]);
         return errno;
     }
  
@@ -175,7 +177,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
         
         if (Sc != 'S') {
             errno |= FORMAT_ERROR;
-            //printf("Record started with %c\n", Sc);
+            //printf("Record started with %c, not S.\n", Sc);
             break;
         }
         
@@ -197,11 +199,11 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
         RETURN_IF_ERROR();
         
         switch (typ) {
-            case 3:
+            case 3: // data records (varying address size)
             case 2:
             case 1:
                 data_rec_cnt++;
-            case 0:
+            case 0: // metadata record
                 for (int i = 0; i < len && !errno; i++) {
                     uint8_t byt = getb();
                     if (typ == 0)
@@ -209,9 +211,10 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
                 
                     write(address, byt);
                     address++; 
+                    program_sz++;
                 }
                 break;
-            case 5:
+            case 5: // record count
             case 6:
                 if (address != data_rec_cnt) {
                     errno |= FORMAT_ERROR;
@@ -219,7 +222,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
                     return errno;
                 }
                 break;
-            case 7:
+            case 7: // entry point records (varying address size)
             case 8:
             case 9:
                 entry_point = address;

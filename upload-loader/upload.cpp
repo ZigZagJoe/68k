@@ -36,6 +36,8 @@ uint16_t readw();
 uint32_t readl();
 uint64_t millis();
 
+extern uint32_t program_sz;
+
 // file descriptor
 int fd;
 
@@ -149,7 +151,7 @@ int main (int argc, char ** argv) {
     int size = ftell (in);
     rewind(in);
     
-    fprintf(stderr, "Program size: %d\n", size);
+    fprintf(stderr, "File size: %d\n", size);
     
     uint8_t *data = (uint8_t*)malloc(size+1);
     uint8_t *readback = (uint8_t*)malloc(size+1);
@@ -165,9 +167,6 @@ int main (int argc, char ** argv) {
     }
     
     fclose(in);
-    
-    data[size] = 0;
-    size++;
 
     uint8_t flags = 0;
     
@@ -178,6 +177,9 @@ int main (int argc, char ** argv) {
         flags |= ALLOW_LOADER;
             
     if (srec) {
+        data[size] = 0;
+        size++;
+        
         printf("Validating S-record... ");
         uint8_t ret = parseSREC(data, size, flags, false);
         if (ret) {
@@ -199,6 +201,7 @@ int main (int argc, char ** argv) {
         } else 
             printf("OK.\n");
             
+        printf("Payload size: %d\n",program_sz);
         go_hiram = true;
     }
     
