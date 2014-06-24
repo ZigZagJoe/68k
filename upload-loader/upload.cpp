@@ -77,7 +77,20 @@ int main (int argc, char ** argv) {
             
             if (dash) {
                 switch (*arg) {
-                    case 'h': printf("I PITY THE FOOL\n"); return 1;
+                    case 'h': printf(
+                        "\nUsage: upload-loader [options] file\n"
+                        "\n"
+                        "-t     only act as terminal emulator\n"
+                        "-n     do not enter terminal emulator mode after load\n"
+                        "-v     verbose verification error log\n"
+                        "-s     file to load is a motorola s-record\n"
+                        "-f     allow s-record to write flash\n"
+                        "-l     allow s-record to write loader (must also specify -f)\n"
+                        "-b     boot from entry point specified in s-record\n"
+                        "-x     s-record is in binary format from srec2srb\n"
+                        "-c     enable qcrc validation (implicit in -s)\n"
+                        "\n"
+                    ); return 1;
                     case 't': term_only = true; break;
                     case 'n': no_terminal = true; break;
                     case 'v': verbose = true; break;
@@ -245,8 +258,6 @@ int main (int argc, char ** argv) {
         
         if (go_hiram) 
             SET_FLAG("HIRAM", CMD_SET_HIRAM, HIRAM_MAGIC);
-
-        //sergetc(fd); // first junk char from uart
 
         printf("Uploading...\n");
         
