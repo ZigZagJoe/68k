@@ -18,6 +18,7 @@
 #define PROG_FAILURE     128
 
 // command codes
+// unused 0xC0
 #define CMD_SET_BOOT	0xC1
 #define CMD_SET_FLWR	0xC2
 #define CMD_SET_LDWR	0xC3
@@ -37,13 +38,36 @@
 #define HIRAM_MAGIC     0xCE110C00
 #define BINSREC_MAGIC   0xB17AC5EC
 
-#ifndef SREC_DEBUG
+// important addresses
+#define FLASH_START 0x80000
+#define IO_START    0xC0000
+#define LOADER_END  0x80FFF
+#define LOWEST_VALID_ADDR 0x2000
+
+#define SECTOR_COUNT     64
+
+#ifndef UPLOADER    /* ############ code for loader-C ############ */
+
+#include <io.h>
+
 #define dbgprintf ; //
 // comment out the function call 
 // have ; so that if (x) dbgprintf(...) does not break stuff
-#else
+
+#else               /* ############ code for upload-loader ############ */
+          
 #include <stdio.h>
 #define dbgprintf printf
+
+extern uint8_t MEMORY[0x100000];
+
+// don't use...
+#define flash_erase_sector ; //
+
+#define flash_write_byte(A,V) MEMORY[A] = V;
+#define MEM(X) MEMORY[X]
+#define ADDR_TO_SECTOR(X) (((X) & 0x3FFFF) >> 12)  
+    
 #endif
 
 #endif

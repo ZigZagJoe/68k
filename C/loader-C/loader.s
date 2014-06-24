@@ -33,15 +33,15 @@
 .set hiram_addr, 0x40000
 
 | command codes
-.set CMD_BOOT,      0xCB
-.set CMD_RESET,     0xCF
-.set CMD_QCRC,      0xCC
-.set CMD_SREC,      0xCD
 .set CMD_SET_BOOT,  0xC1
 .set CMD_SET_FLWR,  0xC2
 .set CMD_SET_LDWR,  0xC3
 .set CMD_SET_HIRAM, 0xC4
 .set CMD_SET_BINSR, 0xC5
+.set CMD_BOOT,      0xCB
+.set CMD_QCRC,      0xCC
+.set CMD_SREC,      0xCD
+.set CMD_RESET,     0xCF
 
 | srec flags
 .set FLAG_BOOT,        1

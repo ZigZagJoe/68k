@@ -8,6 +8,7 @@
 #include <sys/poll.h>
 #include <ctype.h>
 #include <sys/time.h>
+#include <string.h>
 
 #include <loader.h>
 
@@ -38,6 +39,9 @@ uint64_t millis();
 
 extern uint32_t program_sz;
 extern uint32_t entry_point;
+extern uint8_t erased_sectors[SECTOR_COUNT];
+
+uint8_t MEMORY[0x100000];
 
 // file descriptor
 int fd;
@@ -196,13 +200,15 @@ int main (int argc, char ** argv) {
      
     if (bin_srec)
         flags |= BINARY_SREC;
-               
+    
+    memset(MEMORY,0,0x100000);
+         
     if (srec) {
         data[size] = 0;
         size++;
         
         printf("Validating S-record... ");
-        uint8_t ret = parseSREC(data, size, flags, false);
+        uint8_t ret = parseSREC(data, size, flags, true);
         if (ret) {
             printf("\nFailed to validate S-record. Ret: ");
             for (int i = 7; i >= 0; i--) {
@@ -228,6 +234,45 @@ int main (int argc, char ** argv) {
         printf("Payload size: %d\n",program_sz);
         use_qcrc  = true;
         go_hiram = true;
+        
+        if (loader_wr && erased_sectors[0]) {
+            printf("\n*** Loader sector WILL be cleared. ***\n");
+            uint32_t sp = 0, pc = 0;
+            uint32_t a = 0x80000;
+            
+            sp |= MEMORY[a++];
+            sp <<= 8;
+            sp |= MEMORY[a++];
+            sp <<= 8;
+            sp |= MEMORY[a++];
+            sp <<= 8;
+            sp |= MEMORY[a++];
+            
+            pc |= MEMORY[a++];
+            pc <<= 8;
+            pc |= MEMORY[a++];
+            pc <<= 8;
+            pc |= MEMORY[a++];
+            pc <<= 8;
+            pc |= MEMORY[a++];
+            
+            printf("SP: 0x%08X  PC: 0x%08X\n",sp,pc);
+            
+            if (sp > FLASH_START) {
+                printf("\nERROR: SP is not located in RAM. Aborting!\n");
+                return 1;
+            }
+            
+            if (pc < FLASH_START || pc >= IO_START) {
+                printf("\nERROR: PC is not located in FLASH. Aborting!\n");
+                return 1;
+            }
+ 
+            if (!erased_sectors[ADDR_TO_SECTOR(pc)]) {
+                printf("\nERROR: PC is located in a sector that was not written to. Aborting!\n");
+                return 1;
+            }
+        }
      
         if (loader_wr && flash_wr) {
             printf("\nWARNING: Loader write and Flash write have both been enabled.\n");
@@ -360,7 +405,7 @@ int main (int argc, char ** argv) {
         if (errors) {
             printf("Verification FAILED with %d errors. Retrying.\n\n",errors);
         } else {
-            printf("Upload verified.\n\n");
+            printf("Upload echo verified.\n\n");
             if (srec) {
             
                 if (boot_srec && !SET_FLAG("run from SREC", CMD_SET_BOOT, BOOT_MAGIC))

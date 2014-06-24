@@ -1,18 +1,9 @@
 #include <flash.h>
 #include <stdint.h>
-#include <io.h>
 
 //void printf(char * fmt, ...);
 
 #include <loader.h>
-
-// important addresses
-#define FLASH_START 0x80000
-#define IO_START    0xC0000
-#define LOADER_END  0x80FFF
-#define LOWEST_VALID_ADDR 0x2000
-
-#define SECTOR_COUNT     64
 
 // global vars
 uint8_t *srec;
@@ -85,11 +76,14 @@ void flash_write(uint32_t addr, uint8_t byte) {
     uint8_t sector = ADDR_TO_SECTOR(addr);
     
 #ifdef WR_DEBUG   
-    dbgprintf("%X flWrite %X (sect %x)\n", addr, byte, sector);
+    dbgprintf("%08X flWrite %02hhX (sect %hhd)\n", addr, byte, sector);
 #endif
 
     if (!erased_sectors[sector]) {
-         dbgprintf("Flash erase sector %x\n", sector);
+    
+#ifdef WR_DEBUG   
+         dbgprintf("Flash erase sector %hhd\n", sector);
+#endif
          erased_sectors[sector] = 1;
           
          if (write_armed)
@@ -105,7 +99,7 @@ void flash_write(uint32_t addr, uint8_t byte) {
 void ram_write(uint32_t addr, uint8_t byte) {
 
 #ifdef WR_DEBUG   
-    dbgprintf("%X rmWrite %X\n",addr,byte);
+    dbgprintf("%08X rmWrite %02X\n",addr,byte);
 #endif
     
     if (!write_armed) 
@@ -117,7 +111,7 @@ void ram_write(uint32_t addr, uint8_t byte) {
 uint8_t write(uint32_t addr, uint8_t byte) {
     if (addr < LOWEST_VALID_ADDR) {
         errno |= INVALID_WRITE;
-        dbgprintf("Attempted to write to system space. Bad address: 0x%X\n", addr);
+        dbgprintf("Attempted to write to system address space. Bad address: 0x%X\n", addr);
         return 1;
     } else if (addr >= IO_START) {
         errno |= INVALID_WRITE;
