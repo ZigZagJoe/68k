@@ -5,6 +5,7 @@
 #define BOOT_SREC          1
 #define ALLOW_FLASH        2
 #define ALLOW_LOADER       4
+#define BINARY_SREC        8
 
 // errno bits
 #define BAD_HEX_CHAR       1
@@ -25,11 +26,19 @@
 #define CMD_SET_FLWR	0xC2
 #define CMD_SET_LDWR	0xC3
 #define CMD_SET_HIRAM   0xC4
+#define CMD_SET_BINSR   0xC5
 
 // magic flag values
 #define BOOT_MAGIC      0xD0B07CDE
 #define FLWR_MAGIC      0xF1A5C0DE
 #define LDWR_MAGIC      0x10ADC0DE
 #define HIRAM_MAGIC     0xCE110C00
+#define BINSREC_MAGIC   0xB17AC5EC
+
+#ifndef DEBUG
+#define dbgprintf ; //
+#else
+#define dbgprintf printf
+#endif
 
 #endif

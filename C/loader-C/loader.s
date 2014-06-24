@@ -41,11 +41,13 @@
 .set CMD_SET_FLWR,  0xC2
 .set CMD_SET_LDWR,  0xC3
 .set CMD_SET_HIRAM, 0xC4
+.set CMD_SET_BINSR, 0xC5
 
 | srec flags
 .set FLAG_BOOT,        1
 .set FLAG_WR_FLASH,    2
 .set FLAG_WR_LOADER,   4
+.set FLAG_BIN_SREC,    8
 
 #####################################################################
 | entry point of bootloader code in RAM
@@ -120,11 +122,21 @@ cmd_byte:
     cmp.b #CMD_SET_LDWR, %d0
     beq set_loader_wr
     
+    cmp.b #CMD_SET_BINSR, %d0
+    beq set_binary_srec
+    
     TILDBG BC                  | not a recognized command
     bra loop
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||  
 | flag setting handlers
+ 
+| parse binary srec
+set_binary_srec:
+    move.l #0xB17AC5EC, %d0
+    jsr putl
+    ori #FLAG_BIN_SREC, %d5
+    bra loop
  
 | set to boot from s-record
 set_boot:

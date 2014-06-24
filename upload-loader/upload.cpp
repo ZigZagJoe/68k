@@ -60,6 +60,7 @@ int main (int argc, char ** argv) {
     bool boot_srec = false;
     bool flash_wr = false;
     bool loader_wr = false;
+    bool bin_srec = false;
     
     int BAUD_RATE = 28000;
     int BAUD_DELAY = 200;
@@ -83,6 +84,7 @@ int main (int argc, char ** argv) {
                     case 'l': loader_wr = true; break;
                     case 'f': flash_wr = true; break;
                     case 'b': boot_srec = true; break;
+                    case 'x': bin_srec = true; break;
                 }
             } else
                 filename = arg;
@@ -175,7 +177,10 @@ int main (int argc, char ** argv) {
         
     if (loader_wr)
         flags |= ALLOW_LOADER;
-            
+     
+    if (bin_srec)
+        flags |= BINARY_SREC;
+               
     if (srec) {
         data[size] = 0;
         size++;
@@ -346,7 +351,10 @@ int main (int argc, char ** argv) {
                     
                 if (loader_wr && !SET_FLAG("loader write", CMD_SET_LDWR, LDWR_MAGIC))
                     return 1;
-                           
+                   
+                if (bin_srec && !SET_FLAG("binary srec", CMD_SET_BINSR, BINSREC_MAGIC)) 
+                    return 1;
+                    
                 printf("Programming SREC");
                 fflush(stdout);
                 
