@@ -62,6 +62,7 @@ int main (int argc, char ** argv) {
     bool flash_wr = false;
     bool loader_wr = false;
     bool bin_srec = false;
+    bool use_qcrc = false;
     
     int BAUD_RATE = 28000;
     int BAUD_DELAY = 200;
@@ -86,6 +87,7 @@ int main (int argc, char ** argv) {
                     case 'f': flash_wr = true; break;
                     case 'b': boot_srec = true; break;
                     case 'x': bin_srec = true; break;
+                    case 'c': use_qcrc = true; break;
                 }
             } else
                 filename = arg;
@@ -189,8 +191,7 @@ int main (int argc, char ** argv) {
         printf("Validating S-record... ");
         uint8_t ret = parseSREC(data, size, flags, false);
         if (ret) {
-            printf("FAILED!\n");
-            printf("Error: ");
+            printf("\nFailed to validate S-record. Ret: ");
             for (int i = 7; i >= 0; i--) {
                 printf ("%c",((ret >> i) & 0x1) + '0');
                 if (i == 4) printf(" ");
@@ -212,19 +213,20 @@ int main (int argc, char ** argv) {
         }
         
         printf("Payload size: %d\n",program_sz);
+        use_qcrc  = true;
         go_hiram = true;
-    }
-    
-    if (loader_wr && flash_wr) {
-        printf("\nWARNING: Loader write and Flash write have both been enabled.\n");
-        printf("Please confirm that you want to execute a bootloader update\n");
-        printf("by pressing SHIFT+1, then enter. Press any other key to abort.\n");
-        if (getchar() != '!') {
-            printf("\nAborting!\n");
-            return 1;
-        }
+     
+        if (loader_wr && flash_wr) {
+            printf("\nWARNING: Loader write and Flash write have both been enabled.\n");
+            printf("Please confirm that you want to execute a bootloader update\n");
+            printf("by pressing SHIFT+1, then enter. Press any other key to abort.\n");
+            if (getchar() != '!') {
+                printf("\nAborting!\n");
+                return 1;
+            }
         
-        printf("\nContinuing.\n");
+            printf("\nContinuing.\n");
+        }
     }
     
     ////////////////////////////////
@@ -311,24 +313,26 @@ int main (int argc, char ** argv) {
             return 1;
         }
         
-        command(fd, CMD_QCRC);
+        if (use_qcrc) {
+            command(fd, CMD_QCRC);
         
-        uint16_t intro = readw();
-        uint32_t crc = readl();
-        uint8_t nul = readb();
+            uint16_t intro = readw();
+            uint32_t crc = readl();
+            uint8_t nul = readb();
         
-        if (intro != 0xFCAC || nul != 0) { 
-            printf("Sync error reading CRC. Reset board and try again.\n");
-            printf("Error: %s\n\n",(nul != 0)?"Intro invalid.":"Tail invalid."); 
-            return 1;
+            if (intro != 0xFCAC || nul != 0) { 
+                printf("Sync error reading CRC. Reset board and try again.\n");
+                printf("Error: %s\n\n",(nul != 0)?"Intro invalid.":"Tail invalid."); 
+                return 1;
+            }
+        
+            if (crc != expct_crc) {
+                printf("CRC ERROR: Got %08X, expected %08X\n",crc,expct_crc);
+                printf("Retrying.\n\n");
+                continue;
+            } else
+                printf("CRC verified: 0x%08X\n", crc);
         }
-        
-        if (crc != expct_crc) {
-            printf("CRC ERROR: Got %08X, expected %08X\n",crc,expct_crc);
-            printf("Retrying.\n\n");
-            continue;
-        } else
-            printf("CRC verified: 0x%08X\n", crc);
         
         int errors = 0;
                

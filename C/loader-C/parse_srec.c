@@ -237,7 +237,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
             case 8:
             case 9:
                 entry_point = address;
-                dbgprintf("Set entry point to 0x%x\n",entry_point);
+                //dbgprintf("Set entry point to 0x%x\n",entry_point);
                 break;
         }
         
