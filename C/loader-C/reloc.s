@@ -8,6 +8,7 @@
 
 .extern loader_start
 .extern __begin
+.extern __size
 
 | display a constant byte
 .macro TILDBG byte
@@ -26,8 +27,8 @@
 | boot stack pointer and program counter
 | comment these out if testing in RAM...
 
-|_isp: .long stack_pointer      | initial spvr stack pointer
-|_ipc: .long 0x80008            | initial program counter 
+_isp: .long stack_pointer      | initial spvr stack pointer
+_ipc: .long 0x80008            | initial program counter 
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader entry point
@@ -47,7 +48,7 @@ _boot:
     lea (__begin, %pc), %a0    | load address of start of loader, relative to %PC
                                        
     movea.l #reloc_addr, %a1   | load relocation target address into %a1
-    move.w #1023, %d0          | copy full 4kb of bootloader area ((1023+1) * 4)
+    move.w #__size, %d0        | copy bootloader size
 
     TILDBG 1C                  | debugging message
    

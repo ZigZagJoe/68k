@@ -71,6 +71,7 @@ extern uint8_t MEMORY[0x100000];
 
 // don't use...
 #define flash_erase_sector ; //
+#define flash_arm ;//
 
 #define flash_write_byte(A,V) MEMORY[A] = V;
 #define MEM(X) MEMORY[X]

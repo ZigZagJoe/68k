@@ -12,11 +12,15 @@ SECTIONS {
         reloc.o(.text)
 	} > RAM
 	
-	.body : ALIGN(0x10) {
+	.body : ALIGN(0x2) {
 	    loader.o(.text)
 	    loader.o(.data)
 		*(.text)
 		*(.data)
 		*(.rodata.*)
+		__end = .;
 	} > RAM
 }
+
+/* size of loader, in number of longs to copy */
+__size = (__end - __begin) / 4;

@@ -181,8 +181,8 @@ int main (int argc, char ** argv) {
             return 1;
         }
     
-        uint32_t addr = 0x1000;
-        uint32_t len = 0x10000;
+        uint32_t addr = 0x80000;
+        uint32_t len = 2220;
     
         printf("Performing dump of %d bytes starting at %08X\n",len, addr);
         printf("Resetting board...\n");

@@ -56,11 +56,11 @@ cmd_jmp_table:
     .long __bad_cmd         | C8
     .long __bad_cmd         | C9
     .long memory_dump       | CA
-    .long boot              | CB
+    .long boot_ram          | CB
     .long get_qcrc          | CC
     .long do_parse_srec     | CD
     .long __bad_cmd         | CE
-    .long reset_addr        | CF
+    .long reset_addr        | CF - not used
 
 | srec flags
 .set FLAG_BOOT,        1
@@ -85,7 +85,7 @@ loader_start:
     move.b #1, (TSR)           | transmitter enable
     
 reset_addr:
-    TILDBG B3                  | bootloader ready!
+    TILDBG B7                  | bootloader ready!
    
     | initialize variables
     move.l #loram_addr, %d0
@@ -115,24 +115,24 @@ loop:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | execute commmand byte in %d0
 cmd_byte:
-    subi.b #0xC0, %d0
-    cmp.b #0xF, %d0
     
-    bhi __cmd_oor
+    subi.b #0xC0, %d0          | get table offset
+    
+    cmp.b #0xF, %d0
+    beq reset_addr
+    bgt __cmd_oor              
     
     and.w #0xF, %d0
+    lsl.w #2, %d0              | ind * 4 (size of long)
     
-    move.b %d0, TIL311
-    
-    lsl.w #2, %d0
-    
-    movea.l #cmd_jmp_table, %a0
-    jsr (%a0, %d0.W)
+    movea.l #cmd_jmp_table, %a0 | load table address
+    move.l (%a0, %d0.W), %a0   | read address at offset
+    jsr (%a0)                  | jump to address
     
     bra loop
     
 __cmd_oor:
-    TILDBG BC                  | not a recognized command
+    TILDBG B0                  | not a recognized command
     bra loop
     
 __bad_cmd:
@@ -282,8 +282,8 @@ do_parse_srec:
 do_boot:
     | boot from the s-record address
     | ought to check this is nonzero...!
-    move.l (entry_point), %a5
-    bra boot
+    TILDBG BC
+    jmp.l (entry_point)
 
 | an error occured, do not boot.
 bad_srec:
@@ -308,7 +308,7 @@ get_qcrc:
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | boot command
-boot:
+boot_ram:
     TILDBG BB                  | display boot code
     jmp (%a5)                  | jump to the code loaded into RAM
 
