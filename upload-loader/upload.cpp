@@ -20,6 +20,7 @@
 #define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))
 
 char port_def[] ="/dev/cu.usbserial-M68KV1BB";
+
 const int pin_rts = TIOCM_RTS;
 
 int sergetc(int fd);
@@ -37,13 +38,15 @@ uint16_t readw();
 uint32_t readl();
 uint64_t millis();
 
+// s-rec info variables
 extern uint32_t program_sz;
 extern uint32_t entry_point;
 extern uint8_t erased_sectors[SECTOR_COUNT];
 
+// simulated system memory
 uint8_t MEMORY[0x100000];
 
-// file descriptor
+// file descriptor... getting lazy...
 int fd;
 
 /// MAIN CODE
@@ -201,14 +204,17 @@ int main (int argc, char ** argv) {
     if (bin_srec)
         flags |= BINARY_SREC;
     
+    // clear simulated memory array
     memset(MEMORY,0,0x100000);
          
     if (srec) {
+        // add trailing null
         data[size] = 0;
         size++;
         
         printf("Validating S-record... ");
         uint8_t ret = parseSREC(data, size, flags, true);
+        
         if (ret) {
             printf("\nFailed to validate S-record. Ret: ");
             for (int i = 7; i >= 0; i--) {
@@ -238,6 +244,7 @@ int main (int argc, char ** argv) {
         // a loader write will be executed: do a sanity check
         if (loader_wr && erased_sectors[0]) {
             printf("\n*** Loader sector WILL be cleared. ***\n");
+            
             uint32_t sp = 0, pc = 0;
             uint32_t a = 0x80000;
             
@@ -283,12 +290,13 @@ int main (int argc, char ** argv) {
                 printf("# Please confirm that you want to update the bootloader sector    #\n");
                 printf("# by pressing SHIFT+1, then enter. Press any other key to abort.  #\n");
                 printf("###################################################################\n\n> ");
+                
                 if (getchar() != '!') {
                     printf("\nAborting!\n");
                     return 1;
                 }
         
-                printf("\nContinuing.\n");
+                printf("\nContinuing with programming.\n");
             }
         }
     }
@@ -350,10 +358,12 @@ int main (int argc, char ** argv) {
                 
         }
         
+        // done!
         printf("%6.2f %%\n\n",((float)100));
         
         uint64_t start = millis();
         
+        // read additional bytes while they are available, wait up to 250ms 
         while (1) {
             if (has_data(fd))
             	if(read(fd, &ch, 1) == 1) {
@@ -370,11 +380,12 @@ int main (int argc, char ** argv) {
         }
         
         if (size/10 > rbi) {
-            printf("Only %d bytes read. Reset board and try again.\n\n", rbi);
+            printf("Only %d bytes read. Reset board manually and try again.\n\n", rbi);
             close(fd);
             return 1;
         }
         
+        // validate CRC, if enabled
         if (use_qcrc) {
             command(fd, CMD_QCRC);
         
@@ -396,6 +407,7 @@ int main (int argc, char ** argv) {
                 printf("CRC verified: 0x%08X\n", crc);
         }
         
+        // validate readback
         int errors = 0;
                
         for (int i = 0; i < size; i++) {
@@ -408,12 +420,13 @@ int main (int argc, char ** argv) {
             }
         }
         
+        // okay, errors? otherwise boot.
         if (errors) {
             printf("Verification FAILED with %d errors. Retrying.\n\n",errors);
         } else {
             printf("Upload echo verified.\n\n");
-            if (srec) {
             
+            if (srec) {
                 if (boot_srec && !SET_FLAG("run from SREC", CMD_SET_BOOT, BOOT_MAGIC))
                     return 1;
                     

@@ -1,25 +1,29 @@
 #include <flash.h>
 #include <stdint.h>
 
-//void printf(char * fmt, ...);
-
 #include <loader.h>
 
-// global vars
-uint8_t *srec;
-uint32_t pos;
-uint32_t srec_sz;
+#define BREAK_IF_ERROR()    if (errno) break
 
-uint32_t entry_point;
-uint32_t program_sz;
-uint8_t wr_flags;
-uint8_t errno;
+// global state vars
+uint8_t *srec;          // pointer to memory containing s record
+uint32_t pos;           // current position in srec
+uint32_t srec_sz;       // size of srec, including trailing null
+uint8_t write_armed;    // boolean if writes are enabled or not
+
+
+// info vars
+uint16_t rec_cnt = 0;   // number of records
+uint32_t entry_point;   // entry point, specified in S7-S9 records, 0 if none
+uint32_t program_sz;    // number of data bytes written
+uint8_t wr_flags;       // write flags (see loader.h)
+uint8_t errno;          // error flags register
+uint8_t checksum;       // checksum char
+
 uint8_t erased_sectors[SECTOR_COUNT];
-uint8_t write_armed;
-uint8_t checksum;
+                        // array containing sectors that were erased
 
-#define RETURN_IF_ERROR()    if (errno) return errno
-
+// read a character from srec
 uint8_t readch() {
     if (pos >= srec_sz) {
         errno |= EARLY_EOF;
@@ -29,6 +33,7 @@ uint8_t readch() {
     
     char ch = srec[pos++];
     
+    // if not a binary srec, throw an exception if character is not in a valid range
     if (!(wr_flags & BINARY_SREC) && ((ch < '0' || ch > 'z') && ch !='\n' && ch != '\r')) {
         dbgprintf("Invalid character encountered\n");
         errno |= INVALID_CHAR;
@@ -38,6 +43,7 @@ uint8_t readch() {
     return ch;
 }
 
+// read a nibble (one hex char)
 uint8_t getn() {
     char ch = readch();
     
@@ -53,10 +59,11 @@ uint8_t getn() {
     return 0;        
 }
 
+// read a single byte
 uint8_t getb() {
     uint8_t b;
     
-    if (wr_flags & BINARY_SREC) {
+    if (wr_flags & BINARY_SREC) { 
         b = readch();
     } else
         b = (getn() << 4) | getn();
@@ -65,6 +72,7 @@ uint8_t getb() {
     return b;
 }
 
+// read an address of variable length
 uint32_t readAddr(uint8_t len) {
     uint32_t i = 0;
     while (len-- > 0)
@@ -72,6 +80,7 @@ uint32_t readAddr(uint8_t len) {
     return i;
 }
 
+// execute a write to the byte specified, erasing a sector if it has not been already erased
 void flash_write(uint32_t addr, uint8_t byte) {
     uint8_t sector = ADDR_TO_SECTOR(addr);
     
@@ -96,6 +105,7 @@ void flash_write(uint32_t addr, uint8_t byte) {
     flash_write_byte(addr, byte);
 }
 
+// write a byte to memory address
 void ram_write(uint32_t addr, uint8_t byte) {
 
 #ifdef WR_DEBUG   
@@ -108,6 +118,7 @@ void ram_write(uint32_t addr, uint8_t byte) {
     MEM(addr) = byte;
 }
 
+// perform a write (and do a lot of sanity checks)
 uint8_t write(uint32_t addr, uint8_t byte) {
     if (addr < LOWEST_VALID_ADDR) {
         errno |= INVALID_WRITE;
@@ -118,6 +129,7 @@ uint8_t write(uint32_t addr, uint8_t byte) {
         dbgprintf("Attempted to write to IO address space (or higher). Bad address: 0x%X\n", addr);
         return 1;
     } else if (addr >= FLASH_START && addr < IO_START) {
+    
         if (!(wr_flags & ALLOW_FLASH)) {
             errno |= INVALID_WRITE;
             dbgprintf("Attempted to write to flash without allow_flash flag set.\n");
@@ -134,6 +146,7 @@ uint8_t write(uint32_t addr, uint8_t byte) {
     } else 
         ram_write(addr, byte);
     
+    // verify that the byte was successfully written
     if (write_armed && MEM(addr) != byte) {
         dbgprintf("Write to %X of value %X failed.\n",addr,byte&0xFF);
         errno |= FAILED_WRITE;
@@ -143,42 +156,45 @@ uint8_t write(uint32_t addr, uint8_t byte) {
     return 0;
 }
 
+// parse a s-record, either test writing or writing for reals (based on armed)
 uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed) {
+    
+    // local variables 
+    char Sc; // char to hold 'S'
+    uint8_t typ, len, file_crc, loc_crc;
+    uint32_t address;
+    uint16_t data_rec_cnt = 0;
+    
+    // initialize global state variables
     srec_sz = buffer_len;
     wr_flags = fl;
     srec = buffer;
-    
+    write_armed = armed;
+
+    rec_cnt = 0;
     pos = 0;
     errno = 0;
     entry_point = 0;
     program_sz = 0;
     
-    write_armed = armed;
-       
-    char Sc; // char to hold 'S'
-    uint8_t typ, len, file_crc, loc_crc;
-    uint32_t address;
-    
-    uint16_t data_rec_cnt = 0;
-    uint16_t rec_cnt = 0;
-
     // clear sector count array
     for (uint8_t i = 0; i < SECTOR_COUNT; i++)
         erased_sectors[i] = 0;    
-    
+        
+    // check for trailing null
     if (srec[srec_sz-1] != 0) {
         errno |= FORMAT_ERROR;
         dbgprintf("Record is missing trailing null\n", srec[srec_sz]);
-        return errno;
     }
  
     // number of address bytes for each record type
     const uint8_t addr_len[] = {2,2,3,4,0,2,3,4,3,2};
     
-    while(1) {
+    while(!errno) {
         rec_cnt++;
         
-        Sc = readch();  // if not a S, bad news
+        // begin of record
+        Sc = readch();  // if not a S, bad news...
         
         if (Sc != 'S') {
             errno |= FORMAT_ERROR;
@@ -188,20 +204,23 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
         
         typ = readch() - '0'; // record type
 
-        RETURN_IF_ERROR();
+        BREAK_IF_ERROR();
         
         if (typ > 9) {
             errno |= FORMAT_ERROR;
-            dbgprintf("Record of invalid type\n");
+            dbgprintf("Record #%d is of invalid type\n", rec_cnt);
             break;
         }
         
-        checksum = 0;              // reset checksum
+        checksum = 0;  // reset checksum
+        
+        // number of data bytes (record byte count, - checksum, - addr bytes)
         len = getb() - addr_len[typ] - 1;
        
+        // read address field
         address = readAddr(addr_len[typ]);
         
-        RETURN_IF_ERROR();
+        BREAK_IF_ERROR();
         
         switch (typ) {
             case 3: // data records (varying address size)
@@ -211,9 +230,11 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
             case 0: // metadata record
                 for (int i = 0; i < len && !errno; i++) {
                     uint8_t byt = getb();
+                    
                     if (typ == 0)
                         continue;
                 
+                    // perform write
                     write(address, byt);
                     address++; 
                     program_sz++;
@@ -235,39 +256,36 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
                 break;
         }
         
-        RETURN_IF_ERROR();
+        BREAK_IF_ERROR();
         
         if (len != 0 && (typ >= 4)) {
              errno |= FORMAT_ERROR;
-             dbgprintf("Record has data in record that should not contain data!\n");
-             return errno;
+             dbgprintf("Record #%d has data, but type (%d) should not contain data!\n", rec_cnt,typ);
+             break;
         }
         
-        loc_crc = ~checksum;
-        file_crc = getb();
+        loc_crc = ~checksum; // one's complement
+        file_crc = getb();   // read checksum from file
         
         if (loc_crc != file_crc) {
             errno |= CRC_ERROR;
-            dbgprintf("CRC error in record on line %d: got %d, calculated %d\n",rec_cnt, file_crc,loc_crc);
-            return errno;
+            dbgprintf("CRC error in record #%d: got %d, calculated %d\n",rec_cnt, file_crc,loc_crc);
+            break;
         }
         
         while (readch() != '\n' && !errno); // garbage at end of line...
             
-        RETURN_IF_ERROR();
+        BREAK_IF_ERROR();
         
-        if (srec[pos] == 0) 
+        if (srec[pos] == 0) // we're done
             break;        
     }
 
     return errno;
 }
 
+// used by loader-C
 uint8_t handle_srec(uint8_t * start, uint32_t len, uint8_t fl) { 
-    //mem_dump(start, len);
-     
-    dbgprintf("start=0x%x, len=0x%x, wr_flags=0x%x\n", start, len, wr_flags);
-   
     // do sanity check parse run
     uint8_t ret = parseSREC(start,len,fl,0);
     
@@ -282,48 +300,3 @@ uint8_t handle_srec(uint8_t * start, uint32_t len, uint8_t fl) {
     
     return 0;
 }
-
-/*
-void _putc( char ch) {
-    while(!(TSR & 0x80));
-    UDR = ch;
-
-}
-
-void _puts(char *str) {
-    while (*str != 0)
-        _putc(*str++);
-}
-
-void mem_dump(uint8_t *addr, uint32_t cnt) {
-    int c = 0;
-    char ascii[17];
-    ascii[16] = 0;
-    
-    _putc('\n');
-     char *hex_chars = "0123456789ABCDEF";
-	
-    printf("%X   ", addr);
-    for (uint32_t i = 0; i < cnt; i++) {
-        uint8_t b = *addr;
-        
-        ascii[c] = (b > 31 & b < 127) ? b : '.';
-        
-		_putc(hex_chars[b>>4]);
-		_putc(hex_chars[b&0xF]);
-		_putc(' ');
-		
-        addr++;
-        
-        if (++c == 16) {
-            _putc(' '); _putc(' ');
-            _puts(ascii);
-            _putc('\n');
-            if ((i+1) < cnt)
-                printf("%X   ", addr);
-            c = 0;
-        }
-    }
-    
-    if (c < 15) _putc('\n');
-}*/

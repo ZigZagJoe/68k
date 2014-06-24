@@ -46,7 +46,8 @@
 
 #define SECTOR_COUNT     64
 
-#ifndef UPLOADER    /* ############ code for loader-C ############ */
+// conditional defines for parse_srec.c
+#ifndef UPLOADER    /* ############ code for loader-C ################# */
 
 #include <io.h>
 

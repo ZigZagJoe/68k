@@ -841,3 +841,51 @@ DDR |= 1 << 1;
     					 "bra lb\n");
     					 
     
+/*
+void _putc( char ch) {
+    while(!(TSR & 0x80));
+    UDR = ch;
+
+}
+
+void _puts(char *str) {
+    while (*str != 0)
+        _putc(*str++);
+}
+
+void mem_dump(uint8_t *addr, uint32_t cnt) {
+    int c = 0;
+    char ascii[17];
+    ascii[16] = 0;
+    
+    _putc('\n');
+     char *hex_chars = "0123456789ABCDEF";
+	
+    printf("%X   ", addr);
+    for (uint32_t i = 0; i < cnt; i++) {
+        uint8_t b = *addr;
+        
+        ascii[c] = (b > 31 & b < 127) ? b : '.';
+        
+		_putc(hex_chars[b>>4]);
+		_putc(hex_chars[b&0xF]);
+		_putc(' ');
+		
+        addr++;
+        
+        if (++c == 16) {
+            _putc(' '); _putc(' ');
+            _puts(ascii);
+            _putc('\n');
+            if ((i+1) < cnt)
+                printf("%X   ", addr);
+            c = 0;
+        }
+    }
+    
+    if (c < 15) _putc('\n');
+}*/
+
+    //mem_dump(start, len);
+    //dbgprintf("start=0x%x, len=0x%x, wr_flags=0x%x\n", start, len, wr_flags);
+   
