@@ -14,7 +14,7 @@ CC   = gcc
 
 # Compiler and linker flags
 
-CXXFLAGS =  -I ../C/loader-C -I . -fpermissive
+CXXFLAGS =  -I ../C/loader-C -I . -fpermissive -DSREC_DEBUG
 LDFLAGS  =
 LIBS = -lstdc++
 

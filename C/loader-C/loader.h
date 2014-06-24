@@ -37,11 +37,12 @@
 #define HIRAM_MAGIC     0xCE110C00
 #define BINSREC_MAGIC   0xB17AC5EC
 
-#ifndef DEBUG
+#ifndef SREC_DEBUG
 #define dbgprintf ; //
 // comment out the function call 
 // have ; so that if (x) dbgprintf(...) does not break stuff
 #else
+#include <stdio.h>
 #define dbgprintf printf
 #endif
 

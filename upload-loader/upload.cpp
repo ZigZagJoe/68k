@@ -197,8 +197,7 @@ int main (int argc, char ** argv) {
             }
         
             printf("\n");
-            if (ret & INVALID_WRITE)
-                printf("\nVerify that flash and loader writes are enabled.\n");
+
             if (ret & BAD_HEX_CHAR || ret & FORMAT_ERROR)
                 printf("\nVerify that the file is not corrupt.\n");
                 
