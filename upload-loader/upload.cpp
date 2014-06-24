@@ -35,6 +35,8 @@ void command(int fd, uint8_t instr);
 void putl(uint32_t i);
 void putwd(uint32_t i);
 
+int perform_dump();
+
 uint8_t readb();
 uint16_t readw();
 uint32_t readl();
@@ -50,7 +52,8 @@ uint8_t MEMORY[0x100000];
 
 // file descriptor... getting lazy...
 int fd;
-
+char * filename = 0;
+    
 /// MAIN CODE
 
 void usage() { 
@@ -78,14 +81,12 @@ int main (int argc, char ** argv) {
     }
     
     // vars n shit bitches
-    char * filename = 0;
     char * port = (char*)&port_def;
     
-    // tooo many falgs
+    // tooo many flags
     bool no_terminal = false;
     bool verbose = false;
     bool term_only = false;
-    bool program_reset = false;
     
     bool go_hiram = false;
     bool srec = false;
@@ -114,7 +115,6 @@ int main (int argc, char ** argv) {
                     case 't': term_only = true; break;
                     case 'n': no_terminal = true; break;
                     case 'v': verbose = true; break;
-					case 'r': program_reset = true; break;
                     case 's': srec = true; break;
                     case 'l': loader_wr = true; break;
                     case 'f': flash_wr = true; break;
@@ -122,11 +122,13 @@ int main (int argc, char ** argv) {
                     case 'x': bin_srec = true; break;
                     case 'c': use_qcrc = true; break;
                     case 'd': do_dump = true; break;
-                    case 'p': if (ac + 1 == argc) {
-                                 printf("Missing argument to -p\n");
-                                 return 1;
+                    case 'p': 
+                              if (ac + 1 == argc) {
+                                    printf("Missing argument to -p\n");
+                                    return 1;
                               }
                               
+                              port = argv[++ac];
                               printf("Port set to %s\n", port);
                               break;  
                 }
@@ -168,146 +170,30 @@ int main (int argc, char ** argv) {
         monitor(fd);
         return 0;
     }
-    
-    if (do_dump) {
-        if (!filename) {
-            printf("Missing filename.\n");
-            return 1;
-        }
-        
-        FILE *out = fopen(filename,"w");
-        if (!out) {
-            printf("Failed to open %s\n",filename);
-            return 1;
-        }
-    
-        uint32_t addr = 0x80000;
-        uint32_t len = 2220;
-    
-        printf("Performing dump of %d bytes starting at %08X\n",len, addr);
-        printf("Resetting board...\n");
-        command(fd, CMD_RESET);
-        serflush(fd);
-        printf("Sending dump command... \n");
-        command(fd, CMD_DUMP);
-        
-        uint32_t greeting = readw();
-        
-        if (greeting != DUMP_GREET_MAGIC) {
-            printf("Sync error in greeting. Got 0x%x\n", greeting);
-            return 1;
-        }
-        
-        putl(addr);
-        putl(len);
-        
-        uint32_t addr_rb, len_rb;
-        len_rb = readl();
-        addr_rb = readl();
-        
-        if (addr_rb != addr || len_rb != len) {
-            putl(0);
-            printf("Bad readback of length/address! Dump aborted...\n");
-            printf("Address: read 0x%08X, expected 0x%08X\n",addr_rb, addr);
-            printf("Length:  read 0x%08X, expected 0x%08X\n",len_rb, len);
-            return 1;
-        }
-        
-        putwd(DUMP_START_MAGIC);
-        
-        int crc = 0xDEADC0DE;
-        char ch;
-        
-        uint64_t start = millis();
-        uint64_t lastByte = start;
-        uint32_t sz = 0;
-    
-        printf("\n");
-        
-        while (sz < len) {
-            if (has_data(fd)) {
-            	if(read(fd, &ch, 1) == 1) {
-					fputc(ch, out);
-					crc = crc_update(crc, ch);
-					
-					lastByte = millis();
-					sz++;
-					
-					if (sz % 32 == 0) {
-					    printf("%6.2f %%\x8\x8\x8\x8\x8\x8\x8\x8",((float)sz * 100) / len);
-                        fflush(stdout);
-                    }
-            	} else {
-                	printf("Serial read error.\n");
-                	return 1;
-                }
-            } else usleep(10);
-            
-            if ((millis() - lastByte) > 250) {
-                printf("Error: timeout in dump (no data for 250ms)\n");
-            	return 1;
-            }
-        }
-        
-        uint64_t end = millis();
-        
-        printf("%6.2f %%\n\n",((float)100));					 
-             
-        uint32_t rem_crc = readl();
-        uint16_t tail = readw();
-        
-        if (tail != DUMP_TAIL_MAGIC) {
-            printf("Sync error in tail. Got 0x%x\n", tail);
-            return 1;
-        }
-        
-        printf("Read %d bytes in %d ms\n",sz, end-start);
-        // (%3.2f bytes/s) ((float)sz) / (((float)(end-start))/ 1000)
-        
-        if (crc != rem_crc) {
-            printf("ERROR: CRC MISSMATCH!\n");
-            printf("Local CRC:  0x%08X\n",crc);
-            printf("Remote CRC: 0x%08X\n",rem_crc);
-            return 1;
-        }
-    
-        printf("CRC validated as 0x%08X\n",crc);
-        printf("Dump completed successfully.\n");
-        
-        fclose(out);
-        return 0;
-    }
-    
-    if (program_reset) {
-    	printf("Resetting program...\n");
-    	
-    	command(fd, CMD_RESET);
-        serflush(fd);
-        command(fd, CMD_BOOT);
-        
-        if (!no_terminal)
-       		monitor(fd);
-       
-        return 0;
-    }
   
     if (filename == 0) {
-        printf("Missing filename to program\n");
+        printf("Missing filename.\n");
         return 1;
     }
     
+    if (do_dump) 
+        return perform_dump();
+    
     FILE *in = fopen(filename,"rb");
+    
     if (!in) {
         printf("Failed to open %s\n",filename);
         return 1;
     }
     
+    // get file size
     fseek (in, 0, SEEK_END);   // non-portable
     int size = ftell (in);
     rewind(in);
     
     fprintf(stderr, "File size: %d\n", size);
     
+    // allocate buffers
     uint8_t *data = (uint8_t*)malloc(size+1);
     uint8_t *readback = (uint8_t*)malloc(size+1);
     
@@ -323,16 +209,10 @@ int main (int argc, char ** argv) {
     
     fclose(in);
 
-    uint8_t flags = 0;
-    
-    if (flash_wr)
-        flags |= ALLOW_FLASH;
-        
-    if (loader_wr)
-        flags |= ALLOW_LOADER;
-     
-    if (bin_srec)
-        flags |= BINARY_SREC;
+    // set flags as relevant
+    uint8_t flags = (flash_wr ? ALLOW_FLASH : 0) +
+                    (loader_wr ? ALLOW_LOADER : 0) +
+                    (bin_srec ? BINARY_SREC : 0);
     
     // clear simulated memory
     memset(MEMORY, 0, 0x100000);
@@ -363,7 +243,7 @@ int main (int argc, char ** argv) {
             printf("OK.\n");
         
         if (boot_srec && entry_point == 0) {
-            printf("Error: -b flag present, but s-rec does not specify an entry point. Aborting!\n");
+            printf("Error: -b flag present, but S-record does not specify an entry point. Aborting!\n");
             return 1;
         }
         
@@ -644,6 +524,116 @@ int main (int argc, char ** argv) {
     
     close(fd);
     
+    return 0;
+}
+
+
+int perform_dump() {
+    if (!filename) {
+        printf("Missing filename.\n");
+        return 1;
+    }
+    
+    FILE *out = fopen(filename,"w");
+    if (!out) {
+        printf("Failed to open %s\n",filename);
+        return 1;
+    }
+
+    uint32_t addr = 0x80000;
+    uint32_t len = 2220;
+
+    printf("Performing dump of %d bytes starting at %08X\n",len, addr);
+    printf("Resetting board...\n");
+    command(fd, CMD_RESET);
+    serflush(fd);
+    printf("Sending dump command... \n");
+    command(fd, CMD_DUMP);
+    
+    uint32_t greeting = readw();
+    
+    if (greeting != DUMP_GREET_MAGIC) {
+        printf("Sync error in greeting. Got 0x%x\n", greeting);
+        return 1;
+    }
+    
+    putl(addr);
+    putl(len);
+    
+    uint32_t addr_rb, len_rb;
+    len_rb = readl();
+    addr_rb = readl();
+    
+    if (addr_rb != addr || len_rb != len) {
+        putl(0);
+        printf("Bad readback of length/address! Dump aborted...\n");
+        printf("Address: read 0x%08X, expected 0x%08X\n",addr_rb, addr);
+        printf("Length:  read 0x%08X, expected 0x%08X\n",len_rb, len);
+        return 1;
+    }
+    
+    putwd(DUMP_START_MAGIC);
+    
+    int crc = 0xDEADC0DE;
+    char ch;
+    
+    uint64_t start = millis();
+    uint64_t lastByte = start;
+    uint32_t sz = 0;
+
+    printf("\n");
+    
+    while (sz < len) {
+        if (has_data(fd)) {
+            if(read(fd, &ch, 1) == 1) {
+                fputc(ch, out);
+                crc = crc_update(crc, ch);
+                
+                lastByte = millis();
+                sz++;
+                
+                if (sz % 32 == 0) {
+                    printf("%6.2f %%\x8\x8\x8\x8\x8\x8\x8\x8",((float)sz * 100) / len);
+                    fflush(stdout);
+                }
+            } else {
+                printf("Serial read error.\n");
+                return 1;
+            }
+        } else usleep(10);
+        
+        if ((millis() - lastByte) > 250) {
+            printf("Error: timeout in dump (no data for 250ms)\n");
+            return 1;
+        }
+    }
+    
+    uint64_t end = millis();
+    
+    printf("%6.2f %%\n\n",((float)100));					 
+         
+    uint32_t rem_crc = readl();
+    uint16_t tail = readw();
+    
+    if (tail != DUMP_TAIL_MAGIC) {
+        printf("Sync error in tail. Got 0x%x\n", tail);
+        return 1;
+    }
+    
+    printf("Read %d bytes in %d ms\n",sz, end-start);
+    // (%3.2f bytes/s) ((float)sz) / (((float)(end-start))/ 1000)
+    
+    if (crc != rem_crc) {
+        printf("ERROR: CRC MISSMATCH!\n");
+        printf("Local CRC:  0x%08X\n",crc);
+        printf("Remote CRC: 0x%08X\n",rem_crc);
+        return 1;
+    }
+
+    printf("CRC validated as 0x%08X\n",crc);
+    printf("Dump completed successfully.\n");
+    
+    fclose(out);
     return 0;
 }
 

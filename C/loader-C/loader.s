@@ -119,8 +119,8 @@ cmd_byte:
     subi.b #0xC0, %d0          | get table offset
     
     cmp.b #0xF, %d0
-    beq reset_addr
-    bgt __cmd_oor              
+    beq reset_addr             | reset is not a subroutine... jump directly
+    bgt __cmd_oor              | out of range command (ie. not valid)
     
     and.w #0xF, %d0
     lsl.w #2, %d0              | ind * 4 (size of long)
@@ -132,11 +132,11 @@ cmd_byte:
     bra loop
     
 __cmd_oor:
-    TILDBG B0                  | not a recognized command
+    TILDBG B0                  | command out of range
     bra loop
     
 __bad_cmd:
-    TILDBG BC                  | not a recognized command
+    TILDBG BC                  | not an implemented command
     rts
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||  
@@ -146,28 +146,28 @@ __bad_cmd:
 set_binary_srec:
     move.l #0xB17AC5EC, %d0
     jsr putl
-    ori #FLAG_BIN_SREC, %d5
+    ori.b #FLAG_BIN_SREC, %d5
     rts
  
 | set to boot from s-record
 set_boot:
     move.l #0xD0B07CDE, %d0
     jsr putl
-    ori #FLAG_BOOT, %d5
+    ori.b #FLAG_BOOT, %d5
     rts
     
 | set to allow s record to write flash
 set_flash_wr:
     move.l #0xF1A5C0DE, %d0
     jsr putl
-    ori #FLAG_WR_FLASH, %d5
+    ori.b #FLAG_WR_FLASH, %d5
     rts
     
 | set to allow s record to write loader
 set_loader_wr:
     move.l #0x10ADC0DE, %d0
     jsr putl
-    ori #FLAG_WR_LOADER, %d5
+    ori.b #FLAG_WR_LOADER, %d5
     rts
     
 | use an address in high ram to load at
