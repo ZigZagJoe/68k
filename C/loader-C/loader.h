@@ -39,13 +39,16 @@
 #define BINSREC_MAGIC   0xB17AC5EC
 
 // important addresses
-#define FLASH_START 0x80000
-#define IO_START    0xC0000
-#define LOADER_END  0x80FFF
-#define LOWEST_VALID_ADDR 0x2000
+#define FLASH_START       0x80000
+#define IO_START          0xC0000
+#define LOADER_END        0x80FFF
+#define LOWEST_VALID_ADDR 0x02000
 
 #define SECTOR_COUNT     64
 
+uint8_t parseSREC(uint8_t * start, uint32_t len, uint8_t fl, uint8_t armed);
+
+//########################################################################
 // conditional defines for parse_srec.c
 #ifndef UPLOADER    /* ############ code for loader-C ################# */
 

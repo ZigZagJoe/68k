@@ -30,7 +30,6 @@ void monitor(int fd);
 uint8_t has_data(int fd);
 bool SET_FLAG(const char * name, uint8_t value, uint32_t magic) ;
 uint32_t crc_update (uint32_t inp, uint8_t v);
-uint8_t parseSREC(uint8_t * start, uint32_t len, uint8_t fl, uint8_t armed);
 void command(int fd, uint8_t instr);
 
 uint8_t readb();
@@ -51,12 +50,35 @@ int fd;
 
 /// MAIN CODE
 
+void usage() { 
+    printf(
+        "\nUsage: upload-loader [options] file\n"
+        "\n"
+        "-t       only act as terminal emulator\n"
+        "-n       do not enter terminal emulator mode after load\n"
+        "-v       verbose verification error log\n"
+        "-s       file to load is a motorola s-record\n"
+        "-f       allow s-record to write flash\n"
+        "-l       allow s-record to write loader (must also specify -f)\n"
+        "-b       boot from entry point specified in s-record\n"
+        "-x       s-record is in binary format from srec2srb\n"
+        "-c       enable qcrc validation (implicit in -s)\n"
+        "-p port  specify serial port (full path to device)\n"
+        "\n"
+    ); 
+}
+
 int main (int argc, char ** argv) {
- 
+    if (argc == 1) {
+        usage();
+        return 1;
+    }
+    
     // vars n shit bitches
     char * filename = 0;
     char * port = (char*)&port_def;
     
+    // tooo many falgs
     bool no_terminal = false;
     bool verbose = false;
     bool term_only = false;
@@ -71,8 +93,8 @@ int main (int argc, char ** argv) {
     bool bin_srec = false;
     bool use_qcrc = false;
     
+    // should allow setting of this
     int BAUD_RATE = 28000;
-    int BAUD_DELAY = 200;
     
     if (argc > 1) {
         char * arg;
@@ -84,20 +106,7 @@ int main (int argc, char ** argv) {
             
             if (dash) {
                 switch (*arg) {
-                    case 'h': printf(
-                        "\nUsage: upload-loader [options] file\n"
-                        "\n"
-                        "-t     only act as terminal emulator\n"
-                        "-n     do not enter terminal emulator mode after load\n"
-                        "-v     verbose verification error log\n"
-                        "-s     file to load is a motorola s-record\n"
-                        "-f     allow s-record to write flash\n"
-                        "-l     allow s-record to write loader (must also specify -f)\n"
-                        "-b     boot from entry point specified in s-record\n"
-                        "-x     s-record is in binary format from srec2srb\n"
-                        "-c     enable qcrc validation (implicit in -s)\n"
-                        "\n"
-                    ); return 1;
+                    case 'h': usage(); return 1;
                     case 't': term_only = true; break;
                     case 'n': no_terminal = true; break;
                     case 'v': verbose = true; break;
@@ -108,17 +117,24 @@ int main (int argc, char ** argv) {
                     case 'b': boot_srec = true; break;
                     case 'x': bin_srec = true; break;
                     case 'c': use_qcrc = true; break;
+                    case 'p': if (ac + 1 == argc) {
+                                 printf("Missing argument to -p\n");
+                                 return 1;
+                              }
+                              
+                              printf("Port set to %s\n", port);
+                              break;  
                 }
             } else
                 filename = arg;
         }
     }
     
-    printf("Open serial... ");
+    printf("Open port %s ... ", port);
     fd = open(port,O_RDWR);
     
     if (fd <= 0) {
-        printf("Failed to open %s\n",port);
+        printf("FAILED!\n");
         return 1;
     }
     
@@ -138,7 +154,7 @@ int main (int argc, char ** argv) {
     
     // since the FTDI driver is miserable, hard rate the data rate 
     // to the max possible by baud rate (in chunks of 512)
-    BAUD_DELAY = (int)(1000.0F / (BAUD_RATE / 9) * 512);
+    int BAUD_DELAY = (int)(1000.0F / (BAUD_RATE / 9) * 512);
     
     ioctl(fd, IOSSIOSPEED, &speed);
     ioctl(fd, TIOCMBIC, &pin_rts); // deassert RTS
@@ -204,8 +220,8 @@ int main (int argc, char ** argv) {
     if (bin_srec)
         flags |= BINARY_SREC;
     
-    // clear simulated memory array
-    memset(MEMORY,0,0x100000);
+    // clear simulated memory
+    memset(MEMORY, 0, 0x100000);
          
     if (srec) {
         // add trailing null
@@ -345,7 +361,7 @@ int main (int argc, char ** argv) {
                 printf("%6.2f %%\x8\x8\x8\x8\x8\x8\x8\x8",((float)i * 100) / size);
                 fflush(stdout);
                 msleep(BAUD_DELAY);
-                // sleep because the ftdi driver is terrible, so hard rate limit
+                // sleep because the ftdi driver is terrible, so we hard rate limit
             }
             
 			while (has_data(fd)) 
@@ -363,7 +379,7 @@ int main (int argc, char ** argv) {
         
         uint64_t start = millis();
         
-        // read additional bytes while they are available, wait up to 250ms 
+        // read additional bytes while they are available, wait up to 250ms for data 
         while (1) {
             if (has_data(fd))
             	if(read(fd, &ch, 1) == 1) {
@@ -427,6 +443,8 @@ int main (int argc, char ** argv) {
             printf("Upload echo verified.\n\n");
             
             if (srec) {
+                // apply relevant flags
+                
                 if (boot_srec && !SET_FLAG("run from SREC", CMD_SET_BOOT, BOOT_MAGIC))
                     return 1;
                     
@@ -442,6 +460,7 @@ int main (int argc, char ** argv) {
                 printf("Programming SREC");
                 fflush(stdout);
                 
+                // execute command
                 command(fd, CMD_SREC);
                 
                 uint32_t ok = readl();
@@ -493,8 +512,11 @@ int main (int argc, char ** argv) {
                 }
               
                 printf(" completed successfully in %d ms.\n\n", end-start);
+                
+                if (!boot_srec) 
+                    no_terminal = true;
+                
                 break;
-
             } else {
                 printf("Booting program.\n\n");
                 command(fd, CMD_BOOT);
@@ -511,6 +533,7 @@ int main (int argc, char ** argv) {
     return 0;
 }
 
+// perform a flag-set command (returns a magic value)
 bool SET_FLAG(const char * name, uint8_t value, uint32_t magic) {
     printf("Setting %s... ",name);
     fflush(stdout);
@@ -529,7 +552,7 @@ bool SET_FLAG(const char * name, uint8_t value, uint32_t magic) {
 
 uint8_t has_data(int fd) {
 	struct pollfd poll_str;
-    poll_str.fd = fd; /* this is STDIN */
+    poll_str.fd = fd;
     poll_str.events = POLLIN;
     
     return poll(&poll_str, 1, 0);
@@ -645,4 +668,3 @@ uint64_t millis() {
     
     return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }
-
