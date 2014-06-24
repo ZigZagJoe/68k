@@ -18,15 +18,17 @@
 #define PROG_FAILURE     128
 
 // command codes
-#define CMD_BOOT	    0xCB
-#define CMD_RESET	    0xCF
-#define CMD_QCRC	    0xCC
-#define CMD_SREC	    0xCD
 #define CMD_SET_BOOT	0xC1
 #define CMD_SET_FLWR	0xC2
 #define CMD_SET_LDWR	0xC3
 #define CMD_SET_HIRAM   0xC4
 #define CMD_SET_BINSR   0xC5
+// unused 0xC6-CA
+#define CMD_BOOT	    0xCB
+#define CMD_QCRC	    0xCC
+#define CMD_SREC	    0xCD
+// unused 0xCE
+#define CMD_RESET	    0xCF
 
 // magic flag values
 #define BOOT_MAGIC      0xD0B07CDE
@@ -37,6 +39,8 @@
 
 #ifndef DEBUG
 #define dbgprintf ; //
+// comment out the function call 
+// have ; so that if (x) dbgprintf(...) does not break stuff
 #else
 #define dbgprintf printf
 #endif

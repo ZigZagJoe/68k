@@ -37,6 +37,7 @@ uint32_t readl();
 uint64_t millis();
 
 extern uint32_t program_sz;
+extern uint32_t entry_point;
 
 // file descriptor
 int fd;
@@ -205,7 +206,12 @@ int main (int argc, char ** argv) {
             return 1;
         } else 
             printf("OK.\n");
-            
+        
+        if (boot_srec && entry_point == 0) {
+            printf("Error: -b flag present, but s-rec does not specify an entry point.\n");
+            return 1;
+        }
+        
         printf("Payload size: %d\n",program_sz);
         go_hiram = true;
     }

@@ -10,6 +10,7 @@
 #define FLASH_START 0x80000
 #define IO_START    0xC0000
 #define LOADER_END  0x80FFF
+#define LOWEST_VALID_ADDR 0x2000
 
 #define SECTOR_COUNT     64
 
@@ -114,9 +115,13 @@ void ram_write(uint32_t addr, uint8_t byte) {
 }
 
 uint8_t write(uint32_t addr, uint8_t byte) {
-    if (addr >= IO_START) {
+    if (addr < LOWEST_VALID_ADDR) {
         errno |= INVALID_WRITE;
-        dbgprintf("Attempted to write to IO address space (or higher).\n");
+        dbgprintf("Attempted to write to system space. Bad address: 0x%X\n", addr);
+        return 1;
+    } else if (addr >= IO_START) {
+        errno |= INVALID_WRITE;
+        dbgprintf("Attempted to write to IO address space (or higher). Bad address: 0x%X\n", addr);
         return 1;
     } else if (addr >= FLASH_START && addr < IO_START) {
         if (!(wr_flags & ALLOW_FLASH)) {

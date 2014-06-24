@@ -129,6 +129,7 @@ int main (int argc, char ** argv) {
             printf("Record started with %c, not S.\n", Sc);
             break;
         }
+        
         fputc('S',out);
         
         typ = readch();
@@ -136,21 +137,20 @@ int main (int argc, char ** argv) {
         
         typ -= '0'; // record type
 
-        RETURN_IF_ERROR();
+        if (errno) break;
         
         if (typ > 9) {
             errno |= FORMAT_ERROR;
             printf("Record of invalid type\n");
             break;
-        }
-        
+        }  
         
         checksum = 0;              // reset checksum
         len = getb() - addr_len[typ] - 1;
        
         address = readAddr(addr_len[typ]);
         
-        RETURN_IF_ERROR();
+        if (errno) break;
         
         switch (typ) {
             case 3: // data records (varying address size)
@@ -179,7 +179,7 @@ int main (int argc, char ** argv) {
                 break;
         }
         
-        RETURN_IF_ERROR();
+        if (errno) break;
         
         if (len != 0 && (typ >= 4)) {
              errno |= FORMAT_ERROR;
@@ -203,13 +203,21 @@ int main (int argc, char ** argv) {
         
         fputc('\n',out);
         
-        RETURN_IF_ERROR();
+        if (errno) break;
         
         if (srec[pos] == 0) 
             break;        
     }
     
     fclose(out);
+    
+    printf("Parsed %d records\n",rec_cnt);
+    
+    if (!errno) {
+        printf("Program size: %d\n",program_sz);
+        printf("\n%s converted successfully.\n",argv[1]);
+    } else
+        printf("Failed to convert %s\n", argv[1]);
     
 }
 
