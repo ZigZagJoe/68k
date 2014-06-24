@@ -227,7 +227,7 @@ int main (int argc, char ** argv) {
             printf("OK.\n");
         
         if (boot_srec && entry_point == 0) {
-            printf("Error: -b flag present, but s-rec does not specify an entry point.\n");
+            printf("Error: -b flag present, but s-rec does not specify an entry point. Aborting!\n");
             return 1;
         }
         
@@ -235,6 +235,7 @@ int main (int argc, char ** argv) {
         use_qcrc  = true;
         go_hiram = true;
         
+        // a loader write will be executed: do a sanity check
         if (loader_wr && erased_sectors[0]) {
             printf("\n*** Loader sector WILL be cleared. ***\n");
             uint32_t sp = 0, pc = 0;
@@ -272,18 +273,23 @@ int main (int argc, char ** argv) {
                 printf("\nERROR: PC is located in a sector that was not written to. Aborting!\n");
                 return 1;
             }
-        }
      
-        if (loader_wr && flash_wr) {
-            printf("\nWARNING: Loader write and Flash write have both been enabled.\n");
-            printf("Please confirm that you want to execute a bootloader update\n");
-            printf("by pressing SHIFT+1, then enter. Press any other key to abort.\n");
-            if (getchar() != '!') {
-                printf("\nAborting!\n");
-                return 1;
-            }
+            if (loader_wr && flash_wr) {
+                printf("\n###################################################################\n");
+                printf("# WARNING: Loader write and Flash write have both been enabled.   #\n");
+                printf("# At least one write to the bootloader sector will be executed.   #\n");
+                printf("# The stack pointer and program counter values appear to be sane. #\n");
+                printf("#                                                                 #\n");
+                printf("# Please confirm that you want to update the bootloader sector    #\n");
+                printf("# by pressing SHIFT+1, then enter. Press any other key to abort.  #\n");
+                printf("###################################################################\n\n> ");
+                if (getchar() != '!') {
+                    printf("\nAborting!\n");
+                    return 1;
+                }
         
-            printf("\nContinuing.\n");
+                printf("\nContinuing.\n");
+            }
         }
     }
     
