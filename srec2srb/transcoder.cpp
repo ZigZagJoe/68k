@@ -66,14 +66,21 @@ uint32_t readAddr(uint8_t len) {
 
 int main (int argc, char ** argv) {
     if (argc == 1) {
-        printf("Argument required...\n");
+        printf("Usage: srec2bin file_to_convert [outname]\n");
         return 1;
     }
     
-    char * outn = "binrec.srb";
+    char fn_buff[1024];
+    char * outn;
     
-    if (argc >= 3)
+    if (argc >= 3) {
         outn = argv[2];
+    } else {
+        strcpy(fn_buff, argv[1]);
+        int len = strlen(fn_buff);
+        strcat(fn_buff, ".srb");
+        outn = fn_buff;
+    }
     
     FILE *in = fopen(argv[1],"rb");
     if (!in) {
