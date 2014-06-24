@@ -9,6 +9,8 @@
                                 "bne 1b\n" \
                                 ::"i"(X):"d0");
 
+#define FLASH_ARM  0xF1AC0DE0
+
 // @ 8mhz, on 68008
 #define MILLISECOND_DELAY 174
 #define DELAY_MS(x) DELAY(x*MILLISECOND_DELAY)
@@ -19,5 +21,6 @@
 
 void flash_erase_sector(uint8_t sector);
 void flash_write_byte(uint8_t *ptr, uint8_t ch);
+void flash_arm(uint32_t magic);
 
 #endif

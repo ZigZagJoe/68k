@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <interrupts.h>
 #include <io.h>
 #include <flash.h>
 #include <printf.h>
@@ -58,9 +59,13 @@ void mem_dump(uint8_t *addr, uint32_t cnt) {
 
 int main() {
     TIL311 = 0x00;
+    
+    serial_start(SERIAL_SAFE);
+    sei();
 
     mem_dump(0x80000,256);
    
+    flash_arm(FLASH_ARM);
     flash_erase_sector(0);
     
   	mem_dump(0x80000,256);
@@ -71,8 +76,10 @@ int main() {
     		TIL311 = 0xEE;
     }
     
+    flash_arm(0);
+    
     mem_dump(0x80000,256);
    
     TIL311 = 0xFF;
-    while(true);
+    while(1);
 }

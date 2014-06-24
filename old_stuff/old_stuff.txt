@@ -889,3 +889,23 @@ void mem_dump(uint8_t *addr, uint32_t cnt) {
     //mem_dump(start, len);
     //dbgprintf("start=0x%x, len=0x%x, wr_flags=0x%x\n", start, len, wr_flags);
    
+/* 
+uint32_t baseaddr = 0x80000 + (1 << 14);
+
+printf("%d\n",ADDR_TO_SECTOR(baseaddr));
+printf("%d\n",ADDR_TO_SECTOR(0x80000 + (1 << 15)));
+printf("%d\n",ADDR_TO_SECTOR(0x80000 + (37 * 4096)));
+
+do_dump(baseaddr, 256);
+
+flash_write_byte(ADDR(baseaddr),0xDE);
+flash_write_byte(ADDR(baseaddr)+1,0xAD);
+flash_write_byte(ADDR(baseaddr)+2,0xBE);
+flash_write_byte(ADDR(baseaddr)+3,0xEF);
+
+do_dump(baseaddr, 256);
+
+flash_erase_sector(4);
+
+do_dump(baseaddr, 256);*/
+

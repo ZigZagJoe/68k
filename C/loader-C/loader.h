@@ -24,7 +24,8 @@
 #define CMD_SET_LDWR	0xC3
 #define CMD_SET_HIRAM   0xC4
 #define CMD_SET_BINSR   0xC5
-// unused 0xC6-CA
+// unused 0xC6-C9
+#define CMD_DUMP        0xCA
 #define CMD_BOOT	    0xCB
 #define CMD_QCRC	    0xCC
 #define CMD_SREC	    0xCD
@@ -37,6 +38,9 @@
 #define LDWR_MAGIC      0x10ADC0DE
 #define HIRAM_MAGIC     0xCE110C00
 #define BINSREC_MAGIC   0xB17AC5EC
+#define DUMP_GREET_MAGIC  0x10AD
+#define DUMP_START_MAGIC  0x1F07
+#define DUMP_TAIL_MAGIC   0xEEAC
 
 // important addresses
 #define FLASH_START       0x80000

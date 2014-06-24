@@ -1,8 +1,8 @@
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | 68k bootloader - main code
 
-.text
 .align 2
+.data
 
 .global loader_start
 .global putc
@@ -38,17 +38,37 @@
 .set CMD_SET_LDWR,  0xC3
 .set CMD_SET_HIRAM, 0xC4
 .set CMD_SET_BINSR, 0xC5
+.set CMD_DUMP,      0xCA
 .set CMD_BOOT,      0xCB
 .set CMD_QCRC,      0xCC
 .set CMD_SREC,      0xCD
 .set CMD_RESET,     0xCF
+
+cmd_jmp_table:
+    .long __bad_cmd         | C0
+    .long set_boot          | C1
+    .long set_flash_wr      | C2
+    .long set_loader_wr     | C3
+    .long set_hiram         | C4
+    .long set_binary_srec   | C5
+    .long __bad_cmd         | C6
+    .long __bad_cmd         | C7
+    .long __bad_cmd         | C8
+    .long __bad_cmd         | C9
+    .long memory_dump       | CA
+    .long boot              | CB
+    .long get_qcrc          | CC
+    .long do_parse_srec     | CD
+    .long __bad_cmd         | CE
+    .long reset_addr        | CF
 
 | srec flags
 .set FLAG_BOOT,        1
 .set FLAG_WR_FLASH,    2
 .set FLAG_WR_LOADER,   4
 .set FLAG_BIN_SREC,    8
-
+  
+.text
 #####################################################################
 | entry point of bootloader code in RAM
 loader_start: 
@@ -65,7 +85,7 @@ loader_start:
     move.b #1, (TSR)           | transmitter enable
     
 reset_addr:
-    TILDBG B2                  | bootloader ready!
+    TILDBG B3                  | bootloader ready!
    
     | initialize variables
     move.l #loram_addr, %d0
@@ -74,11 +94,8 @@ reset_addr:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | main bootloader loop
 loop:
-    | see if there is a byte pending
-    btst #7, (RSR)             | test if buffer full (bit 7) is set
-    beq loop                   | buffer empty, loop (Z=1)
-
-    move.b (UDR), %d0          | read char from buffer
+    jsr getc
+    
     move.b %d0, (TIL311)       | display on device
     
     | check to see if the GPIO for command byte is low
@@ -98,36 +115,30 @@ loop:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | execute commmand byte in %d0
 cmd_byte:
-    cmp.b #CMD_BOOT, %d0       | is it the command to boot?
-    beq boot
-
-    cmp.b #CMD_RESET, %d0      | is it the command to reset address?
-    beq reset_addr
+    subi.b #0xC0, %d0
+    cmp.b #0xF, %d0
     
-    cmp.b #CMD_QCRC, %d0
-    beq get_qcrc
-
-    cmp.b #CMD_SREC, %d0
-    beq do_parse
+    bhi __cmd_oor
     
-    cmp.b #CMD_SET_HIRAM, %d0
-    beq set_hiram
+    and.w #0xF, %d0
     
-    cmp.b #CMD_SET_BOOT, %d0
-    beq set_boot
+    move.b %d0, TIL311
     
-    cmp.b #CMD_SET_FLWR, %d0
-    beq set_flash_wr
+    lsl.w #2, %d0
     
-    cmp.b #CMD_SET_LDWR, %d0
-    beq set_loader_wr
+    movea.l #cmd_jmp_table, %a0
+    jsr (%a0, %d0.W)
     
-    cmp.b #CMD_SET_BINSR, %d0
-    beq set_binary_srec
+    bra loop
     
+__cmd_oor:
     TILDBG BC                  | not a recognized command
     bra loop
     
+__bad_cmd:
+    TILDBG BC                  | not a recognized command
+    rts
+
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||  
 | flag setting handlers
  
@@ -136,28 +147,28 @@ set_binary_srec:
     move.l #0xB17AC5EC, %d0
     jsr putl
     ori #FLAG_BIN_SREC, %d5
-    bra loop
+    rts
  
 | set to boot from s-record
 set_boot:
     move.l #0xD0B07CDE, %d0
     jsr putl
     ori #FLAG_BOOT, %d5
-    bra loop
+    rts
     
 | set to allow s record to write flash
 set_flash_wr:
     move.l #0xF1A5C0DE, %d0
     jsr putl
     ori #FLAG_WR_FLASH, %d5
-    bra loop
+    rts
     
 | set to allow s record to write loader
 set_loader_wr:
     move.l #0x10ADC0DE, %d0
     jsr putl
     ori #FLAG_WR_LOADER, %d5
-    bra loop
+    rts
     
 | use an address in high ram to load at
 set_hiram:
@@ -169,11 +180,67 @@ set_hiram:
     move.l #hiram_addr, %d0
     jsr init_vars
     
-    bra loop
+    rts
+    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
+| command to dump a region of memory
+memory_dump:
+    TILDBG D0
+    
+    move.w #0x10AD, %d0
+    jsr putw
+    
+    jsr getl                   | read source address
+    move.l %d0, %a0            | source
+    jsr getl                   | read length
+    move.l %d0, %d1            | length   
+    
+    jsr putl                   | echo length
+    move.l %a0, %d0
+    jsr putl                   | echo source
+    
+    jsr getw                   | get final confirmation to go (addr/len correct)
+    cmp.w #0x1F07, %d0
+    bne dump_end               | host aborted / out of sync
+    
+    move.l #0xDEADC0DE, %d2    | crc
+    
+dump_loop:
+    btst #7, (RSR)             | test if buffer full (bit 7) is set
+    beq _cont                  | buffer empty, continue
+
+    move.b (UDR), %d0
+    
+    btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
+    bne _cont                  | if Z is not set
+    
+    cmp.b #CMD_RESET, %d0      | check if byte is reset
+    beq reset_addr
+    
+_cont:
+    move.b (%a0)+, %d0         | read a byte
+    move.b %d0, TIL311
+    
+    eor.b %d0, %d2             | qcrc update
+    rol.l #1, %d2
+    
+    jsr putb                   | send it out
+    
+    subi.l #1, %d1
+	bne dump_loop	
+	
+	move.l %d2, %d0            | send out the crc
+	jsr putl
+	
+dump_end:
+    move.w #0xEEAC, %d0        | finale 
+    jsr putw
+    
+    rts
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | command to handle s-record loaded into RAM
-do_parse:
+do_parse_srec:
     TILDBG DC
     
     move.l #0xD0E881CC, %d0    | tell host we are initiating write
@@ -187,7 +254,8 @@ do_parse:
     move.l %d6, -(%sp)         | byte count
     move.l %a5, -(%sp)         | byte addr
     
-    jsr handle_srec            | enter c
+    jsr handle_srec            | enter c code
+    | d0-d1, a0-a1 will be clobbered, return code in d0
     
     | dealloc arguments
     add.l #12, %sp
@@ -208,8 +276,10 @@ do_parse:
     TILDBG 0C
     
     and.b #FLAG_BOOT, %d5
-    beq loop                   | not set as bootable
-
+    bne do_boot                   | not set as bootable
+    rts
+    
+do_boot:
     | boot from the s-record address
     | ought to check this is nonzero...!
     move.l (entry_point), %a5
@@ -218,7 +288,7 @@ do_parse:
 | an error occured, do not boot.
 bad_srec:
     TILDBG EC
-    bra loop
+    rts
         
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | get crc command
@@ -234,7 +304,7 @@ get_qcrc:
     clr.b %d0                  | tail
     jsr putc
     
-    bra loop
+    rts
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | boot command
@@ -252,6 +322,37 @@ init_vars:
     clr.l %d6                  | bytecount = 0
     clr.l %d5                  | flash writes disallowed
     move.l #0xDEADC0DE, %d7    | init qcrc
+    rts
+    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| serial comm routines
+
+| get a long from uart
+getl:
+    jsr getc
+    lsl.w #8, %d0
+    jsr getc
+    lsl.l #8, %d0
+    jsr getc
+    lsl.l #8, %d0
+    jsr getc
+    rts
+    
+| get a word from uart
+getw:
+    jsr getc
+    lsl.w #8, %d0
+    jsr getc
+    rts  
+    
+| get a character from uart 
+getb:
+getc:
+    | see if there is a byte pending
+    btst #7, (RSR)             | test if buffer full (bit 7) is set
+    beq getc                   | buffer empty, loop (Z=1)
+
+    move.b (UDR), %d0          | read char from buffer
     rts
     
 | write long to serial

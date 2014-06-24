@@ -32,6 +32,9 @@ bool SET_FLAG(const char * name, uint8_t value, uint32_t magic) ;
 uint32_t crc_update (uint32_t inp, uint8_t v);
 void command(int fd, uint8_t instr);
 
+void putl(uint32_t i);
+void putwd(uint32_t i);
+
 uint8_t readb();
 uint16_t readw();
 uint32_t readl();
@@ -92,6 +95,7 @@ int main (int argc, char ** argv) {
     bool loader_wr = false;
     bool bin_srec = false;
     bool use_qcrc = false;
+    bool do_dump = false;
     
     // should allow setting of this
     int BAUD_RATE = 28000;
@@ -117,6 +121,7 @@ int main (int argc, char ** argv) {
                     case 'b': boot_srec = true; break;
                     case 'x': bin_srec = true; break;
                     case 'c': use_qcrc = true; break;
+                    case 'd': do_dump = true; break;
                     case 'p': if (ac + 1 == argc) {
                                  printf("Missing argument to -p\n");
                                  return 1;
@@ -161,6 +166,115 @@ int main (int argc, char ** argv) {
     
     if (term_only) {
         monitor(fd);
+        return 0;
+    }
+    
+    if (do_dump) {
+        if (!filename) {
+            printf("Missing filename.\n");
+            return 1;
+        }
+        
+        FILE *out = fopen(filename,"w");
+        if (!out) {
+            printf("Failed to open %s\n",filename);
+            return 1;
+        }
+    
+        uint32_t addr = 0x1000;
+        uint32_t len = 0x10000;
+    
+        printf("Performing dump of %d bytes starting at %08X\n",len, addr);
+        printf("Resetting board...\n");
+        command(fd, CMD_RESET);
+        serflush(fd);
+        printf("Sending dump command... \n");
+        command(fd, CMD_DUMP);
+        
+        uint32_t greeting = readw();
+        
+        if (greeting != DUMP_GREET_MAGIC) {
+            printf("Sync error in greeting. Got 0x%x\n", greeting);
+            return 1;
+        }
+        
+        putl(addr);
+        putl(len);
+        
+        uint32_t addr_rb, len_rb;
+        len_rb = readl();
+        addr_rb = readl();
+        
+        if (addr_rb != addr || len_rb != len) {
+            putl(0);
+            printf("Bad readback of length/address! Dump aborted...\n");
+            printf("Address: read 0x%08X, expected 0x%08X\n",addr_rb, addr);
+            printf("Length:  read 0x%08X, expected 0x%08X\n",len_rb, len);
+            return 1;
+        }
+        
+        putwd(DUMP_START_MAGIC);
+        
+        int crc = 0xDEADC0DE;
+        char ch;
+        
+        uint64_t start = millis();
+        uint64_t lastByte = start;
+        uint32_t sz = 0;
+    
+        printf("\n");
+        
+        while (sz < len) {
+            if (has_data(fd)) {
+            	if(read(fd, &ch, 1) == 1) {
+					fputc(ch, out);
+					crc = crc_update(crc, ch);
+					
+					lastByte = millis();
+					sz++;
+					
+					if (sz % 32 == 0) {
+					    printf("%6.2f %%\x8\x8\x8\x8\x8\x8\x8\x8",((float)sz * 100) / len);
+                        fflush(stdout);
+                    }
+            	} else {
+                	printf("Serial read error.\n");
+                	return 1;
+                }
+            } else usleep(10);
+            
+            if ((millis() - lastByte) > 250) {
+                printf("Error: timeout in dump (no data for 250ms)\n");
+            	return 1;
+            }
+        }
+        
+        uint64_t end = millis();
+        
+        printf("%6.2f %%\n\n",((float)100));					 
+             
+        uint32_t rem_crc = readl();
+        uint16_t tail = readw();
+        
+        if (tail != DUMP_TAIL_MAGIC) {
+            printf("Sync error in tail. Got 0x%x\n", tail);
+            return 1;
+        }
+        
+        printf("Read %d bytes in %d ms\n",sz, end-start);
+        // (%3.2f bytes/s) ((float)sz) / (((float)(end-start))/ 1000)
+        
+        if (crc != rem_crc) {
+            printf("ERROR: CRC MISSMATCH!\n");
+            printf("Local CRC:  0x%08X\n",crc);
+            printf("Remote CRC: 0x%08X\n",rem_crc);
+            return 1;
+        }
+    
+        printf("CRC validated as 0x%08X\n",crc);
+        printf("Dump completed successfully.\n");
+        
+        fclose(out);
         return 0;
     }
     
@@ -593,6 +707,7 @@ void monitor(int fd) {
 }
 
 int serputc(int fd, char c) {
+   // printf("xmit %02hhx\n",c);
     if (write(fd, &c, 1) != 1) {
         printf("Serial write failed");
         exit(1);
@@ -618,6 +733,7 @@ int sergetc(int fd) {
         printf("\n *** Serial read failed %d ***\n",ret);
         exit(1);
     }
+   // printf("rec  %02hhx\n",ch);
     return ch;
 }
 
@@ -648,6 +764,17 @@ void command(int fd, uint8_t instr) {
     usleep(50*1000);
 }
 
+void putl(uint32_t i) {
+    serputc(fd, (i >> 24) & 0xFF);
+    serputc(fd, (i >> 16) & 0xFF);
+    serputc(fd, (i >>  8) & 0xFF);
+    serputc(fd, (i      ) & 0xFF);
+}
+
+void putwd(uint32_t i) {
+    serputc(fd, (i >>  8) & 0xFF);
+    serputc(fd, (i      ) & 0xFF);
+}
 
 uint8_t readb() {
     return sergetc(fd);

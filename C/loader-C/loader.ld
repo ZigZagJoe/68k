@@ -14,6 +14,7 @@ SECTIONS {
 	
 	.body : ALIGN(0x10) {
 	    loader.o(.text)
+	    loader.o(.data)
 		*(.text)
 		*(.data)
 		*(.rodata.*)
