@@ -46,8 +46,10 @@ int main() {
    // millis_start();
     sei();
     
+    memset(0x4000,0,0x30000);
+    memset(0x34000,0,0x30000);
     
-    mem_dump(0x80000, 2500);
+    //mem_dump(0x4000, 2500);
     
   //  uint32_t i = 0;
  //   DDR = 2;

@@ -69,19 +69,49 @@ void usage() {
     printf(
         "\nUsage: upload-loader [options] file\n"
         "\n"
-        "-t       only act as terminal emulator\n"
-        "-n       do not enter terminal emulator mode after load\n"
-        "-v       verbose verification error log\n"
-        "-s       file to load is a motorola s-record\n"
-        "-f       allow s-record to write flash\n"
-        "-l       allow s-record to write loader (must also specify -f)\n"
-        "-b       boot from entry point specified in s-record\n"
-        "-x       s-record is in binary format from srec2srb\n"
-        "-c       enable qcrc validation (implicit in -s)\n"
-        "-p port  specify serial port (full path to device)\n"
+        "-t             only act as terminal emulator\n"
+        "-n             do not enter terminal emulator mode after load\n"
+        "-v             verbose verification error log\n"
+        "-s             file to load is a motorola s-record\n"
+        "-f             allow s-record to write flash\n"
+        "-l             allow s-record to write loader (must also specify -f)\n"
+        "-b             boot from entry point specified in s-record\n"
+        "-x             s-record is in binary format from srec2srb\n"
+        "-c             enable qcrc validation (implicit in -s)\n"
+        "-p port        specify serial port (full path to device)\n"
+        "-d addr[:len]  dump specified region of memory, in hex or dec.\n"
         "\n"
     ); 
 }
+
+uint32_t parse_num(char * c) {
+    uint32_t ret;
+    
+    if (c[0] == '$') {
+        c++;
+        if (!sscanf(c," %x",&ret)) {
+            printf("Argument error parsing %s\n", c);
+            exit(1);
+        }
+        return ret;
+    }
+
+    if (c[0] == '0' && c[1] == 'x') {
+        c+=2;
+        if (!sscanf(c," %x",&ret)) {
+            printf("Argument error parsing %s\n", c);
+            exit(1);
+        }
+        return ret;
+    }
+
+    if (!sscanf(c," %u",&ret)) {
+            printf("Argument error parsing %s\n", c);
+            exit(1);
+    }
+    return ret;
+}
+
 
 int main (int argc, char ** argv) {
     if (argc == 1) {
@@ -111,9 +141,15 @@ int main (int argc, char ** argv) {
     // should allow setting of this
     int BAUD_RATE = 28000;
     
+    uint32_t addr = 0;
+    uint32_t len = 256;
+        
     if (argc > 1) {
         char * arg;
         int dash = 0;
+        
+        char *dumparg = 0;
+        
         for (int ac = 1; ac < argc; ac++) {
             arg=argv[ac];
             dash = 0;
@@ -131,7 +167,15 @@ int main (int argc, char ** argv) {
                     case 'b': boot_srec = true; break;
                     case 'x': bin_srec = true; break;
                     case 'c': use_qcrc = true; break;
-                    case 'd': do_dump = true; break;
+                    case 'd': 
+                                do_dump = true; 
+                                if (ac + 1 == argc) {
+                                    printf("Missing argument to -d\n");
+                                    return 1;
+                                }
+                                dumparg = argv[++ac];
+                                break;
+                       
                     case 'p': 
                               if (ac + 1 == argc) {
                                     printf("Missing argument to -p\n");
@@ -144,6 +188,38 @@ int main (int argc, char ** argv) {
                 }
             } else
                 filename = arg;
+        }
+        
+        if (dumparg != 0) {
+            char *addr_s = dumparg;
+            char *len_s = 0;
+            
+            for (int i = 0; i < 100; i++) {
+                char ch = dumparg[i];
+                if (!(ch >= '0' && ch <= '9') && !(ch >= 'a' && ch <= 'f') && !(ch >= 'A' && ch <= 'F') && ch != 'x' && ch != '$') {
+                    if (ch == 0) 
+                        break;
+                        
+                    len_s = addr_s + i + 1;
+                    dumparg[i] = 0; 
+                }
+            }
+                
+            addr = parse_num(addr_s);
+            
+            if (len_s)
+                len = parse_num (len_s);
+            
+                
+            if (len == 0 || len > 768 * 1024) {
+                printf("Bad length argument: value of %d is invalid.\n",len);
+                return 1;
+            }
+            
+            if (addr == 0 || addr > 768 * 1024) {
+                printf("Bad address argument: value of %d is invalid.\n",addr);
+                return 1;
+            }
         }
     }
     
@@ -178,8 +254,6 @@ int main (int argc, char ** argv) {
     }
   
     if (do_dump) {  
-        uint32_t addr = 0x1000;
-        uint32_t len = 32;
         return perform_dump(addr, len);
     }
     
@@ -285,7 +359,7 @@ int main (int argc, char ** argv) {
             pc <<= 8;
             pc |= MEMORY[a++];
             
-            printf("SP: 0x%08X  PC: 0x%08X\n",sp,pc);
+            printf("SP: 0x%06X  PC: 0x%06X\n",sp,pc);
             
             if (sp > FLASH_START) {
                 printf("\nERROR: SP is not located in RAM. Aborting!\n");
@@ -546,7 +620,7 @@ int perform_dump(uint32_t addr, uint32_t len) {
         printf("Failed to open %s.\n",filename);
     }
 
-    printf("Performing dump of %d bytes starting at 0x%08X\n",len, addr);
+    printf("Performing dump of %d bytes starting at 0x%06X\n",len, addr);
     printf("Resetting board...\n");
     command(fd, CMD_RESET);
     serflush(fd);
@@ -570,8 +644,8 @@ int perform_dump(uint32_t addr, uint32_t len) {
     if (addr_rb != addr || len_rb != len) {
         putl(0);
         printf("Bad readback of length/address! Dump aborted...\n");
-        printf("Address: read 0x%08X, expected 0x%08X\n",addr_rb, addr);
-        printf("Length:  read 0x%08X, expected 0x%08X\n",len_rb, len);
+        printf("Address: read 0x%06X, expected 0x%06X\n",addr_rb, addr);
+        printf("Length:  read 0x%06X, expected 0x%06X\n",len_rb, len);
         return 1;
     }
     
