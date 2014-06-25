@@ -32,7 +32,7 @@ _ipc: .long 0x80008            | initial program counter
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader entry point
-| this code must run in a PIC manner!
+| This code must run in a PIC manner! No absolute references!
 _boot:
     TILDBG BA
 
@@ -48,7 +48,7 @@ _boot:
     lea (__begin, %pc), %a0    | load address of start of loader, relative to %PC
                                        
     movea.l #reloc_addr, %a1   | load relocation target address into %a1
-    move.w #__size, %d0        | copy bootloader size
+    move.w #__size, %d0        | copy bootloader size (in longs) into %d0
 
     TILDBG 1C                  | debugging message
    

@@ -1,3 +1,5 @@
+/* S-record parsing */
+
 #include <flash.h>
 #include <stdint.h>
 
@@ -63,10 +65,10 @@ uint8_t getn() {
 uint8_t getb() {
     uint8_t b;
     
-    if (wr_flags & BINARY_SREC) { 
+    if (wr_flags & BINARY_SREC) {   // binary mode; just read a character
         b = readch();
     } else
-        b = (getn() << 4) | getn();
+        b = (getn() << 4) | getn(); // read two hex chars to assemble a byte
         
     checksum += b;
     return b;
@@ -120,6 +122,8 @@ void ram_write(uint32_t addr, uint8_t byte) {
 
 // perform a write (and do a lot of sanity checks)
 uint8_t write(uint32_t addr, uint8_t byte) {
+
+    // first: do a lot of sanity checks on the write
     if (addr < LOWEST_VALID_ADDR) {
         errno |= INVALID_WRITE;
         dbgprintf("Attempted to write to system address space. Bad address: 0x%X\n", addr);
@@ -142,8 +146,9 @@ uint8_t write(uint32_t addr, uint8_t byte) {
             return 1;
         }
         
+        // okay, seems valid: pass it to flash_write
         flash_write(addr, byte);
-    } else 
+    } else  // execute RAM write
         ram_write(addr, byte);
     
     // verify that the byte was successfully written
@@ -156,7 +161,7 @@ uint8_t write(uint32_t addr, uint8_t byte) {
     return 0;
 }
 
-// parse a s-record, either test writing or writing for reals (based on armed)
+// parse a s-record, either test writing or writing for real (based on armed)
 uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed) {
     
     // local variables 
@@ -282,24 +287,4 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
     }
 
     return errno;
-}
-
-// used by loader-C
-uint8_t handle_srec(uint8_t * start, uint32_t len, uint8_t fl) { 
-    // do sanity check parse run
-    uint8_t ret = parseSREC(start,len,fl,0);
-    
-    if (ret) 
-        return ret;
-    
-    // if no errors, do programming
-    // allow flash writes
-    flash_arm(FLASH_ARM);
-    ret = parseSREC(start,len,fl,1);
-    flash_arm(0);
-    
-    if (ret) 
-        return ret | PROG_FAILURE;
-    
-    return 0;
 }

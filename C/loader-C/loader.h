@@ -1,6 +1,8 @@
 #ifndef __LOADER_H__
 #define __LOADER_H__
 
+#include <stdint.h>
+
 // flag bits
 #define BOOT_SREC          1
 #define ALLOW_FLASH        2
@@ -51,7 +53,7 @@
 
 #define SECTOR_COUNT     64
 
-uint8_t parseSREC(uint8_t * start, uint32_t len, uint8_t fl, uint8_t armed);
+uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed);
 
 //########################################################################
 // conditional defines for parse_srec.c

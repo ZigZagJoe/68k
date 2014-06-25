@@ -59,7 +59,7 @@ cmd_jmp_table:
     .long get_qcrc          | CC
     .long do_parse_srec     | CD
     .long __bad_cmd         | CE
-    .long reset_addr        | CF - not used as reset_addr can not use RTS
+    .long reset_addr        | CF (never used as reset_addr can not use rts)
 
 | srec flags
 .set FLAG_BOOT,        1
