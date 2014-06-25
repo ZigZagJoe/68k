@@ -4,9 +4,9 @@
 
 # Get directory name, to use as output filename.
 PRJ = bootloader
-BIN = loader.s68
+BIN = $(PRJ).s68
 
-LINK_SCRIPT = loader.ld
+LINK_SCRIPT = loader-C.ld
 
 # Program names
 

@@ -284,7 +284,6 @@ do_parse_srec:
     
 do_boot:
     | boot from the s-record address
-    | ought to check this is nonzero...!
     TILDBG BC
     move.l (entry_point), %a0
     jmp.l (%a0)
@@ -331,7 +330,7 @@ init_vars:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | serial comm routines
 
-| get a long from uart
+| fetch a long from uart into %d0
 getl:
     jsr getc
     lsl.w #8, %d0
@@ -342,14 +341,14 @@ getl:
     jsr getc
     rts
     
-| get a word from uart
+| fetch a word from uart into %d0
 getw:
     jsr getc
     lsl.w #8, %d0
     jsr getc
     rts  
     
-| get a character from uart 
+| get a character from uart, store in %d0
 getb:
 getc:
     | see if there is a byte pending
@@ -359,7 +358,7 @@ getc:
     move.b (UDR), %d0          | read char from buffer
     rts
     
-| write long to serial
+| write long in %d0 to serial
 putl:
 	swap %d0
 	jsr putw
@@ -367,7 +366,7 @@ putl:
 	jsr putw
 	rts
 
-| write word to serial
+| write word in %d0 to serial
 putw:
 	move.w %d0, -(%sp)
 
@@ -379,7 +378,7 @@ putw:
 
 	rts
 	
-| write byte to serial
+| write byte in %d0 to serial
 putb:
 putc:
 	btst #7, (TSR)           | test buffer empty (bit 7)
