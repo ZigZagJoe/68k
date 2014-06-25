@@ -49,6 +49,7 @@ void monitor(int fd);
 // general functions
 uint64_t millis();
 uint32_t crc_update (uint32_t inp, uint8_t v);
+void hex_dump(uint8_t *array, uint32_t cnt, uint32_t baseaddr) ;
 
 // s-rec info variables
 extern uint32_t program_sz;
@@ -176,15 +177,15 @@ int main (int argc, char ** argv) {
         return 0;
     }
   
+    if (do_dump) {  
+        uint32_t addr = 0x1000;
+        uint32_t len = 32;
+        return perform_dump(addr, len);
+    }
+    
     if (filename == 0) {
         printf("Missing filename.\n");
         return 1;
-    }
-    
-    if (do_dump) {  
-        uint32_t addr = 0x0;
-        uint32_t len = 0x8000;
-        return perform_dump(addr, len);
     }
     
     FILE *in = fopen(filename,"rb");
@@ -541,12 +542,11 @@ int main (int argc, char ** argv) {
 int perform_dump(uint32_t addr, uint32_t len) {
     FILE *out = fopen(filename,"w");
     
-    if (!out) {
-        printf("Failed to open %s\n",filename);
-        return 1;
+    if (!out && filename || (!filename && len >= 5000)) {
+        printf("Failed to open %s.\n",filename);
     }
 
-    printf("Performing dump of %d bytes starting at %08X\n",len, addr);
+    printf("Performing dump of %d bytes starting at 0x%08X\n",len, addr);
     printf("Resetting board...\n");
     command(fd, CMD_RESET);
     serflush(fd);
@@ -583,17 +583,25 @@ int perform_dump(uint32_t addr, uint32_t len) {
     uint64_t start = millis();
     uint64_t lastByte = start;
     uint32_t sz = 0;
+    
+    uint8_t *dump = (uint8_t*)malloc(len);
+    if (!dump) {
+        printf("Failed to allocate memory\n");
+        return 1;
+    }
 
     printf("\n");
     
     while (sz < len) {
         if (has_data(fd)) {
             if(read(fd, &ch, 1) == 1) {
-                fputc(ch, out);
+                
+                if (out) fputc(ch, out);
+                
                 crc = crc_update(crc, ch);
                 
                 lastByte = millis();
-                sz++;
+                dump[sz++] = ch;
                 
                 if (sz % 32 == 0) {
                     printf("%6.2f %%\x8\x8\x8\x8\x8\x8\x8\x8",((float)sz * 100) / len);
@@ -636,8 +644,40 @@ int perform_dump(uint32_t addr, uint32_t len) {
     printf("CRC validated as 0x%08X\n",crc);
     printf("Dump completed successfully.\n");
     
-    fclose(out);
+    if (len < 5000)
+        hex_dump(dump, len, addr);
+    
+    if (out) fclose(out);
     return 0;
+}
+
+void hex_dump(uint8_t *array, uint32_t cnt, uint32_t baseaddr) {
+    int c = 0;
+    char ascii[17];
+    ascii[16] = 0;
+    
+    printf("\n%8X   ", baseaddr);
+   
+    for (uint32_t i = 0; i < cnt; i++) {
+        uint8_t b = array[i];
+        
+        ascii[c] = (b > 31 & b < 127) ? b : '.';
+        
+        printf("%02X ",b);
+
+        if (++c == 16) {
+            printf("  %s\n",ascii);
+            if ((i+1) < cnt)
+                printf("%8X   ", baseaddr+i);
+            c = 0;
+        }
+    }
+    
+    if (c && c < 15) {
+        while (c++ < 16)
+            printf("   ");
+        printf("  %s\n",ascii);
+    } else printf("\n");
 }
 
 // perform a flag-set command (returns a magic value)
