@@ -119,8 +119,8 @@ cmd_byte:
     subi.b #0xC0, %d0          | get table offset
     
     cmp.b #0xF, %d0
-    beq reset_addr             | reset is not a subroutine... jump directly
-    bgt __cmd_oor              | out of range command (ie. not valid)
+    beq reset_addr             | reset is not a subroutine... jump directly.
+    bhi __cmd_oor              | out of range command (ie. not valid)
     
     and.w #0xF, %d0
     lsl.w #2, %d0              | ind * 4 (size of long)
@@ -283,7 +283,8 @@ do_boot:
     | boot from the s-record address
     | ought to check this is nonzero...!
     TILDBG BC
-    jmp.l (entry_point)
+    move.l (entry_point), %a0
+    jmp.l (%a0)
 
 | an error occured, do not boot.
 bad_srec:

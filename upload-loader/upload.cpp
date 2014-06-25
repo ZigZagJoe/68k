@@ -12,35 +12,43 @@
 
 #include <loader.h>
 
-#define msleep(x) usleep((x) * 1000)
-
 #define IOSSDATALAT    _IOW('T', 0, unsigned long)
 #define IOSSIOSPEED    _IOW('T', 2, speed_t)
 
 #define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))
+#define msleep(x) usleep((x) * 1000)
 
+
+// default port
 char port_def[] ="/dev/cu.usbserial-M68KV1BB";
 
 const int pin_rts = TIOCM_RTS;
 
-int sergetc(int fd);
-int serputc(int fd, char c);
-void serflush(int fd);
-void monitor(int fd);
-uint8_t has_data(int fd);
-bool SET_FLAG(const char * name, uint8_t value, uint32_t magic) ;
-uint32_t crc_update (uint32_t inp, uint8_t v);
-void command(int fd, uint8_t instr);
+// serial functions
+uint8_t readb();
+uint16_t readw();
+uint32_t readl();
 
 void putl(uint32_t i);
 void putwd(uint32_t i);
 
-int perform_dump();
+int sergetc(int fd);
+int serputc(int fd, char c);
+void serflush(int fd);
+uint8_t has_data(int fd);
 
-uint8_t readb();
-uint16_t readw();
-uint32_t readl();
+void command(int fd, uint8_t instr);
+
+// execute a flag set command
+bool SET_FLAG(const char * name, uint8_t value, uint32_t magic) ;
+
+// large functions
+int perform_dump(uint32_t addr, uint32_t len);
+void monitor(int fd);
+
+// general functions
 uint64_t millis();
+uint32_t crc_update (uint32_t inp, uint8_t v);
 
 // s-rec info variables
 extern uint32_t program_sz;
@@ -83,20 +91,21 @@ int main (int argc, char ** argv) {
     // vars n shit bitches
     char * port = (char*)&port_def;
     
-    // tooo many flags
+    // program flags
     bool no_terminal = false;
     bool verbose = false;
     bool term_only = false;
+    bool use_qcrc = false;
+    bool do_dump = false;
     
-    bool go_hiram = false;
-    bool srec = false;
-    
+    // flags
     bool boot_srec = false;
     bool flash_wr = false;
     bool loader_wr = false;
+    bool go_hiram = false;
     bool bin_srec = false;
-    bool use_qcrc = false;
-    bool do_dump = false;
+    
+    bool srec = false;
     
     // should allow setting of this
     int BAUD_RATE = 28000;
@@ -147,19 +156,15 @@ int main (int argc, char ** argv) {
     
     printf("OK\n");
     
+    // remove any pending characters
     serflush(fd);
-    
-    /*// unset nodelay
-     flags = fcntl(fd, F_GETFL);
-     flags &= ~O_NDELAY;
-     fcntl(fd,F_SETFL,flags);*/
     
     unsigned long mics = 1UL; // set latency to 1 microsecond
     ioctl(fd, IOSSDATALAT, &mics);
     
     speed_t speed = BAUD_RATE; // Set baud
     
-    // since the FTDI driver is miserable, hard rate the data rate 
+    // since the FTDI driver is shit, hard rate the data rate 
     // to the max possible by baud rate (in chunks of 512)
     int BAUD_DELAY = (int)(1000.0F / (BAUD_RATE / 9) * 512);
     
@@ -176,8 +181,11 @@ int main (int argc, char ** argv) {
         return 1;
     }
     
-    if (do_dump) 
-        return perform_dump();
+    if (do_dump) {  
+        uint32_t addr = 0x0;
+        uint32_t len = 0x8000;
+        return perform_dump(addr, len);
+    }
     
     FILE *in = fopen(filename,"rb");
     
@@ -258,6 +266,7 @@ int main (int argc, char ** argv) {
             uint32_t sp = 0, pc = 0;
             uint32_t a = 0x80000;
             
+            // read stack pointer from simulated memory, big endian
             sp |= MEMORY[a++];
             sp <<= 8;
             sp |= MEMORY[a++];
@@ -266,6 +275,7 @@ int main (int argc, char ** argv) {
             sp <<= 8;
             sp |= MEMORY[a++];
             
+            // read program counter from simulated memory, big endian
             pc |= MEMORY[a++];
             pc <<= 8;
             pc |= MEMORY[a++];
@@ -528,20 +538,13 @@ int main (int argc, char ** argv) {
 }
 
 
-int perform_dump() {
-    if (!filename) {
-        printf("Missing filename.\n");
-        return 1;
-    }
-    
+int perform_dump(uint32_t addr, uint32_t len) {
     FILE *out = fopen(filename,"w");
+    
     if (!out) {
         printf("Failed to open %s\n",filename);
         return 1;
     }
-
-    uint32_t addr = 0x80000;
-    uint32_t len = 2220;
 
     printf("Performing dump of %d bytes starting at %08X\n",len, addr);
     printf("Resetting board...\n");
@@ -716,13 +719,25 @@ void serflush(int fd) {
 
 
 int sergetc(int fd) {
+    uint64_t start = millis();
+    uint64_t t;
+    
+    while(!has_data(fd)) {
+        t = millis();
+        if ((t-start) > 1000) {
+            printf("Timeout occurred in sergetc(). Ensure bootloader supports command.\n");
+            exit(1);
+        }
+        usleep(10);
+    }
+        
     char ch;
-    int ret;
-    while ((ret = read(fd, &ch, 1)) == 0) msleep(10);
+    int ret = read(fd, &ch, 1);
     if (ret == -1) {
         printf("\n *** Serial read failed %d ***\n",ret);
         exit(1);
     }
+    
    // printf("rec  %02hhx\n",ch);
     return ch;
 }

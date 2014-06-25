@@ -4,7 +4,7 @@
 
 # Get directory name, to use as output filename.
 PRJ = $(notdir $(CURDIR))
-BIN = $(PRJ).S68
+BIN = $(PRJ).s68
 
 LINK_SCRIPT = lksr_kern.ld
 
