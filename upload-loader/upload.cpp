@@ -62,7 +62,7 @@ uint8_t MEMORY[0x100000];
 // file descriptor... getting lazy...
 int fd;
 char * filename = 0;
-    
+bool can_timeout = true;
 /// MAIN CODE
 
 void usage() { 
@@ -563,7 +563,11 @@ int main (int argc, char ** argv) {
                     fflush(stdout);
                 }*/
                 
+                // this can take a while, so disable serial timeouts
+                can_timeout = false;
                 uint32_t c0de = readw();
+                can_timeout = true;
+                
                 uint64_t end = millis();
                 
                 if (c0de != 0xC0DE) {
@@ -838,7 +842,7 @@ int sergetc(int fd) {
     
     while(!has_data(fd)) {
         t = millis();
-        if ((t-start) > 1000) {
+        if (can_timeout && (t-start) > 2000) {
             printf("Timeout occurred in sergetc(). Ensure bootloader supports command.\n");
             exit(1);
         }

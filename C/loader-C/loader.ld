@@ -13,6 +13,7 @@ SECTIONS {
 	} > RAM
 	
 	.body : ALIGN(0x2) {
+	    build_date.o(.data)
 	    loader.o(.text)
 	    loader.o(.data)
 		*(.text)

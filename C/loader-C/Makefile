@@ -23,6 +23,7 @@ INCPATHS=-I . -I ../include -I /Users/zigzagjoe/Documents/68008/deploy/lib/gcc/m
 
 CFLAGS  = -Os -nostartfiles -nostdinc -nostdlib -m68000 -std=c99 -fno-builtin $(INCPATHS)
 
+DATE := $(shell date)
 LDFLAGS = -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) --oformat srec
 ASFLAGS = -march=68000 -mcpu=68000
 
@@ -56,7 +57,10 @@ run:	$(BIN)
 	upload-strapper -n $(PRJ).bin
 	
 $(BIN): $(OBJS) 
-	$(LD)  $(OBJS) $(LDFLAGS) $(LIBS) -o $(BIN)
+	echo ".data\nBUILD_DATE: .word 0\n.string \"$(DATE)\"\n.word 0\n" > build_date.s_tmp
+	$(AS) -o build_date.o build_date.s_tmp
+	$(LD) $(OBJS) build_date.o $(LDFLAGS) $(LIBS) -o $(BIN)
+	rm build_date.*
 	$(OBJCOPY) -I srec $(BIN) -O binary $(PRJ).bin
 	$(OBJDUMP) -D $(BIN) -m68000 > $(PRJ).lst
 	@echo
