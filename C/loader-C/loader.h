@@ -22,7 +22,7 @@
 #define CMD_SET_BOOT	0xC1
 #define CMD_SET_FLWR	0xC2
 #define CMD_SET_LDWR	0xC3
-#define CMD_SET_HIRAM   0xC4
+#define CMD_SET_ADDR    0xC4
 #define CMD_SET_BINSR   0xC5
 // unused 0xC6-C9
 #define CMD_DUMP        0xCA
@@ -36,7 +36,8 @@
 #define BOOT_MAGIC      0xD0B07CDE
 #define FLWR_MAGIC      0xF1A5C0DE
 #define LDWR_MAGIC      0x10ADC0DE
-#define HIRAM_MAGIC     0xCE110C00
+#define ADDR_MAGIC      0xCE110C00
+#define ADDR_TAIL_MAGIC   0xACC0
 #define BINSREC_MAGIC   0xB17AC5EC
 #define DUMP_GREET_MAGIC  0x10AD
 #define DUMP_START_MAGIC  0x1F07

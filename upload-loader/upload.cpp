@@ -133,7 +133,7 @@ int main (int argc, char ** argv) {
     bool boot_srec = false;
     bool flash_wr = false;
     bool loader_wr = false;
-    bool go_hiram = false;
+    bool set_addr = false;
     bool bin_srec = false;
     
     bool srec = false;
@@ -302,11 +302,10 @@ int main (int argc, char ** argv) {
          
     if (srec) {
         // add trailing null
-        data[size] = 0;
-        size++;
+        data[size++] = 0;
         
         printf("Validating S-record... ");
-        uint8_t ret = parseSREC(data, size, flags, true);
+        uint8_t ret = parseSREC(data, size+1, flags, true);
         
         if (ret) {
             printf("\nFailed to validate S-record. Ret: ");
@@ -332,7 +331,7 @@ int main (int argc, char ** argv) {
         
         printf("Payload size: %d\n",program_sz);
         use_qcrc  = true;
-        go_hiram = true;
+        set_addr = true;
         
         // a loader write will be executed: do a sanity check
         if (loader_wr && erased_sectors[0]) {
@@ -410,8 +409,36 @@ int main (int argc, char ** argv) {
         msleep(200);
         serflush(fd);
         
-        if (go_hiram) 
-            SET_FLAG("HIRAM", CMD_SET_HIRAM, HIRAM_MAGIC);
+        if (set_addr) {
+            uint32_t load_addr = (0x80000 - 4096 - size) & ~1; // aligned load address with just enough room to load entire lower RAM
+            
+            printf("Setting write address to 0x%x... ", load_addr);
+            fflush(stdout);
+            
+            command(fd, CMD_SET_ADDR);
+            
+            uint32_t intro = readl();
+            
+            if (intro != ADDR_MAGIC) {
+                printf("Sync error setting write address: got %x\n", intro);
+                return 1;
+            }
+            putl(load_addr);
+            uint32_t addr_rb = readl();
+            uint16_t tail = readw();
+            
+            if (tail != ADDR_TAIL_MAGIC) {
+                printf("Sync error getting addrSet tail: got %x\n", tail);
+                return 1;
+            }
+            
+            if (addr_rb != load_addr) {
+                printf("Address verification failed (got %x, expected %x)\nRetrying.", addr_rb, load_addr);
+                continue;
+            }
+            
+            printf("OK!\n");
+        }
 
         printf("Uploading...\n");
         
@@ -522,6 +549,7 @@ int main (int argc, char ** argv) {
             printf("Upload echo verified.\n\n");
             
             if (srec) {
+
                 // apply relevant flags
                 
                 if (boot_srec && !SET_FLAG("run from SREC", CMD_SET_BOOT, BOOT_MAGIC))
@@ -696,7 +724,7 @@ int perform_dump(uint32_t addr, uint32_t len) {
             return 1;
         }
     }
-    
+             
     uint64_t end = millis();
     
     printf("%6.2f %%\n\n",((float)100));					 

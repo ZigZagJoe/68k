@@ -29,14 +29,13 @@
 .set TCDR,  MFP + 0x23         | timer c data
 .set UCR,   MFP + 0x29         | uart ctrl
 
-.set loram_addr,  0x2000
-.set hiram_addr, 0x40000
+.set default_addr,  0x2000
 
 | command codes
 .set CMD_SET_BOOT,  0xC1
 .set CMD_SET_FLWR,  0xC2
 .set CMD_SET_LDWR,  0xC3
-.set CMD_SET_HIRAM, 0xC4
+.set CMD_SET_ADDR,  0xC4
 .set CMD_SET_BINSR, 0xC5
 .set CMD_DUMP,      0xCA
 .set CMD_BOOT,      0xCB
@@ -49,7 +48,7 @@ cmd_jmp_table:
     .long set_boot          | C1
     .long set_flash_wr      | C2
     .long set_loader_wr     | C3
-    .long set_hiram         | C4
+    .long set_addr          | C4
     .long set_binary_srec   | C5
     .long __bad_cmd         | C6
     .long __bad_cmd         | C7
@@ -60,7 +59,7 @@ cmd_jmp_table:
     .long get_qcrc          | CC
     .long do_parse_srec     | CD
     .long __bad_cmd         | CE
-    .long reset_addr        | CF - not used
+    .long reset_addr        | CF - not used as reset_addr can not use RTS
 
 | srec flags
 .set FLAG_BOOT,        1
@@ -88,7 +87,7 @@ reset_addr:
     TILDBG B7                  | bootloader ready!
    
     | initialize variables
-    move.l #loram_addr, %d0
+    move.l #default_addr, %d0
     jsr init_vars
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -169,16 +168,20 @@ set_loader_wr:
     jsr putl
     ori.b #FLAG_WR_LOADER, %d5
     rts
-    
-| use an address in high ram to load at
-set_hiram:
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||       
+| set address to load data to
+set_addr:
     TILDBG 1A
     
     move.l #0xCE110C00, %d0
     jsr putl
     
-    move.l #hiram_addr, %d0
-    jsr init_vars
+    jsr getl               | get address
+    jsr putl               | echo it back
+    jsr init_vars          | init vars
+    move.w #0xACC0, %d0    | send tail
+    jsr putw
     
     rts
     
