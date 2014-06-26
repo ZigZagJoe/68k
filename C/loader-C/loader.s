@@ -49,36 +49,7 @@
    which is absolutely harmless with no impact on registers or flags
    thus, it will never be used in any sane code, but it does not need
    to be removed when testing a program in RAM, like boot vectors do.
-   also, a flash address can be nulled later without erasing the sector.
-
-#### implementation
-    
-    cmp.l #bootable_magic, (sector1_entry)
-    jeq wait_for_command                    | wait for command to stay in bootloader 
-    
-loop:
-    jsr getb
-    .....
-    
-wait_for_command:
-    move.l #100000, %d2        | number of loops - should result in a bit over half a second until normal boot
-    
-wait_loop:
-    btst #7, (RSR)             | test if buffer full (bit 7) is set
-    beq _wcont                 | buffer empty, continue
-
-    move.b (UDR), %d0
-    
-    btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
-    bne _wcont                 | if Z is not set
-    
-    cmp.b #CMD_SPECIAL, %d0    | check if byte is $special_command, maybe just reset
-    beq loop                
-   
-_wcont: 
-    subi.l #1, %d2
-    jne wait_loop
-
+   misc: a flash address can be nulled later without erasing the sector
 */  
 
 | command codes
@@ -133,6 +104,10 @@ loader_start:
     move.b #1, (RSR)           | receiver enable
     move.b #1, (TSR)           | transmitter enable
     
+    | check if boot magic is present on sector 1
+    cmp.l #bootable_magic, (sector1_entry)
+    beq wait_for_command 
+    
 reset_addr:
     TILDBG B7                  | bootloader ready!
    
@@ -160,6 +135,22 @@ loop:
     rol.l #1, %d7
     
     bra loop                   | and back to start we go
+ 
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
+| wait for a command to stay in bootloader, otherwise boot
+wait_for_command:
+    TILDBG CD
+    move.l #60000, %d2         | number of loops - should result about a second delay
+    
+_cmd_w_loop:
+    jsr check_reset_cmd
+    bne reset_addr             | enter bootloader mode
+
+    subi.l #1, %d2
+    jne _cmd_w_loop            | timeout, boot from flash
+    
+    TILDBG BF                
+    jmp (sector1_entry)
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | execute commmand byte in %d0
@@ -259,18 +250,9 @@ memory_dump:
     move.l #0xDEADC0DE, %d2    | crc
     
 dump_loop:
-    btst #7, (RSR)             | test if buffer full (bit 7) is set
-    beq _cont                  | buffer empty, continue
-
-    move.b (UDR), %d0
-    
-    btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
-    bne _cont                  | if Z is not set
-    
-    cmp.b #CMD_RESET, %d0      | check if byte is reset
-    beq reset_addr
-    
-_cont:
+    jsr check_reset_cmd
+    bne dump_end
+        
     move.b (%a0)+, %d0         | read a byte
     move.b %d0, TIL311
     
@@ -377,6 +359,27 @@ init_vars:
     clr.l %d6                  | bytecount = 0
     clr.l %d5                  | flash writes disallowed
     move.l #0xDEADC0DE, %d7    | init qcrc
+    rts
+    
+| check if reset command was recieved
+| returns bool in %d0
+| sets Z if return code is zero
+check_reset_cmd:
+    clr.b %d0
+    
+    btst #7, (RSR)             | test if buffer full (bit 7) is set
+    beq _end_chk               | buffer empty, continue
+
+    cmp.b #CMD_RESET, (UDR)
+    bne _end_chk
+    
+    btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
+    bne _end_chk               | if Z is not set (gpio = 1)
+
+    move.b #1, %d0
+    
+_end_chk:
+    tst.b %d0
     rts
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

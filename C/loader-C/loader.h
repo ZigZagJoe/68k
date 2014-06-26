@@ -54,6 +54,7 @@
 #define SECTOR_COUNT     64
 
 // serial utility functions
+// provided by loader.s
 uint32_t getl();
 uint16_t getw();
 uint8_t getb();
@@ -61,6 +62,8 @@ void putb(uint8_t b);
 void putw(uint16_t w);
 void putl(uint32_t l);
 
+// srec parsing
+// provided by parse_srec.c
 uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed);
 
 //########################################################################

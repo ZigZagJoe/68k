@@ -909,10 +909,18 @@ uint32_t crc_update (uint32_t inp, uint8_t v) {
 void command(int fd, uint8_t instr) {
     ioctl(fd, TIOCMBIS, &pin_rts); // assert RTS
     usleep(50*1000);
-    serputc(fd, instr);
-    usleep(50*1000);
+    
+    if (instr == CMD_RESET) {
+        for (int i = 0; i < 8; i++) {
+            serputc(fd, instr);
+            usleep(25*1000);
+        }
+    } else {
+        serputc(fd, instr);
+        usleep(50*1000);
+    }
+    
     ioctl(fd, TIOCMBIC, &pin_rts); // deassert RTS
-    usleep(50*1000);
 }
 
 void putl(uint32_t i) {
