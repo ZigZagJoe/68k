@@ -24,8 +24,11 @@
 .set TCDR,  MFP + 0x23         | timer c data
 .set UCR,   MFP + 0x29         | uart ctrl
 
-| boot magic, required to boot. translates into exg %d0, %d1; exg %d1, %d0;
-|.long 0xc141c340
+| boot magic, required for bootloader to run this from flash
+| it translates into exg %d0, %d1; exg %d1, %d0;
+| does absolutely nothing and thus would never be used normally
+
+.long 0xc141c340
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | entry point
@@ -33,12 +36,13 @@ _start:
     clr.b %d1
   
 _inc:
+    | increment counter
     addq.b #1, %d1  
     move.b %d1, (TIL311)
-    move.l #0x8000, %d0
-_loop:
-    subi.l #1, %d0
-    jne _loop
+    
+    | delay for a little bit
+    move.w #0xFFFF, %d0
+dl: dbra %d0, dl
     
     bra _inc    
 
