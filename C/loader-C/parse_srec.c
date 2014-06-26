@@ -13,7 +13,6 @@ uint32_t pos;           // current position in srec
 uint32_t srec_sz;       // size of srec, including trailing null
 uint8_t write_armed;    // boolean if writes are enabled or not
 
-
 // info vars
 uint16_t rec_cnt = 0;   // number of records
 uint32_t entry_point;   // entry point, specified in S7-S9 records, 0 if none
@@ -34,7 +33,7 @@ uint8_t readch() {
     }
     
     char ch = srec[pos++];
-    
+
     // if not a binary srec, throw an exception if character is not in a valid range
     if (!(wr_flags & BINARY_SREC) && ((ch < '0' || ch > 'z') && ch !='\n' && ch != '\r')) {
         dbgprintf("Invalid character encountered\n");

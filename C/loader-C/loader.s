@@ -186,7 +186,7 @@ set_addr:
     jsr _putl
     
     jsr getl                   | get address
-    jsr _putl                   | echo it back
+    jsr _putl                  | echo it back
     jsr init_vars              | init vars with addr in %d0
     move.w #0xACC0, %d0        | send tail
     jsr _putw
@@ -206,9 +206,9 @@ memory_dump:
     jsr getl                   | read length
     move.l %d0, %d1            | length   
     
-    jsr _putl                   | echo length
+    jsr _putl                  | echo length
     move.l %a0, %d0
-    jsr _putl                   | echo source
+    jsr _putl                  | echo source
     
     jsr getw                   | get final confirmation to go (addr/len correct)
     cmp.w #0x1F07, %d0
@@ -235,14 +235,14 @@ _cont:
     eor.b %d0, %d2             | qcrc update
     rol.l #1, %d2
     
-    jsr _putb                   | send it out
+    jsr _putb                  | send it out
     
     subi.l #1, %d1
-	bne dump_loop	
-	
-	move.l %d2, %d0            | send out the crc
-	jsr _putl
-	
+    bne dump_loop   
+   
+    move.l %d2, %d0            | send out the crc
+    jsr _putl
+   
 dump_end:
     move.w #0xEEAC, %d0        | finale 
     jsr _putw
@@ -371,33 +371,33 @@ putl:
     move.l (4,%sp), %d0
 | write long in %d0 to serial
 _putl:
-	swap %d0
-	jsr _putw
-	swap %d0
-	jsr _putw
-	rts
+   swap %d0
+   jsr _putw
+   swap %d0
+   jsr _putw
+   rts
 
 putw:
     move.w (6,%sp), %d0
 | write word in %d0 to serial
 _putw:
-	move.w %d0, -(%sp)
+   move.w %d0, -(%sp)
 
-	lsr.w #8, %d0
-	jsr _putb
-	
-	move.w (%sp)+, %d0
-	jsr _putb
+   lsr.w #8, %d0
+   jsr _putb
+   
+   move.w (%sp)+, %d0
+   jsr _putb
 
-	rts
-	
+   rts
+   
 putb:  
     move.b (7,%sp), %d0
 | write byte in %d0 to serial
 _putb:
-	btst #7, (TSR)             | test buffer empty (bit 7)
-    beq _putb                   | Z=1 (bit = 0) ? branch
-	move.b %d0, (UDR)		   | write char to buffer
-	rts
-	
+   btst #7, (TSR)             | test buffer empty (bit 7)
+   beq _putb                  | Z=1 (bit = 0) ? branch
+   move.b %d0, (UDR)          | write char to buffer
+   rts
+   
 # EOF loader.s

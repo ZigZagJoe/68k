@@ -53,6 +53,7 @@
 
 #define SECTOR_COUNT     64
 
+// serial utility functions
 uint32_t getl();
 uint16_t getw();
 uint8_t getb();
@@ -63,7 +64,6 @@ void putl(uint32_t l);
 uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed);
 
 //########################################################################
-// conditional defines for parse_srec.c
 #ifndef UPLOADER    /* ############ code for loader-C ################# */
 
 #include <io.h>
@@ -79,13 +79,13 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
 
 extern uint8_t MEMORY[0x100000];
 
-// don't use...
+// disable these functions.
 #define flash_erase_sector ; //
 #define flash_arm ;//
 
-#define flash_write_byte(A,V) MEMORY[A] = V;
-#define MEM(X) MEMORY[X]
-#define ADDR_TO_SECTOR(X) (((X) & 0x3FFFF) >> 12)  
+#define flash_write_byte(A,V)  MEMORY[A] = V
+#define MEM(X)                 MEMORY[X]
+#define ADDR_TO_SECTOR(X)      (((X) & 0x3FFFF) >> 12)  
     
 #endif
 
