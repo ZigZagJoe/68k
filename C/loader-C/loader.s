@@ -38,6 +38,48 @@
 .set UCR,   MFP + 0x29         | uart ctrl
 
 .set default_addr,  0x2000
+.set sector1_entry,  0x81000
+
+.set bootable_magic, 0xc141c340
+
+/* this is code for:
+
+   exg %d0, %d1; exg %d1, %d0;
+   
+   which is absolutely harmless with no impact on registers or flags
+   thus, it will never be used in any sane code, but it does not need
+   to be removed when testing a program in RAM, like boot vectors do.
+   also, a flash address can be nulled later without erasing the sector.
+
+#### implementation
+    
+    cmp.l #bootable_magic, (sector1_entry)
+    jeq wait_for_command                    | wait for command to stay in bootloader 
+    
+loop:
+    jsr getb
+    .....
+    
+wait_for_command:
+    move.l #100000, %d2        | number of loops - should result in a bit over half a second until normal boot
+    
+wait_loop:
+    btst #7, (RSR)             | test if buffer full (bit 7) is set
+    beq _wcont                 | buffer empty, continue
+
+    move.b (UDR), %d0
+    
+    btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
+    bne _wcont                 | if Z is not set
+    
+    cmp.b #CMD_SPECIAL, %d0    | check if byte is $special_command, maybe just reset
+    beq loop                
+   
+_wcont: 
+    subi.l #1, %d2
+    jne wait_loop
+
+*/  
 
 | command codes
 .set CMD_SET_BOOT,  0xC1
@@ -367,8 +409,10 @@ getb:
     move.b (UDR), %d0          | read char from buffer
     rts
     
+| c binding for putl
 putl:
     move.l (4,%sp), %d0
+    
 | write long in %d0 to serial
 _putl:
    swap %d0
@@ -377,8 +421,10 @@ _putl:
    jsr _putw
    rts
 
+| c binding for putw
 putw:
     move.w (6,%sp), %d0
+    
 | write word in %d0 to serial
 _putw:
    move.w %d0, -(%sp)
@@ -391,8 +437,10 @@ _putw:
 
    rts
    
+| c binding for putb
 putb:  
     move.b (7,%sp), %d0
+    
 | write byte in %d0 to serial
 _putb:
    btst #7, (TSR)             | test buffer empty (bit 7)
