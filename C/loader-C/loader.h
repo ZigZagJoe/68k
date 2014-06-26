@@ -53,6 +53,13 @@
 
 #define SECTOR_COUNT     64
 
+uint32_t getl();
+uint16_t getw();
+uint8_t getb();
+void putb(uint8_t b);
+void putw(uint16_t w);
+void putl(uint32_t l);
+
 uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed);
 
 //########################################################################

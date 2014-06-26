@@ -4,10 +4,18 @@
 .align 2
 .data
 
+| entry point
 .global loader_start
-.global putc
-.global entry_point
 
+| C-callable serial functions
+.global putb
+.global putw
+.global putl
+.global getb
+.global getw
+.global getl
+
+.extern entry_point
 .extern handle_srec
 
 | display a constant byte
@@ -93,7 +101,7 @@ reset_addr:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | main bootloader loop
 loop:
-    jsr getc
+    jsr getb
     
     move.b %d0, (TIL311)       | display on device
     
@@ -144,28 +152,28 @@ __bad_cmd:
 | parse binary srec
 set_binary_srec:
     move.l #0xB17AC5EC, %d0
-    jsr putl
+    jsr _putl
     ori.b #FLAG_BIN_SREC, %d5
     rts
  
 | set to boot from s-record
 set_boot:
     move.l #0xD0B07CDE, %d0
-    jsr putl
+    jsr _putl
     ori.b #FLAG_BOOT, %d5
     rts
     
 | set to allow s record to write flash
 set_flash_wr:
     move.l #0xF1A5C0DE, %d0
-    jsr putl
+    jsr _putl
     ori.b #FLAG_WR_FLASH, %d5
     rts
     
 | set to allow s record to write loader
 set_loader_wr:
     move.l #0x10ADC0DE, %d0
-    jsr putl
+    jsr _putl
     ori.b #FLAG_WR_LOADER, %d5
     rts
 
@@ -175,13 +183,13 @@ set_addr:
     TILDBG 1A
     
     move.l #0xCE110C00, %d0
-    jsr putl
+    jsr _putl
     
-    jsr getl               | get address
-    jsr putl               | echo it back
-    jsr init_vars          | init vars
-    move.w #0xACC0, %d0    | send tail
-    jsr putw
+    jsr getl                   | get address
+    jsr _putl                   | echo it back
+    jsr init_vars              | init vars with addr in %d0
+    move.w #0xACC0, %d0        | send tail
+    jsr _putw
     
     rts
     
@@ -191,16 +199,16 @@ memory_dump:
     TILDBG D0
     
     move.w #0x10AD, %d0
-    jsr putw
+    jsr _putw
     
     jsr getl                   | read source address
     move.l %d0, %a0            | source
     jsr getl                   | read length
     move.l %d0, %d1            | length   
     
-    jsr putl                   | echo length
+    jsr _putl                   | echo length
     move.l %a0, %d0
-    jsr putl                   | echo source
+    jsr _putl                   | echo source
     
     jsr getw                   | get final confirmation to go (addr/len correct)
     cmp.w #0x1F07, %d0
@@ -227,17 +235,17 @@ _cont:
     eor.b %d0, %d2             | qcrc update
     rol.l #1, %d2
     
-    jsr putb                   | send it out
+    jsr _putb                   | send it out
     
     subi.l #1, %d1
 	bne dump_loop	
 	
 	move.l %d2, %d0            | send out the crc
-	jsr putl
+	jsr _putl
 	
 dump_end:
     move.w #0xEEAC, %d0        | finale 
-    jsr putw
+    jsr _putw
     
     rts
     
@@ -247,10 +255,10 @@ do_parse_srec:
     TILDBG DC
     
     move.l #0xD0E881CC, %d0    | tell host we are initiating write
-    jsr putl
+    jsr _putl
     
     move.b %d5, %d0            | write mode
-    jsr putc
+    jsr _putb
     
     | push arguments
     move.l %d5, -(%sp)         | write mode
@@ -263,15 +271,17 @@ do_parse_srec:
     | dealloc arguments
     add.l #12, %sp
     
+    clr.b %d5                  | clear write flags
+    
     move.w %d0, %d1            | save return code
     move.w #0xC0DE, %d0        | write sync word #2
-    jsr putw            
+    jsr _putw            
     
     move.b %d1, %d0            | write return code
-    jsr putc
+    jsr _putb
     
     move.w #0xEF00, %d0        | trailing null
-    jsr putw
+    jsr _putw
     
     cmp.b #0, %d1
     bne bad_srec
@@ -279,7 +289,7 @@ do_parse_srec:
     TILDBG 0C
     
     and.b #FLAG_BOOT, %d5
-    bne do_boot                   | not set as bootable
+    bne do_boot                | not set as bootable
     rts
     
 do_boot:
@@ -299,13 +309,13 @@ get_qcrc:
     TILDBG CC                  | display code
     
     move.w #0xFCAC, %d0        | intro
-    jsr putw
+    jsr _putw
     
     move.l %d7, %d0            | crc data
-    jsr putl                  
+    jsr _putl                  
     
     clr.b %d0                  | tail
-    jsr putc
+    jsr _putb
     
     rts
 
@@ -332,58 +342,62 @@ init_vars:
 
 | fetch a long from uart into %d0
 getl:
-    jsr getc
+    jsr getb
     lsl.w #8, %d0
-    jsr getc
+    jsr getb
     lsl.l #8, %d0
-    jsr getc
+    jsr getb
     lsl.l #8, %d0
-    jsr getc
+    jsr getb
     rts
     
 | fetch a word from uart into %d0
 getw:
-    jsr getc
+    jsr getb
     lsl.w #8, %d0
-    jsr getc
+    jsr getb
     rts  
     
 | get a character from uart, store in %d0
 getb:
-getc:
     | see if there is a byte pending
     btst #7, (RSR)             | test if buffer full (bit 7) is set
-    beq getc                   | buffer empty, loop (Z=1)
+    beq getb                   | buffer empty, loop (Z=1)
 
     move.b (UDR), %d0          | read char from buffer
     rts
     
-| write long in %d0 to serial
 putl:
+    move.l (4,%sp), %d0
+| write long in %d0 to serial
+_putl:
 	swap %d0
-	jsr putw
+	jsr _putw
 	swap %d0
-	jsr putw
+	jsr _putw
 	rts
 
-| write word in %d0 to serial
 putw:
+    move.w (6,%sp), %d0
+| write word in %d0 to serial
+_putw:
 	move.w %d0, -(%sp)
 
 	lsr.w #8, %d0
-	jsr putc
+	jsr _putb
 	
 	move.w (%sp)+, %d0
-	jsr putc
+	jsr _putb
 
 	rts
 	
+putb:  
+    move.b (7,%sp), %d0
 | write byte in %d0 to serial
-putb:
-putc:
-	btst #7, (TSR)           | test buffer empty (bit 7)
-    beq putc                 | Z=1 (bit = 0) ? branch
-	move.b %d0, (UDR)		 | write char to buffer
+_putb:
+	btst #7, (TSR)             | test buffer empty (bit 7)
+    beq _putb                   | Z=1 (bit = 0) ? branch
+	move.b %d0, (UDR)		   | write char to buffer
 	rts
 	
 # EOF loader.s

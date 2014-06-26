@@ -46,7 +46,7 @@ uint8_t readch() {
 }
 
 // read a nibble (one hex char)
-uint8_t getn() {
+uint8_t read_nibble() {
     char ch = readch();
     
     if (ch >= 'A' && ch <= 'F')
@@ -62,13 +62,13 @@ uint8_t getn() {
 }
 
 // read a single byte
-uint8_t getb() {
+uint8_t read_byte() {
     uint8_t b;
     
     if (wr_flags & BINARY_SREC) {   // binary mode; just read a character
         b = readch();
     } else
-        b = (getn() << 4) | getn(); // read two hex chars to assemble a byte
+        b = (read_nibble() << 4) | read_nibble(); // read two hex chars to assemble a byte
         
     checksum += b;
     return b;
@@ -78,7 +78,7 @@ uint8_t getb() {
 uint32_t readAddr(uint8_t len) {
     uint32_t i = 0;
     while (len-- > 0)
-        i = (i << 8) | getb();
+        i = (i << 8) | read_byte();
     return i;
 }
 
@@ -220,7 +220,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
         checksum = 0;  // reset checksum
         
         // number of data bytes (record byte count, - checksum, - addr bytes)
-        len = getb() - addr_len[typ] - 1;
+        len = read_byte() - addr_len[typ] - 1;
        
         // read address field
         address = readAddr(addr_len[typ]);
@@ -234,7 +234,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
                 data_rec_cnt++;
             case 0: // metadata record
                 for (int i = 0; i < len && !errno; i++) {
-                    uint8_t byt = getb();
+                    uint8_t byt = read_byte();
                     
                     if (typ == 0)
                         continue;
@@ -270,7 +270,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
         }
         
         loc_crc = ~checksum; // one's complement
-        file_crc = getb();   // read checksum from file
+        file_crc = read_byte();   // read checksum from file
         
         if (loc_crc != file_crc) {
             errno |= CRC_ERROR;
