@@ -55,3 +55,30 @@ SET BINARY SREC
     improves write speeds by a factor of 4 - faster to upload, faster to program
     normal s-records can be translated into binary srecs by using srec2srb     
 
+
+** Code structure / Boot sequence **
+
+[reloc.s]
+Show character on TIL311
+Disable interrupts (may die here if user code jumped to loader...)
+Reset MFP
+Copy bootloader region into RAM at 0x1000
+Jump to bootloader code in RAM
+
+[loader.s]
+Initialize UART
+Check for bootable magic on second flash sector
+If magic found: 
+   wait up to a second for a reset command
+   else boot from second flash sector
+   
+Reset address pointer and QCRC
+Read byte
+   execute command if GPIO0 = 0
+   else write byte to address++
+   
+loop to read byte
+
+if command == CMD_SREC
+    call handle_srec [c_funcs.c]
+        which then calls parseSREC [parse_srec.c] once to verify, and again to write
