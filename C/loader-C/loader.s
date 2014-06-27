@@ -37,8 +37,8 @@
 .set TCDR,  MFP + 0x23         | timer c data
 .set UCR,   MFP + 0x29         | uart ctrl
 
-.set default_addr,  0x2000
-.set sector1_entry,  0x81000
+.set default_addr,   0x2000
+.set sector1_entry, 0x81000
 
 .set bootable_magic, 0xc141c340
 

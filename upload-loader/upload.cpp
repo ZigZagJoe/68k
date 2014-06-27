@@ -572,7 +572,7 @@ int main (int argc, char ** argv) {
                 
                 uint32_t ok = readl();
                 
-                if (ok != 0xD0E881CC) {
+                if (ok != SREC_GREET_MAGIC) {
                     printf("\nSync error executing srec (bad greeting). Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0E881CC);
                     return 1;
                 } else {
@@ -598,16 +598,16 @@ int main (int argc, char ** argv) {
                 
                 uint64_t end = millis();
                 
-                if (c0de != 0xC0DE) {
-                    printf("\nSync error executing srec (bad c0de). Reset board and try again.\nGot %04X, expected %04X\n\n", c0de, 0xC0DE);
+                if (c0de != SREC_CODE_MAGIC) {
+                    printf("\nSync error executing srec (bad c0de). Reset board and try again.\nGot %04X, expected %04X\n\n", c0de, SREC_CODE_MAGIC);
                     return 1;
                 }
                 
                 uint8_t ret_code = readb();
                 uint16_t tail_magic = readw();
                 
-                if (tail_magic != 0xEF00) {
-                    printf("\nSync error executing srec (bad tail). Reset board and try again.\nGot %04X, expected %04X\n\n", tail_magic, 0xEF00);
+                if (tail_magic != SREC_TAIL_MAGIC) {
+                    printf("\nSync error executing srec (bad tail). Reset board and try again.\nGot %04X, expected %04X\n\n", tail_magic, SREC_TAIL_MAGIC);
                     return 1;
                 }    
                 
