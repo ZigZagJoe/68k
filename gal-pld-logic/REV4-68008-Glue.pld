@@ -21,7 +21,7 @@ PIN    6 = A2                         ; /* Address bus bit 2               */
 PIN    7 = FC0                        ; /* Processor status 1              */ 
 PIN    8 = FC1                        ; /* Processor status 2              */ 
 PIN    9 = FC2                        ; /* Processor status 3              */ 
-PIN    10 = BOOT_R                    ; /* /RESET from TL7705 for BOOTED   */ 
+PIN    10 = BOOT_RESET                ; /* /RESET from TL7705 (for BOOTED) */ 
 PIN    11 = DTACKIN                   ; /* DTACK input, 68901 and others'  */ 
 /* PIN 12 GROUND */
 PIN    13 = SLOW_DTACK_T              ; /* delay signal, from 74LS164 SR   */
@@ -53,9 +53,9 @@ PIN    23 = SLOW_DTACK_CS             ; /* /CS INPUT for slow device (LCD) */
    will always be generated, and thus will suffice as a trigger for setting 
    the BOOTED flag, until the next external reset by the TL7705.   */
    
-BOOT_S = ~(A19 & ~AS);
-BOOTED   = ~(BOOT_S & BOOTED_I);
-BOOTED_I = ~(BOOT_R & BOOTED);
+BOOT_SET = ~(A19 & ~AS);
+BOOTED   = ~(BOOT_SET   & BOOTED_I);
+BOOTED_I = ~(BOOT_RESET & BOOTED);
 
 /* ##### Interrupt ACKnowledge for 68901 ##### */
 /* FC0-2 all being low with AS asserted indicates interrupt being services

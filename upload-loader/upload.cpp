@@ -374,18 +374,26 @@ int main (int argc, char ** argv) {
                 printf("\nERROR: PC is located in a sector that was not written to. Aborting!\n");
                 return 1;
             }
+            
+            if (ADDR_TO_SECTOR(pc) != 0)
+                printf("\nWarning: PC is not located in the bootloader sector - it is in sector %d.\n", ADDR_TO_SECTOR(pc));
      
+            const char *conf_chars=" !@#$%^&*()";
+            srand(time(NULL));
+            
             if (loader_wr && flash_wr) {
+                int num = (rand() % 9) + 1;
+                
                 printf("\n###################################################################\n");
                 printf("# WARNING: Loader write and Flash write have both been enabled.   #\n");
                 printf("# At least one write to the bootloader sector will be executed.   #\n");
                 printf("# The stack pointer and program counter values appear to be sane. #\n");
                 printf("#                                                                 #\n");
                 printf("# Please confirm that you want to update the bootloader sector    #\n");
-                printf("# by pressing SHIFT+1, then enter. Press any other key to abort.  #\n");
+                printf("# by pressing SHIFT+%d, then enter. Press any other key to abort.  #\n",num);
                 printf("###################################################################\n\n> ");
                 
-                if (getchar() != '!') {
+                if (getchar() != conf_chars[num]) {
                     printf("\nAborting!\n");
                     return 1;
                 }

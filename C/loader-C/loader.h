@@ -48,7 +48,7 @@
 
 #define SREC_GREET_MAGIC  0xD0E881CC
 #define SREC_CODE_MAGIC   0xC0DE
-#define SreC_TAIL_MAGIC   0xEF00
+#define SREC_TAIL_MAGIC   0xEF00
 
 // important addresses
 #define FLASH_START       0x80000
