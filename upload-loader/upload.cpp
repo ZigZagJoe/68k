@@ -910,7 +910,7 @@ void command(int fd, uint8_t instr) {
     ioctl(fd, TIOCMBIS, &pin_rts); // assert RTS
     usleep(50*1000);
     
-    if (instr == CMD_RESET) {
+    if (instr == CMD_RESET) { // send multiple to ensure we enter bootloader mode
         for (int i = 0; i < 8; i++) {
             serputc(fd, instr);
             usleep(25*1000);

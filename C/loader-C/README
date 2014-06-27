@@ -1,0 +1,57 @@
+This is the first true bootloader for my 68k board.
+Internally, it is mostly asm, with only the s-record parsing being C code.
+
+Its primary function is to write characters read via uart into RAM 
+at an address, postincrement, and then echo them back to the sender.
+
+The default address is 0x2000, to remain backwards compatible
+with the "strapper" simple bootloader.
+
+Bytes read while GPIO0 of the MFP is low are interpreted as a command byte.
+
+** Commands **
+
+BOOT 
+    displays 0xBB, then jumps to the last address loaded in with SET ADDR (or RESET)
+    
+RESET
+    resets the address pointer to 0x2000 and resets qcrc value to default (0xDEADC0DE)
+    user programs should watch for this command and re-enter bootloader if recv'd
+    
+QCRC
+    returns the "QCRC" (uint32_t) of the bytes written since last RESET/SET ADDR
+    qcrc = rol(qcrc ^ byte, 1)
+    
+SREC
+    parses the bytes written at the last address set as a S-RECORD. must be null-terminated!
+    can be used to write flash and/or bootloader, if the relevant flags have been set.
+    can not be aborted once started, flags are cleared once completed. bootloader will
+    be unresponsive while the s-record program is in progress.
+    
+SET ADDR
+    sets the address pointer to a uint32_t read in over serial and clears qcrc
+    
+DUMP       
+    reads (length, uint32) bytes from (address, uint32) and sends them over serial
+    once the specified number of bytes have been read, the qcrc of the read bytes is sent
+    can be aborted by sending RESET command a few times
+    
+Additionally, there are 4 commands which simply set flags for the SREC command: 
+
+SET BOOT
+    causes the bootloader to jump to the entry point specified in the s-record, 
+    after it has been /successfully/ format-checked and then programmed
+    
+SET FLASH
+    allows a s-record to write to flash addresses
+    
+SET LOADER
+    allows a s-record to write to the loader sector 
+    set flash must also be set or write will fail
+    
+SET BINARY SREC
+    specifies the s-record is in binary format rather than hexadecimal format
+    everything after S[0-9] are binary bytes, rather than hex digit pairs
+    improves write speeds by a factor of 4 - faster to upload, faster to program
+    normal s-records can be translated into binary srecs by using srec2srb     
+

@@ -24,14 +24,13 @@
 #define CMD_SET_BOOT	0xC1
 #define CMD_SET_FLWR	0xC2
 #define CMD_SET_LDWR	0xC3
-#define CMD_SET_ADDR    0xC4
-#define CMD_SET_BINSR   0xC5
-// unused 0xC6-C9
+#define CMD_SET_BINSR   0xC4
+// unused 0xC5-C9
 #define CMD_DUMP        0xCA
 #define CMD_BOOT	    0xCB
 #define CMD_QCRC	    0xCC
 #define CMD_SREC	    0xCD
-// unused 0xCE
+#define CMD_SET_ADDR    0xCE
 #define CMD_RESET	    0xCF
 
 // magic flag values

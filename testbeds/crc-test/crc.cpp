@@ -9,9 +9,26 @@
 
 uint8_t failures[20];
 
+
 uint32_t crc_update (uint32_t inp, uint8_t v) {
 	return ROL(inp ^ v, 1);
 }
+
+/*
+uint16_t crc_update(uint16_t crc, uint8_t a) {
+    int i;
+    
+    crc ^= a;
+    for (i = 0; i < 8; ++i)
+    {
+        if (crc & 1)
+            crc = (crc >> 1) ^ 0xA001;
+        else
+            crc = (crc >> 1);
+    }
+    
+    return crc;
+}*/
 
 uint32_t base;
 uint16_t fail_ind = 0;

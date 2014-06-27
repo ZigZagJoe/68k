@@ -56,12 +56,12 @@
 .set CMD_SET_BOOT,  0xC1
 .set CMD_SET_FLWR,  0xC2
 .set CMD_SET_LDWR,  0xC3
-.set CMD_SET_ADDR,  0xC4
-.set CMD_SET_BINSR, 0xC5
+.set CMD_SET_BINSR, 0xC4
 .set CMD_DUMP,      0xCA
 .set CMD_BOOT,      0xCB
 .set CMD_QCRC,      0xCC
 .set CMD_SREC,      0xCD
+.set CMD_SET_ADDR,  0xCE
 .set CMD_RESET,     0xCF
 
 cmd_jmp_table:
@@ -69,8 +69,8 @@ cmd_jmp_table:
     .long set_boot          | C1
     .long set_flash_wr      | C2
     .long set_loader_wr     | C3
-    .long set_addr          | C4
-    .long set_binary_srec   | C5
+    .long set_binary_srec   | C4
+    .long __bad_cmd         | C5
     .long __bad_cmd         | C6
     .long __bad_cmd         | C7
     .long __bad_cmd         | C8
@@ -79,7 +79,7 @@ cmd_jmp_table:
     .long boot_ram          | CB
     .long get_qcrc          | CC
     .long do_parse_srec     | CD
-    .long __bad_cmd         | CE
+    .long set_addr          | CE
     .long reset_addr        | CF (never used as reset_addr can not use rts)
 
 | srec flags
@@ -247,7 +247,7 @@ memory_dump:
     cmp.w #0x1F07, %d0
     bne dump_end               | host aborted / out of sync
     
-    move.l #0xDEADC0DE, %d2    | crc
+    move.l #0xDEADC0DE, %d2    | qcrc initial value
     
 dump_loop:
     jsr check_reset_cmd
