@@ -10,6 +10,7 @@
 .extern __data_length
 .extern __bss_start
 .extern __bss_length
+.extern __data_file_start
 
 .set IO_BASE, 0xC0000
 .set TIL311, IO_BASE + 0x8000
@@ -32,7 +33,7 @@
 	cmp.l #0, %d0  	| check if empty bss section
 	beq clrbss
 
-	move.l #__data_start, %a0 	| A0 = data start
+	move.l #__data_rom_start, %a0 	| A0 = data start
 	move.l #0x2000, %a1         | A1 = data dest
 	
 	

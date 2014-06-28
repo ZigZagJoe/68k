@@ -1,4 +1,3 @@
-heap_size = 32768; 
 stack_size = 32768;
 
 ENTRY(_start)
@@ -22,19 +21,19 @@ SECTIONS {
 		startup.o(.text)
 	} > RAM
 
-	.text : ALIGN(0x10) {
+	.text : ALIGN(0x4) {
 		__text_start = .;
 		*(.text)
 		__text_end = .;
 	} > RAM
 
-	.data : ALIGN(0x10) {
+	.data : ALIGN(0x4) {
 		__data_start = .;
 		*(.data)
 		__data_end = .;
 	} > RAM
 
-	.bss : ALIGN(0x10) {
+	.bss : ALIGN(0x4) {
 		__bss_start = .;
 		*(.bss)
 		__bss_end = .;

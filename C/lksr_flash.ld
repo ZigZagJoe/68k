@@ -1,4 +1,3 @@
-heap_size = 32768; 
 stack_size = 32768;
 
 ENTRY(_start)
@@ -22,23 +21,25 @@ SECTIONS {
 		startup.o(.text)
 	} > ROM
 
-	.text : ALIGN(0x2) {
+	.text : ALIGN(0x4) {
 		*(.text)
     } > ROM
     
-    .rodata : ALIGN(0x2) {
+    .rodata : ALIGN(0x4) {
         *(.rodata.*)
     } > ROM
     
-    __rom_end = .;
-    
-	.data (0x2000) : AT (__rom_end) ALIGN(0x2) {
-		__data_start = .;
+    /* offset in ROM */
+	__data_rom_start = .;
+	
+	.data (0x2000) : AT (__data_rom_start) ALIGN(0x4) {
+	    /* offset relative to load address */
+	    __data_start = .;
 		*(.data)
 		__data_end = .;
 	} > RAM
 	
-	.bss (__data_end) : ALIGN(0x2) {
+	.bss (__data_end) : ALIGN(0x4) {
 		__bss_start = .;
 		*(.bss)
 		__bss_end = .;
