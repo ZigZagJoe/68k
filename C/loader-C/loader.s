@@ -106,7 +106,7 @@ loader_start:
     
     | check if boot magic is present on sector 1
     cmp.l #bootable_magic, (sector1_entry)
-    beq wait_for_command 
+    beq wait_for_command       | if it is, wait for a command to stay in bootloader
     
 reset_addr:
     TILDBG B7                  | bootloader ready!
@@ -311,17 +311,18 @@ do_parse_srec:
     TILDBG 0C
     
     and.b #FLAG_BOOT, %d5
-    bne do_boot                | not set as bootable
+    bne do_boot                | set to boot?
         
     clr.b %d5                  | clear write flags
     
     rts
     
 do_boot:
-    | boot from the s-record address
+    | boot from the s-record entry point address
+    | gonna assume it was validated pre-upload
     TILDBG BC
     move.l (entry_point), %a0
-    jmp.l (%a0)
+    jmp (%a0)
 
 | an error occured, do not boot.
 bad_srec:
@@ -378,7 +379,6 @@ check_reset_cmd:
     bne _end_chk               | if Z is not set (gpio = 1)
 
     move.b #1, %d0
-    
 _end_chk:
     tst.b %d0
     rts

@@ -53,4 +53,4 @@ SECTIONS {
 __heap_start = __bss_end;
 __heap_size = __heap_end - __heap_start;
 __bss_size  = (__bss_end - __bss_start) / 4;
-__data_size = (__data_end - __data_end) / 4;
+__data_size = (__data_end - __data_start) / 4;

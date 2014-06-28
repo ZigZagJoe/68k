@@ -11,15 +11,6 @@
 #include <lcd.h>
 #include <beep.h>
 
-ISR(address_err)  { HALT_CODE(0xEE,0xAE); }
-ISR(bus_error)    { HALT_CODE(0xEE,0xBE); }
-ISR(illegal_inst) { HALT_CODE(0xEE,0x11); }
-ISR(divby0)       { HALT_CODE(0xEE,0x70); }
-ISR(bad_isr)      { HALT_CODE(0xEE,0x1B); }
-ISR(spurious)     { HALT_CODE(0xEE,0x1F); }
-ISR(auto_lvl2)    { HALT_CODE(0xEE,0x12); }
-ISR(priv_vio)     { HALT_CODE(0xEE,0x77); }
-
 void mem_dump(uint8_t *addr, uint32_t cnt) {
     int c = 0;
     char ascii[17];
@@ -95,14 +86,7 @@ void lcd_printf(char *fmt, ...)
 int main() {
     TIL311 = 0x01;
     
-    __vectors.address_error = &address_err;
-    __vectors.bus_error = &bus_error;
-    __vectors.illegal_instr = &illegal_inst;
-    __vectors.divide_by_0 = &divby0;
-    __vectors.uninitialized_isr = &bad_isr;
-    __vectors.int_spurious = &spurious;
-    __vectors.auto_level2 = &auto_lvl2;
-    __vectors.priv_violation = &priv_vio;
+    default_interrupts();
     
     serial_start(SERIAL_SAFE);
     millis_start();

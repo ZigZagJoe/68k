@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#define UPLOADER
 #include "../C/loader-C/loader.h"
 
 uint8_t *srec;
@@ -167,7 +168,8 @@ int main (int argc, char ** argv) {
             case 0: // metadata record
                 for (int i = 0; i < len && !errno; i++) {
                     uint8_t byt = getb();
-                    program_sz++;
+                    if (typ != 0)
+                        program_sz++;
                 }
                 break;
             case 5: // record count

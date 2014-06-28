@@ -19,6 +19,7 @@
 
  _start:
 	move.b #0xCC, (TIL311) | what up my glip glops!
+
 	move.l #0xFFFFFFFF, (0x400) | kernel not active
 	
 	move.l #__stack_start, %a7
@@ -27,17 +28,20 @@
 	
 	move.l #__data_size, %d0
 	
+
 	cmp.l #0, %d0  	| check if empty bss section
-	beq run
-	
+	beq clrbss
+
 	move.l #__data_start, %a0 	| A0 = data start
 	move.l #0x2000, %a1         | A1 = data dest
+	
 	
 	| due to use of dbra, we can copy a max of 256kb
 cpydat:
 	move.l (%a0)+, (%a1)+       | clear [A0.l]
 	dbra %d0, cpydat            | D0 != 0
 
+clrbss:
 	/* clear BSS section */
 	
 	move.l #__bss_size, %d0
@@ -52,6 +56,7 @@ cbss:
 	clr.l (%a0)+        | clear [A0.l]
 	dbra %d0, cbss 		| D0 != 0
 	
+
 run:
 	jsr main            | jump to main
 	
