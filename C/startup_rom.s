@@ -27,8 +27,7 @@ _start:
 	
 	/* copy data */
 	
-	move.l #__data_size, %d0
-	
+	move.l #__data_size, %d0	
 
 	cmp.l #0, %d0  	               | check if empty data section
 	beq clrbss

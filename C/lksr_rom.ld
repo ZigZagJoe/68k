@@ -17,7 +17,7 @@ __heap_end = __stack_end;
 __vectors = 0;
 
 SECTIONS {
-	/* startup code must be first in binary, given 0x2000 as fixed entry point */
+	/* startup code must be first in binary, given fixed entry point */
 	.startup (0x81000) : {
 		startup.o(.text)
 	} > ROM
@@ -27,6 +27,7 @@ SECTIONS {
     } > ROM
     
     .rodata : ALIGN(0x4) {
+        *(.rodata)
         *(.rodata.*)
     } > ROM
     

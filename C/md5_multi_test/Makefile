@@ -4,9 +4,10 @@
 
 # Get directory name, to use as output filename.
 PRJ = $(notdir $(CURDIR))
-BIN = $(PRJ).S68
+BIN = $(PRJ).s68
 
-LINK_SCRIPT = lksr_kern.ld
+CODE_LOC = rom
+LDFLAGS = --defsym "__start_func=_kernel_start" --defsym "stack_size=4096"
 
 # Program names
 
@@ -24,18 +25,21 @@ LIBPATHS=-L ../lib -L /Users/zigzagjoe/Documents/68008/deploy/lib/gcc/m68k-elf/4
 
 CFLAGS  = -O3 -nostartfiles -nostdinc -nostdlib -m68000 -std=c99 -fno-builtin $(INCPATHS)
 
-LDFLAGS = -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) $(LIBPATHS) --oformat srec
+LDFLAGS += -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) $(LIBPATHS) --oformat srec
 ASFLAGS = -march=68000 -mcpu=68000
 
-LIBS =    -lmd5  -lcore -lprintf -lbeep  -lhd44780 -lgcc
+LIBS =  -lmd5 -lbeep  -lcore  -lhd44780 -lgcc
 # -lbeep   -lprintf -lgcc -lhd44780  -lbeep  -lhd44780
 
 # List of source files
 
+LINK_SCRIPT = ../lksr_$(CODE_LOC).ld
+STARTUP_SRC = ../startup_$(CODE_LOC).s
+
 SRC_C=$(wildcard *.c)
 SRC_S=$(wildcard *.s)
 
-OBJS=$(SRC_C:.c=.o) $(SRC_S:.s=.o)
+OBJS=$(SRC_C:.c=.o) $(SRC_S:.s=.o) startup.o
 LSTS=$(SRC_C:.c=.lst)
 
 # clear suffixes
@@ -73,7 +77,10 @@ $(BIN): $(OBJS)
 	@stat -f %z $(PRJ).bin | sed 's/$$/ bytes/'
 	
 startup.o:
-	$(AS) $(ASFLAGS) ../startup_ram.S -o startup.o
+	$(AS) $(ASFLAGS) $(STARTUP_SRC) -o startup.o
+	
+.s.o:
+	$(AS) $(ASFLAGS) -o $@ $<
 	
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $<

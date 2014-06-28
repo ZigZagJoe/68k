@@ -22,6 +22,7 @@
 .extern __bss_start
 .extern __bss_end
 .extern default_interrupts
+.extern _hexchars
  
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | state variables
@@ -540,7 +541,10 @@ puthexbyte:
 	
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | strings	
+
+.section .rodata
+
 _system_halted: .string "\n\n*** All tasks exited. System halted. ***\n"
 _system_exit: .string "\n\n*** Program exited with code 0x"
 _system_exit_2: .string ". System halted. ***\n"
-_hexchars: .ascii "0123456789ABCDEF"
+

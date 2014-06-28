@@ -17,6 +17,13 @@
 	move.w (%SP)+, %D0
 .endm
 
+.macro regist ch
+    move.w %D0, -(%SP)
+	move.b #0x\ch, %D0
+    jsr putregi
+    move.w (%SP)+, %D0
+.endm
+
 .macro newline 
 	putchar '\n'
 .endm
@@ -49,6 +56,7 @@
 .global exception_privilege
 .global user_dump
 .global _soft_reset
+.global _hexchars
 
 _soft_reset:
 	move.l 0x80000, %sp
@@ -108,7 +116,49 @@ dumpregs:
 
 	newline
 	move.l 60(%SP), %A0
-	jsr puts
+
+	| time to put exception info string
+	move.b #' ', %d0
+    jsr putc
+    
+	move.l %A0, %A1
+	clr.b %d3
+
+_lf:
+    tst.b (%A1)+
+    jeq _fl
+    addq.b #1, %d3
+    bra _lf
+    	
+_fl:
+    | %d3 contains exception string len
+    addq.b #2, %d3            | space compensation
+
+    move.w #62, %d2
+    sub.b %d3, %d2
+    
+    clr.w %d3
+    lsr.b #1, %d2
+    bcc _noex                 | carry = lowest bit
+    move.b #1, %d3            | if it was set, then not an even division: add an extra # on the second half
+    
+_noex: 
+    move.w %d2, %d1           | first set of bashes
+    add.w %d2, %d3            | second set of bashes
+    
+    jsr putbash               | leading bashes
+      	
+	move.b #' ', %d0
+    jsr putc                  | leading space
+    
+	jsr puts                  | exception
+		
+	move.b #' ', %d0          | tailing space
+    jsr putc
+	
+	move.w %d3, %d1           | tailing bashes
+    jsr putbash
+    
 	newline
 	
 	/*put_str _TASKNUM
@@ -134,70 +184,70 @@ regs:
 	
 	newline
 	
-	put_str _D0
+	regist D0
 	move.l (%SP), %D0
 	jsr puthexlong
 	
-	put_str _D1
+	regist D1
 	move.l 4(%SP), %D0
 	jsr puthexlong
 	
-	put_str _D2
+	regist D2
 	move.l 8(%SP), %D0
 	jsr puthexlong
 	
-	put_str _D3
+	regist D3
 	move.l 12(%SP), %D0
 	jsr puthexlong
 	
 	newline
 	
-	put_str _D4
+	regist D4
 	move.l 16(%SP), %D0
 	jsr puthexlong
 	
-	put_str _D5
+	regist D5
 	move.l 20(%SP), %D0
 	jsr puthexlong
 	
-	put_str _D6
+	regist D6
 	move.l 24(%SP), %D0
 	jsr puthexlong
 	
-	put_str _D7
+	regist D7
 	move.l 28(%SP), %D0
 	jsr puthexlong
 	
 	newline
 	newline
 	
-	put_str _A0
+	regist A0
 	move.l 32(%SP), %D0
 	jsr puthexlong
 	
-	put_str _A1
+	regist A1
 	move.l 36(%SP), %D0
 	jsr puthexlong
 	
-	put_str _A2
+	regist A2
 	move.l 40(%SP), %D0
 	jsr puthexlong
 	
-	put_str _A3
+	regist A3
 	move.l 44(%SP), %D0
 	jsr puthexlong	
 	
 	newline
 	
-	put_str _A4
+	regist A4
 	move.l 48(%SP), %D0
 	jsr puthexlong	
 	
-	put_str _A5
+	regist A5
 	move.l 52(%SP), %D0
 	jsr puthexlong
 	
-	put_str _A6
+	regist A6
 	move.l 56(%SP), %D0
 	jsr puthexlong
 			
@@ -206,6 +256,7 @@ regs:
 	
 	cmp.b #0xAE, 65(%SP)
 	beq _group0
+	
 	cmp.b #0xBE, 65(%SP)
 	beq _group0
 	
@@ -302,9 +353,12 @@ _contp:
 	jsr print_kern_status
 	
 end:
-	move.l #_end, %A0
-	jsr puts
-	newline
+    move.b #' ', %d0
+    jsr putc
+    
+    move.b #62, %d1
+    jsr putbash
+    newline
 	
 loop_forever:
 	move.b #0xEE, (TIL311)
@@ -406,6 +460,29 @@ puthexword:
 
 	move.w (%SP)+, %D0
 	rts
+	
+putregi:
+    move.w %d0, -(%sp)
+    move.b #' ',%d0
+    jsr putc
+    jsr putc
+    jsr putc
+    move.b (1,%sp), %d0
+    jsr puthexbyte
+    move.b #':', %d0
+    jsr putc
+    move.b #' ', %d0
+    jsr putc
+    move.w (%sp)+, %d0
+    rts
+    
+putbash: 
+    move.b #'#', %d0
+    subq.b #1, %d1
+_putcl:
+    jsr putc
+    dbra %d1, _putcl
+    rts
 
 puthexbyte:
 	move.l %A0, -(%SP)
@@ -428,40 +505,24 @@ puthexbyte:
 	
 	rts
 
-.data 
+.section .rodata 
 
 _hexchars: .ascii "0123456789ABCDEF"
 
 _flags: .string "    T   S     IMASK       X N Z V C\n    "
 
-_random_excep:.string " ######################## Exception ##########################"
-_addr_err:    .string " ###################### Address Error ########################"
-_bus_err:     .string " ######################## Bus Error ##########################"
-_ilginst_err: .string " ################### Illegal Instruction #####################"
-_bad_isr_err: .string " ######################### Bad ISR ###########################"
-_sprr_err:    .string " #################### Spurious Interrupt #####################"
-_trap:        .string " ########################### Trap ############################"
-_privvio:        .string " ################### Privilege Violation #####################"
-_end:         .string " #############################################################"
+_random_excep:.string "Exception"
+_addr_err:    .string "Address Error"
+_bus_err:     .string "Bus Error"
+_ilginst_err: .string "Illegal Instruction"
+_bad_isr_err: .string "Bad ISR"
+_sprr_err:    .string "Spurious Interrupt"
+_trap:        .string "Trap"
+_privvio:     .string "Privilege Violation"
 
 _invt: .string "<invalid task>  0x"
 _TASKNUM: .string "  TASK "
 _PC: .string "   PC: "
-_D0: .string "   D0: "
-_D1: .string "   D1: "
-_D2: .string "   D2: "
-_D3: .string "   D3: "
-_D4: .string "   D4: "
-_D5: .string "   D5: "
-_D6: .string "   D6: "
-_D7: .string "   D7: "
-_A0: .string "   A0: "
-_A1: .string "   A1: "
-_A2: .string "   A2: "
-_A3: .string "   A3: "
-_A4: .string "   A4: "
-_A5: .string "   A5: "
-_A6: .string "   A6: "
 _usersp: .string "  USP: "
 _supsp: .string "  SSP: "
 _ADDR: .string " ADDR: "
