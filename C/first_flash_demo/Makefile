@@ -6,7 +6,8 @@
 PRJ = $(notdir $(CURDIR))
 BIN = $(PRJ).s68
 
-LINK_SCRIPT = ../lksr_flash.ld
+CODE_LOC = rom
+LIBS =  -lcore -lhd44780 -ltime -lbeep -lgcc
 
 # Program names
 
@@ -27,17 +28,20 @@ CFLAGS  = -O -nostartfiles -nostdinc -nostdlib -m68000 -std=c99 -fno-builtin $(I
 LDFLAGS = -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) $(LIBPATHS) --oformat srec
 ASFLAGS = -march=68000 -mcpu=68000
 
-LIBS =  -lcore  -lgcc -lprintf -lhd44780 -ltime -lbeep  -lgcc
+LINK_SCRIPT = ../lksr_$(CODE_LOC).ld
+STARTUP_SRC = ../startup_$(CODE_LOC).s
 
 # List of source files
 
-SRCS=$(wildcard *.c)
-OBJS=$(SRCS:.c=.o) startup.o
-LSTS=$(SRCS:.c=.S)
+SRC_C=$(wildcard *.c)
+SRC_S=$(wildcard *.s)
+
+OBJS=$(SRC_C:.c=.o) $(SRC_S:.s=.o)
+LSTS=$(SRC_C:.c=.lst)
 
 # clear suffixes
 .SUFFIXES:
-.SUFFIXES: .c .o .S
+.SUFFIXES: .s .o .c .lst
 
 ####### TARGETS ########
 
@@ -70,10 +74,15 @@ $(BIN): $(OBJS)
 	@stat -f %z $(PRJ).bin | sed 's/$$/ bytes/'
 	
 startup.o:
-	$(AS) $(ASFLAGS) ../startup_flash.S -o startup.o
+	$(AS) $(ASFLAGS) $(STARTUP_SRC) -o startup.o
+	
+listing: $(LSTS)
+
+.s.o:
+	$(AS) $(ASFLAGS) -o $@ $<
 	
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $<
 	
-.c.S:
+.c.lst:
 	$(CC) $(CFLAGS) -c -S -o $@ $<
