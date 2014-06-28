@@ -75,8 +75,8 @@ void usage() {
         "-s             file to load is a motorola s-record\n"
         "-f             allow s-record to write flash\n"
         "-l             allow s-record to write loader (must also specify -f)\n"
-        "-b             boot from entry point specified in s-record\n"
-        "-x             s-record is in binary format from srec2srb\n"
+        "-x             boot from entry point specified in s-record\n"
+        "-b             s-record is in binary format from srec2srb\n"
         "-c             enable qcrc validation (implicit in -s)\n"
         "-p port        specify serial port (full path to device)\n"
         "-d addr[:len]  dump specified region of memory, in hex or dec.\n"
@@ -164,8 +164,8 @@ int main (int argc, char ** argv) {
                     case 's': srec = true; break;
                     case 'l': loader_wr = true; break;
                     case 'f': flash_wr = true; break;
-                    case 'b': boot_srec = true; break;
-                    case 'x': bin_srec = true; break;
+                    case 'x': boot_srec = true; break;
+                    case 'b': bin_srec = true; break;
                     case 'c': use_qcrc = true; break;
                     case 'd': 
                                 do_dump = true; 
@@ -324,11 +324,14 @@ int main (int argc, char ** argv) {
         } else 
             printf("OK.\n");
         
-        if (boot_srec && entry_point == 0) {
-            printf("Error: -b flag present, but S-record does not specify an entry point. Aborting!\n");
-            return 1;
+        if (boot_srec) {
+            if(entry_point == 0) {
+                printf("Error: -b flag present, but S-record does not specify an entry point. Aborting!\n");
+                return 1;
+            } else
+                printf("Entry point of 0x%06X\n",entry_point);
         }
-        
+         
         printf("Payload size: %d\n",program_sz);
         use_qcrc  = true;
         set_addr = true;
@@ -418,7 +421,8 @@ int main (int argc, char ** argv) {
         serflush(fd);
         
         if (set_addr) {
-            uint32_t load_addr = (0x80000 - 4096 - size) & ~1; // aligned load address with just enough room to load entire lower RAM
+            uint32_t load_addr = (0x80000 - 4096 - size) & ~1; 
+            // aligned load address with just enough room to load entire file without clobbering stack
             
             printf("Setting write address to 0x%x... ", load_addr);
             fflush(stdout);

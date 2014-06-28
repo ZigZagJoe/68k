@@ -294,9 +294,7 @@ do_parse_srec:
     
     | dealloc arguments
     add.l #12, %sp
-    
-    clr.b %d5                  | clear write flags
-    
+
     move.w %d0, %d1            | save return code
     move.w #0xC0DE, %d0        | write sync word #2
     jsr _putw            
@@ -314,6 +312,9 @@ do_parse_srec:
     
     and.b #FLAG_BOOT, %d5
     bne do_boot                | not set as bootable
+        
+    clr.b %d5                  | clear write flags
+    
     rts
     
 do_boot:
