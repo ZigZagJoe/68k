@@ -2,7 +2,7 @@
 .align 2
 
 /* functions */
-.global _start
+.global _kernel_start
 .global sleep_for
 .global create_task
 .global yield
@@ -93,7 +93,7 @@
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | entry point
-_start:
+_kernel_start:
 	cli
 	move.b #0xE1, (TIL311) | what up my glip glops!
 	
@@ -120,23 +120,6 @@ zero_structs:
     add.l #96, %a0
     dbra %d0, zero_structs
 
-	/* clear BSS section */
-	
-	move.l #__bss_start, %d1
-	move.l #__bss_end, %d0
-	
-	cmp.l	%d0, %d1  	                | check if empty bss section
-	jbeq run
-	
-	move.l %d1, %a0 	                | A0 = _bss start
-	sub.l %d1, %d0		                | D0 = num bytes to copy
-	
-cbss:
-	clr.b (%a0)+                        | clear [A0.b]
-	subq.l #1, %d0		                | DBRA uses word size unfortunately
-	jne cbss 			                | D0 != 0
-	
-run:
     | set up vectors
     move.l #_kern_millis_count, (0x210)
     move.l #task_manager, (0x80)
@@ -220,16 +203,18 @@ task_manager:
     beq _exit
     rte
 
+| skip this swap tick
+_sknt_taken:
+    clr.b (_skip_next_tick)
+	rte	
+
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| add a count to the millis counter and do a swap
+| add a count to the millis counter and do a swap	
 _kern_millis_count:
 	addi.l #1, (millis_counter)
 	
-	cmp.b #0, (_skip_next_tick)
-	beq _swap_task                      | if user task did not yield, swap now
-	
-	clr.b (_skip_next_tick)
-	rte	
+	tst.b (_skip_next_tick)
+	bne _sknt_taken                     | if user task did yield, skip this swap
 
 | swap out the current task 
 _swap_task:
