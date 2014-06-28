@@ -7,7 +7,7 @@ PRJ = $(notdir $(CURDIR))
 BIN = $(PRJ).s68
 
 CODE_LOC = rom
-LIBS =  -lcore -lhd44780 -ltime -lbeep -lgcc
+LIBS =  -lcore -lhd44780 -ltime -lgcc
 
 # Program names
 

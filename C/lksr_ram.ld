@@ -47,3 +47,4 @@ SECTIONS {
 
 __heap_start = __bss_end;
 __heap_size = __heap_end - __heap_start;
+__bss_size  = (__bss_end - __bss_start) / 4;

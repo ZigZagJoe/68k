@@ -19,7 +19,7 @@ void millis_start() {
 	__vectors.user[MFP_INT + MFP_TIMERD - USER_ISR_START] = &millis_count;
 	
 	VR = MFP_INT;
-	TDDR = 183;	  // approx 100 hz, /very/ slightly fast
+	TDDR = 184;	  // approx 100 hz, /very/ slightly fast
 	TCDCR |= 0x7; // prescaler of 200 for timer D
 	IERB |= INTR_TIMR_D;
 	IMRB |= INTR_TIMR_D;

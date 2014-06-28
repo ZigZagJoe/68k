@@ -36,7 +36,7 @@ STARTUP_SRC = ../startup_$(CODE_LOC).s
 SRC_C=$(wildcard *.c)
 SRC_S=$(wildcard *.s)
 
-OBJS=$(SRC_C:.c=.o) $(SRC_S:.s=.o)
+OBJS=$(SRC_C:.c=.o) $(SRC_S:.s=.o) startup.o
 LSTS=$(SRC_C:.c=.lst)
 
 # clear suffixes
@@ -48,7 +48,7 @@ LSTS=$(SRC_C:.c=.lst)
 all:	$(BIN)
 
 clean:
-	$(RM) $(OBJS) $(BIN) $(LSTS) $(PRJ).bin
+	$(RM) $(OBJS) $(BIN) $(LSTS) $(PRJ).bin startup.o
 	
 zip:	clean all
 	zip -vr $(PRJ).zip . -x $(PRJ).zip
