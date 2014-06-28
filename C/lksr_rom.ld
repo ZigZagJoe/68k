@@ -30,10 +30,13 @@ SECTIONS {
         *(.rodata.*)
     } > ROM
     
-    /* offset in ROM */
-	__data_rom_start = .;
+    /* force alignment for data */
+    . =ALIGN(0x4);
 	
-	.data (0x2000) : AT (__data_rom_start) ALIGN(0x4) {
+	/* offset in ROM */
+	__data_rom_start = .;
+	  
+	.data (0x2000) : AT (__data_rom_start) {	  
 	    /* offset relative to load address */
 	    __data_start = .;
 		*(.data)

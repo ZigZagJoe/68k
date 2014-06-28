@@ -18,7 +18,7 @@ __vectors = 0;
 
 SECTIONS {
 	/* startup code must be first in binary, given 0x2000 as fixed entry point */
-	.text.start (0x2000) : {
+	.startup (0x2000) : {
 		startup.o(.text)
 	} > RAM
 

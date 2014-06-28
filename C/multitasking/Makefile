@@ -6,7 +6,7 @@
 PRJ = $(notdir $(CURDIR))
 BIN = $(PRJ).s68
 
-CODE_LOC = ram
+CODE_LOC = rom
 LDFLAGS = --defsym "__start_func=_kernel_start"
 
 # Program names
