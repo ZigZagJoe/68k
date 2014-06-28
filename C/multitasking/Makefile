@@ -6,8 +6,8 @@
 PRJ = $(notdir $(CURDIR))
 BIN = $(PRJ).s68
 
-CODE_LOC = rom
-LDFLAGS = --defsym "__start_func=_kernel_start"
+CODE_LOC = ram
+LDFLAGS = --defsym "__start_func=_kernel_start" --defsym "stack_size=4096"
 
 # Program names
 
@@ -28,7 +28,7 @@ CFLAGS  = -O3 -nostartfiles -nostdinc -nostdlib -m68000 -std=c99 -fno-builtin $(
 LDFLAGS += -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) $(LIBPATHS) --oformat srec
 ASFLAGS = -march=68000 -mcpu=68000
 
-LIBS =    -lmd5 -lbeep  -lcore  -lhd44780 -lgcc
+LIBS =   -lbeep  -lcore  -lhd44780 -lgcc
 # -lbeep   -lprintf -lgcc -lhd44780  -lbeep  -lhd44780
 
 # List of source files
