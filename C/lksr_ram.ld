@@ -38,6 +38,11 @@ SECTIONS {
 		*(.bss)
 		__bss_end = .;
 	} > RAM
+	
+	/DISCARD/ : {
+	    *(.comment)
+	    *(.debug*)
+	}
 }
 
 __heap_start = __bss_end;

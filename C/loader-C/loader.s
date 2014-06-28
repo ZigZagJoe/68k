@@ -140,7 +140,7 @@ loop:
 | wait for a command to stay in bootloader, otherwise boot
 wait_for_command:
     TILDBG CD
-    move.l #60000, %d2         | number of loops - should result about a second delay
+    move.l #100000, %d2        | number of loops - should result about a second delay
     
 _cmd_w_loop:
     jsr check_reset_cmd

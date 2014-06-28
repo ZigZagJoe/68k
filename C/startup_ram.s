@@ -7,7 +7,7 @@
 .extern main
 .extern __stack_start
 .extern __bss_start
-.extern __bss_end
+.extern __bss_length
 
 .set IO_BASE, 0xC0000
 .set TIL311, IO_BASE + 0x8000
@@ -19,20 +19,18 @@
 	move.l #__stack_start, %a7
 
 	/* clear BSS section */
+
+	move.l #__bss_size, %d0
 	
-	move.l #__bss_start, %d1
-	move.l #__bss_end, %d0
+	cmp.l #0, %d0  	| check if empty bss section
+	beq run
 	
-	cmp.l	%d0, %d1  	| check if empty bss section
-	jbeq run
+	move.l #__bss_start, %a0 	| A0 = _bss start
 	
-	move.l %d1, %a0 	| A0 = _bss start
-	sub.l %d1, %d0		| D0 = num bytes to copy
-	
+	| due to use of dbra, we can clear a max of 256kb of RAM (65536 * sizeof(long))
 cbss:
-	clr.b (%a0)+        | clear [A0.b]
-	subq.l #1, %d0		| DBRA uses word size unfortunately
-	jne cbss 			| D0 != 0
+	clr.l (%a0)+        | clear [A0.l]
+	dbra %d0, cbss 		| D0 != 0
 	
 run:
 	jsr main            | jump to main
