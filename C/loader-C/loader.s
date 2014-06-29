@@ -105,13 +105,18 @@ loader_start:
     move.b #1, (RSR)           | receiver enable
     move.b #1, (TSR)           | transmitter enable
     
+    cmp.w #0xB007, 0x400       | check addr
+    beq reset_addr             | if it is set to magic val, do not (possibly) boot from rom
+                               | as we were reset while waiting for command to stay in loader
+
     | check if boot magic is present on sector 1
     cmp.l #bootable_magic, (sector1_entry)
     beq wait_for_command       | if it is, wait for a command to stay in bootloader
-    
+     
 reset_addr:
     TILDBG B7                  | bootloader ready!
-   
+    clr.w 0x400
+    
     | initialize variables
     move.l #default_addr, %d0
     jsr init_vars
@@ -141,6 +146,9 @@ loop:
 | wait for a command to stay in bootloader, otherwise boot
 wait_for_command:
     TILDBG CD
+    
+    move.w #0xB007, 0x400      | set trying-to-boot magic
+    
     move.l #100000, %d2        | number of loops - should result about a second delay
     
 _cmd_w_loop:
@@ -150,7 +158,9 @@ _cmd_w_loop:
     subi.l #1, %d2
     jne _cmd_w_loop            | timeout, boot from flash
     
-    TILDBG BF                
+    clr.w 0x400                | booting from rom, clear magic
+       
+    TILDBG BF   
     jmp (sector1_entry)
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
