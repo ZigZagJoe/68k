@@ -4,10 +4,9 @@
 #include <stdint.h>
 
 // flag bits
-#define BOOT_SREC            1
-#define ALLOW_FLASH          2
-#define ALLOW_LOADER         4
-#define BINARY_SREC          8
+#define ALLOW_FLASH          1
+#define ALLOW_LOADER         2
+#define BINARY_SREC          4
 
 // errno bits
 #define BAD_HEX_CHAR         1
@@ -21,10 +20,9 @@
 
 // command codes
 // unused 0xC0
-#define CMD_SET_BOOT	  0xC1
-#define CMD_SET_FLWR	  0xC2
-#define CMD_SET_LDWR	  0xC3
-#define CMD_SET_BINSR     0xC4
+#define CMD_SET_FLWR	  0xC1
+#define CMD_SET_LDWR	  0xC2
+#define CMD_SET_BINSR     0xC3
 // unused 0xC5-C9
 #define CMD_DUMP          0xCA
 #define CMD_BOOT	      0xCB

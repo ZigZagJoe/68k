@@ -4,7 +4,7 @@
 #include <flash.h>
 
 // C handler called by ASM
-uint8_t handle_srec(uint8_t * start, uint32_t len, uint8_t fl) { 
+uint16_t handle_srec(uint8_t * start, uint32_t len, uint8_t fl) { 
     // do sanity check parse run
     uint8_t ret = parseSREC(start,len,fl,0);
     

@@ -39,6 +39,8 @@ uint8_t has_data(int fd);
 
 void command(int fd, uint8_t instr);
 
+int set_address(uint32_t addr);
+
 // execute a flag set command
 bool SET_FLAG(const char * name, uint8_t value, uint32_t magic) ;
 
@@ -329,7 +331,7 @@ int main (int argc, char ** argv) {
                 printf("Error: -b flag present, but S-record does not specify an entry point. Aborting!\n");
                 return 1;
             } else
-                printf("Entry point of 0x%06X\n",entry_point);
+                printf("Entry point of 0x%X\n",entry_point);
         }
          
         printf("Payload size: %d\n",program_sz);
@@ -421,35 +423,11 @@ int main (int argc, char ** argv) {
         serflush(fd);
         
         if (set_addr) {
-            uint32_t load_addr = (0x80000 - 4096 - size) & ~1; 
             // aligned load address with just enough room to load entire file without clobbering stack
+            uint32_t load_addr = (0x80000 - 4096 - size) & ~1; 
             
-            printf("Setting write address to 0x%x... ", load_addr);
-            fflush(stdout);
-            
-            command(fd, CMD_SET_ADDR);
-            
-            uint32_t intro = readl();
-            
-            if (intro != ADDR_MAGIC) {
-                printf("Sync error setting write address: got %x\n", intro);
+            if (!set_address(load_addr))
                 return 1;
-            }
-            putl(load_addr);
-            uint32_t addr_rb = readl();
-            uint16_t tail = readw();
-            
-            if (tail != ADDR_TAIL_MAGIC) {
-                printf("Sync error getting addrSet tail: got %x\n", tail);
-                return 1;
-            }
-            
-            if (addr_rb != load_addr) {
-                printf("Address verification failed (got %x, expected %x)\nRetrying.", addr_rb, load_addr);
-                continue;
-            }
-            
-            printf("OK!\n");
         }
 
         printf("Uploading...\n");
@@ -563,9 +541,6 @@ int main (int argc, char ** argv) {
             if (srec) {
 
                 // apply relevant flags
-                
-                if (boot_srec && !SET_FLAG("run from SREC", CMD_SET_BOOT, BOOT_MAGIC))
-                    return 1;
                     
                 if (flash_wr   && !SET_FLAG("flash write", CMD_SET_FLWR, FLWR_MAGIC))
                     return 1;
@@ -615,7 +590,7 @@ int main (int argc, char ** argv) {
                     return 1;
                 }
                 
-                uint8_t ret_code = readb();
+                uint16_t ret_code = readw();
                 uint16_t tail_magic = readw();
                 
                 if (tail_magic != SREC_TAIL_MAGIC) {
@@ -624,7 +599,7 @@ int main (int argc, char ** argv) {
                 }    
                 
                 if (ret_code) {
-                    printf("Failed. Error %hhx: ", ret_code);
+                    printf("Failed. Error %hx: ", ret_code);
                     for (int i = 7; i >= 0; i--) {
                         printf ("%c",((ret_code >> i) & 0x1) + '0');
                         if (i == 4) printf(" ");
@@ -636,8 +611,13 @@ int main (int argc, char ** argv) {
               
                 printf(" completed successfully in %d ms.\n\n", end-start);
                 
-                if (!boot_srec) 
+                if (!boot_srec) {
                     no_terminal = true;
+                } else {
+                    set_address(entry_point);
+                    printf("Booting program.\n\n");
+                    command(fd, CMD_BOOT);
+                }
                 
                 break;
             } else {
@@ -656,6 +636,37 @@ int main (int argc, char ** argv) {
     return 0;
 }
 
+int set_address(uint32_t addr) { 
+    printf("Setting address to 0x%x... ", addr);
+    fflush(stdout);
+    
+    command(fd, CMD_SET_ADDR);
+    
+    uint32_t intro = readl();
+    
+    if (intro != ADDR_MAGIC) {
+        printf("Sync error setting write address: got %x\n", intro);
+        return 0;
+    }
+    
+    putl(addr);
+    uint32_t addr_rb = readl();
+    uint16_t tail = readw();
+    
+    if (tail != ADDR_TAIL_MAGIC) {
+        printf("Sync error in SetAddr tail: got %x\n", tail);
+        return 0;
+    }
+    
+    if (addr_rb != addr) {
+        printf("Address verification failed (got %x, expected %x)\n", addr_rb, addr);
+        return 0;
+    }
+    
+    printf("OK!\n");
+    
+    return 1;
+}
 
 int perform_dump(uint32_t addr, uint32_t len) {
     FILE *out = fopen(filename,"w");
@@ -668,6 +679,10 @@ int perform_dump(uint32_t addr, uint32_t len) {
     printf("Resetting board...\n");
     command(fd, CMD_RESET);
     serflush(fd);
+    
+    if (!set_address(addr)) 
+        return 1;
+    
     printf("Sending dump command... \n");
     command(fd, CMD_DUMP);
     
@@ -678,12 +693,11 @@ int perform_dump(uint32_t addr, uint32_t len) {
         return 1;
     }
     
-    putl(addr);
     putl(len);
     
     uint32_t addr_rb, len_rb;
-    len_rb = readl();
     addr_rb = readl();
+    len_rb = readl();
     
     if (addr_rb != addr || len_rb != len) {
         putl(0);

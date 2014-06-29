@@ -12,7 +12,7 @@ Bytes read while GPIO0 of the MFP is low are interpreted as a command byte.
 ** Commands **
 
 BOOT 
-    displays 0xBB, then jumps to the last address loaded in with SET ADDR (or RESET)
+    displays 0xBB, then jumps to the last address loaded in with SET ADDR (or 0x2000, if none)
     
 RESET
     resets the address pointer to 0x2000 and resets qcrc value to default (0xDEADC0DE)
@@ -23,25 +23,23 @@ QCRC
     qcrc = rol(qcrc ^ byte, 1)
     
 SREC
-    parses the bytes written at the last address set as a S-RECORD. must be null-terminated!
+    parses the bytes written at the last address set as a null-terminated S-RECORD
     can be used to write flash and/or bootloader, if the relevant flags have been set.
     can not be aborted once started, flags are cleared once completed. bootloader will
     be unresponsive while the s-record program is in progress.
     
 SET ADDR
     sets the address pointer to a uint32_t read in over serial and clears qcrc
+    sets the boot address to the same value 
     
 DUMP       
-    reads (length, uint32) bytes from (address, uint32) and sends them over serial
+    reads (length, uint32) bytes from current address and sends them over serial
+    confirms length and address before beginning dump
     once the specified number of bytes have been read, the qcrc of the read bytes is sent
     can be aborted by sending RESET command a few times
     
-Additionally, there are 4 commands which simply set flags for the SREC command: 
+Additionally, there are 3 commands which simply set flags for the SREC command: 
 
-SET BOOT
-    causes the bootloader to jump to the entry point specified in the s-record, 
-    after it has been /successfully/ format-checked and then programmed
-    
 SET FLASH
     allows a s-record to write to flash addresses
     

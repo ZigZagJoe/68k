@@ -52,25 +52,15 @@
    misc: a flash address can be nulled later without erasing the sector
 */  
 
-| command codes
-.set CMD_SET_BOOT,  0xC1
-.set CMD_SET_FLWR,  0xC2
-.set CMD_SET_LDWR,  0xC3
-.set CMD_SET_BINSR, 0xC4
-.set CMD_DUMP,      0xCA
-.set CMD_BOOT,      0xCB
-.set CMD_QCRC,      0xCC
-.set CMD_SREC,      0xCD
-.set CMD_SET_ADDR,  0xCE
-.set CMD_RESET,     0xCF
+.set CMD_RESET, 0xCF
 
 /* could save 32 bytes and increase speed by storing offsets relative to jump point */
 cmd_jmp_table:
     .long __bad_cmd         | C0
-    .long set_boot          | C1
-    .long set_flash_wr      | C2
-    .long set_loader_wr     | C3
-    .long set_binary_srec   | C4
+    .long set_flash_wr      | C1
+    .long set_loader_wr     | C2
+    .long set_binary_srec   | C3
+    .long __bad_cmd         | C4
     .long __bad_cmd         | C5
     .long __bad_cmd         | C6
     .long __bad_cmd         | C7
@@ -84,10 +74,9 @@ cmd_jmp_table:
     .long reset_addr        | CF (never used as reset_addr can not use rts)
 
 | srec flags
-.set FLAG_BOOT,        1
-.set FLAG_WR_FLASH,    2
-.set FLAG_WR_LOADER,   4
-.set FLAG_BIN_SREC,    8
+.set FLAG_WR_FLASH,    1
+.set FLAG_WR_LOADER,   2
+.set FLAG_BIN_SREC,    4
   
 .text
 #####################################################################
@@ -114,7 +103,7 @@ loader_start:
     beq wait_for_command       | if it is, wait for a command to stay in bootloader
      
 reset_addr:
-    TILDBG B7                  | bootloader ready!
+    TILDBG B8                  | bootloader ready!
     clr.w 0x400
     
     | initialize variables
@@ -133,7 +122,7 @@ loop:
     beq cmd_byte               | gpio is 0; command byte!
     
     move.b %d0, (UDR)          | not a command, echo it back
-    move.b %d0, (%a0)+         | store to address, postincrement
+    move.b %d0, (%a4)+         | store to address, postincrement
 
     addi.l #1, %d6             | bytecount ++
     
@@ -199,13 +188,6 @@ set_binary_srec:
     jsr _putl
     ori.b #FLAG_BIN_SREC, %d5
     rts
- 
-| set to boot from s-record
-set_boot:
-    move.l #0xD0B07CDE, %d0
-    jsr _putl
-    ori.b #FLAG_BOOT, %d5
-    rts
     
 | set to allow s record to write flash
 set_flash_wr:
@@ -245,16 +227,14 @@ memory_dump:
     move.w #0x10AD, %d0
     jsr _putw
     
-    jsr getl                   | read source address
-    move.l %d0, %a0            | source
+    move.l %a4, %d0
+    jsr _putl                  | put address
+    
     jsr getl                   | read length
-    move.l %d0, %d1            | length   
-    
     jsr _putl                  | echo length
-    move.l %a0, %d0
-    jsr _putl                  | echo source
-    
-    jsr getw                   | get final confirmation to go (addr/len correct)
+    move.l %d0, %d1            | %d1 = num bytes    
+
+    jsr getw                   | get final confirmation to go (len correct)
     cmp.w #0x1F07, %d0
     bne dump_end               | host aborted / out of sync
     
@@ -264,7 +244,7 @@ dump_loop:
     jsr check_reset_cmd
     bne dump_end
         
-    move.b (%a0)+, %d0         | read a byte
+    move.b (%a4)+, %d0         | read a byte
     move.b %d0, TIL311
     
     eor.b %d0, %d2             | qcrc update
@@ -306,38 +286,25 @@ do_parse_srec:
     | dealloc arguments
     add.l #12, %sp
 
-    move.w %d0, %d1            | save return code
-    move.w #0xC0DE, %d0        | write sync word #2
-    jsr _putw            
-    
-    move.b %d1, %d0            | write return code
-    jsr _putb
+    swap %d0                   | %d0 = [ RET]xxxx
+    move.w #0xC0DE, %d0        | %d0 = [ RET]C0DE 
+    swap %d0                   | %d0 = C0DE[ RET]
+    jsr _putl          
     
     move.w #0xEF00, %d0        | trailing null
     jsr _putw
     
-    cmp.b #0, %d1
+    clr.b %d5                  | clear write flags
+   
+    cmp.b #0, %d0
     bne bad_srec
     
-    TILDBG 0C
-    
-    and.b #FLAG_BOOT, %d5
-    bne do_boot                | set to boot?
-        
-    clr.b %d5                  | clear write flags
-    
+    TILDBG 0C    
     rts
-    
-do_boot:
-    | boot from the s-record entry point address
-    | gonna assume it was validated pre-upload
-    TILDBG BC
-    move.l (entry_point), %a0
-    jmp (%a0)
 
-| an error occured, do not boot.
+| an error occured
 bad_srec:
-    TILDBG EC
+    TILDBG FA
     rts
         
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
@@ -367,8 +334,8 @@ boot_ram:
 
 | initialize registers with load address in %d0
 init_vars:
-    movea.l %d0, %a0           | set address to load to
-    movea.l %d0, %a5           | save boot address
+    movea.l %d0, %a4           | set address to load to ...
+    movea.l %d0, %a5           | ... and save boot address
     clr.l %d6                  | bytecount = 0
     clr.l %d5                  | flash writes disallowed
     move.l #0xDEADC0DE, %d7    | init qcrc
