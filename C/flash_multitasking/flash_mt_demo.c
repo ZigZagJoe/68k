@@ -77,7 +77,7 @@ int main() {
 	create_task(&task_time,0);
     create_task(&task_echo,0);
     create_task(&task_scroller,0);
-  	  
+  	
   	puts("Tasks started, main() returning.\n");	
 	
   	return 0;

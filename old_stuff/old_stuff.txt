@@ -909,3 +909,21 @@ flash_erase_sector(4);
 
 do_dump(baseaddr, 256);*/
 
+
+void task_tick() {
+    printf("TICKER TASK (ID %d) started.\n",CURRENT_TASK_ID);
+	yield();
+	uint32_t sec = 0;
+	uint32_t now;
+	while(true) {
+	    now = millis()/1000;
+	    if (sec != now) {
+	        sec = now;
+	        beep_start(100);
+	        sleep_for(20);
+	        beep_stop();
+	    }
+	        
+	    sleep_for(100);
+	}
+}

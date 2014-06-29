@@ -35,7 +35,7 @@ memset:
 	
 	move.l 12(%sp), %d0  | count
 	
-	cmp.l #0, %d0
+	tst.l %d0
 	beq _endset
 	
 	cmp.l #5, %d0        | smaller than 5 will cause below code to die, so just
@@ -82,7 +82,7 @@ memcpy:
 	move.l 12(%sp), %d0  | count
 	move.w %d2, -(%sp)
 	
-	cmp.l #0, %d0        | nope
+	tst.l %d0            | nope
 	beq _endcpy
 	
 	cmp.l #5, %d0		 | long routine does not work below 5 bytes, use byte copy
@@ -96,7 +96,7 @@ memcpy:
 	cmp.b %d1, %d2       | if the alignment differs, this /has/ to be a byte copy
 	jne _bytememc
 	
-	cmp.b #0, %d1
+	tst.b %d1
 	beq _aligned_cpy     | if lowest bit is not set, we are aligned
 	
 	move.b (%a0)+,(%a1)+ | copy first byte so that we are aligned
@@ -145,7 +145,7 @@ strlen:
 	clr.l %d0
 	
 _cnt:
-	cmp.b #0, (%a1)+
+	tst.b (%a1)+
 	beq _memcr
 	
 	add.l #1, %d0
