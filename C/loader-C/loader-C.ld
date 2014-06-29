@@ -18,6 +18,7 @@ SECTIONS {
 	    loader.o(.data)
 		*(.text)
 		*(.data)
+		*(.rodata)
 		*(.rodata.*)
 		__end = .;
 	} > RAM

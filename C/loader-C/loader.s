@@ -64,6 +64,7 @@
 .set CMD_SET_ADDR,  0xCE
 .set CMD_RESET,     0xCF
 
+/* could save 32 bytes and increase speed by storing offsets relative to jump point */
 cmd_jmp_table:
     .long __bad_cmd         | C0
     .long set_boot          | C1

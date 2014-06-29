@@ -268,7 +268,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
              break;
         }
         
-        loc_crc = ~checksum; // one's complement
+        loc_crc = ~checksum;      // one's complement
         file_crc = read_byte();   // read checksum from file
         
         if (loc_crc != file_crc) {
