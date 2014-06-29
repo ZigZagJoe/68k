@@ -5,6 +5,7 @@ LINK_SCRIPT = loader-C.ld
 
 NO_CORELIB = 1
 NO_STARTUP = 1
+OPTIMIZE = s
 
 DATE := $(shell date)
 OBJS += build_date.o
