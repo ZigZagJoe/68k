@@ -1,80 +1,19 @@
-# 68008 makefile for bootloader
+# 68008 executable makefile stub
 
-####### VARIABLES #######
-
-# Get directory name, to use as output filename.
 PRJ = bootloader
-BIN = $(PRJ).s68
-
 LINK_SCRIPT = loader-C.ld
 
-# Program names
-
-RM   = rm -f
-CC   = m68k-elf-gcc
-LD   = m68k-elf-ld
-AS   = m68k-elf-as
-OBJDUMP = m68k-elf-objdump
-OBJCOPY = m68k-elf-objcopy
-
-# Compiler and linker flags
-
-INCPATHS=-I . -I ../include -I /Users/zigzagjoe/Documents/68008/deploy/lib/gcc/m68k-elf/4.2.4/include/
-
-CFLAGS  = -Os -nostartfiles -nostdinc -nostdlib -m68000 -std=c99 -fno-builtin $(INCPATHS)
+NO_CORELIB = 1
+NO_STARTUP = 1
 
 DATE := $(shell date)
-LDFLAGS = -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) --oformat srec
-ASFLAGS = -march=68000 -mcpu=68000
+OBJS += build_date.o
 
-# List of source files
+include ../Makefile_exe.mk
 
-SRC_C=$(wildcard *.c)
-SRC_S=$(wildcard *.s)
-
-OBJS=$(SRC_C:.c=.o) $(SRC_S:.s=.o)
-LSTS=$(SRC_C:.c=.lst)
-
-# clear suffixes
-.SUFFIXES:
-.SUFFIXES: .s .o .c .lst
-
-####### TARGETS ########
-
-all:	$(BIN)
-
-clean:
-	$(RM) $(OBJS) $(BIN) $(PRJ).bin $(PRJ).lst
-	
-backup:
-	cd ..; backup $(PRJ)
-
-# Open source in default editor, on mac.
-open:
-	-open $(SRCS) 
-	
-run:	$(BIN)
-	upload-strapper -n $(PRJ).bin
-	
-$(BIN): $(OBJS) 
-	echo ".data\nBUILD_DATE: .word 0\n.string \"$(DATE)\"\n.word 0\n" > build_date.s_tmp
+build_date.o: .FORCE
+	echo ".data\nBUILD_DATE:.string \"## $(DATE) ##\"\n" > build_date.s_tmp	
 	$(AS) -o build_date.o build_date.s_tmp
-	$(LD) $(OBJS) build_date.o $(LDFLAGS) $(LIBS) -o $(BIN)
-	rm build_date.*
-	$(OBJCOPY) -I srec $(BIN) -O binary $(PRJ).bin
-	$(OBJDUMP) -D $(BIN) -m68000 > $(PRJ).lst
-	@echo
-	@echo -n 'Binary size: '
-	@stat -f %z $(PRJ).bin | sed 's/$$/ bytes/'
+	$(RM) build_date.s_tmp
 	
-listing: $(LSTS)
-
-.s.o:
-	$(AS) $(ASFLAGS) -o $@ $<
-	
-.c.o:
-	$(CC) $(CFLAGS) -c -o $@ $<
-	
-.c.lst:
-	$(CC) $(CFLAGS) -c -S -o $@ $<
-
+.FORCE:

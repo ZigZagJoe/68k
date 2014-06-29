@@ -11,13 +11,14 @@ ifndef BIN
 endif
 
 ifndef OPTIMIZE
-    OPTIMIZE = s
+    OPTIMIZE = 3
 endif
 
 # RAM or ROM
 ifndef CODE_LOC
     CODE_LOC = ram
 else
+    # convert to lower
     CODE_LOC := $(shell echo $(CODE_LOC) | tr A-Z a-z)
 endif
 
@@ -31,8 +32,9 @@ ifndef NO_CORELIB
     LIBS += -lcore -lgcc
 endif
 
-#############################################################
-# Should not need to edit past here
+ifndef NO_STARTUP
+    OBJS += startup_$(CODE_LOC).o
+endif
 
 ifndef LINK_SCRIPT
     LINK_SCRIPT = ../lksr_$(CODE_LOC).ld
@@ -42,10 +44,10 @@ STARTUP_SRC = ../startup_$(CODE_LOC).s
 
 # Program names
 
-RM   = rm -f
-CC   = m68k-elf-gcc
-LD   = m68k-elf-ld
-AS   = m68k-elf-as
+RM      = rm -f
+CC      = m68k-elf-gcc
+LD      = m68k-elf-ld
+AS      = m68k-elf-as
 OBJDUMP = m68k-elf-objdump
 OBJCOPY = m68k-elf-objcopy
 
@@ -60,15 +62,11 @@ ASFLAGS += -march=68000 -mcpu=68000
 
 # List of source files
 
-SRC_C=$(wildcard *.c)
-SRC_S=$(wildcard *.s)
+SRC_C = $(wildcard *.c)
+SRC_S = $(wildcard *.s)
 
-OBJS=$(SRC_C:.c=.o) $(SRC_S:.s=.o)
-LSTS=$(SRC_C:.c=.lst)
-
-ifndef NO_STARTUP
-    OBJS += startup_$(CODE_LOC).o
-endif
+OBJS += $(SRC_C:.c=.o) $(SRC_S:.s=.o)
+LSTS  = $(SRC_C:.c=.lst)
 
 # clear suffixes
 .SUFFIXES:
@@ -79,27 +77,34 @@ endif
 all:	$(BIN)
 
 clean:
-	$(RM) $(OBJS) $(BIN) $(LSTS) $(PRJ).bin
+	$(RM) $(OBJS) $(BIN) $(LSTS) $(PRJ).bin $(PRJ).l68 $(PRJ).srb
 	
-zip:	clean all
-	zip -vr $(PRJ).zip . -x $(PRJ).zip
-	
-backup:
-	cd ..; backup $(PRJ)
+commit:
+	git diff
+	git add . 
+	git commit -a
 
 # Open source in default editor, on mac.
 open:
-	-open $(SRCS) 
+	-edit $(SRCS) 
 	
 run:	$(BIN)
+ifeq ($(CODE_LOC),rom)
+	@echo ERROR: Can only upload a ROM project.
+else
 	upload-strapper $(PRJ).bin
-
+endif
+	
+upload: $(BIN)
+	srec2srb $(BIN) /tmp/_$(PRJ).srb
+	upload-strapper -x -b -s -f /tmp/_$(PRJ).srb
+    
 listing: $(LSTS)
 	
 $(BIN): $(OBJS) 
 	$(LD)  $(OBJS) $(LIBS) $(LDFLAGS) -o $(BIN)
 	$(OBJCOPY) -I srec $(BIN) -O binary $(PRJ).bin
-	$(OBJDUMP) -D $(BIN) -m68000 > $(PRJ).L68
+	$(OBJDUMP) -D $(BIN) -m68000 > $(PRJ).l68
 	@echo
 	@echo -n 'Binary size: '
 	@stat -f %z $(PRJ).bin | sed 's/$$/ bytes/'
