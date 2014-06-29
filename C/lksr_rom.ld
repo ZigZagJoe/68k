@@ -20,22 +20,23 @@ __vectors = 0;
 SECTIONS {
 	/* startup code must be first in binary, given fixed entry point */
 	.startup (0x81000) : {
-		startup.o(.text)
+		startup_rom.o(.text)
 	} > ROM
 
 	.text : ALIGN(0x4) {
 		*(.text)
     } > ROM
     
+    /* data that will never be written */
     .rodata : ALIGN(0x4) {
         *(.rodata)
         *(.rodata.*)
     } > ROM
     
-    /* force alignment for data */
+    /* force alignment for writable data section */
     . =ALIGN(0x4);
 	
-	/* offset in ROM */
+	/* offset in ROM to copy from */
 	__data_rom_start = .;
 	  
 	.data (__data_ram_start) : AT (__data_rom_start) {	  

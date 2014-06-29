@@ -1,16 +1,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <printf.h>
 
 // IO devices for my specific machine
 #include <io.h>
 #include <interrupts.h>
-#include <flash.h>
 #include <lcd.h>
-#include <time.h>
 #include <kernel.h>
-#include <beep.h>
+#include <md5.h>
 
 void putc_lcd(void*p, char ch) {
 	lcd_data(ch);
@@ -43,8 +40,7 @@ void task_time() {
     }
 }
 
-#include <md5.h>
-
+// test 320k of ram
 #define MD5_START 0x10000
 #define MD5_END 0x60000
 

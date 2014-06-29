@@ -19,7 +19,7 @@ __vectors = 0;
 SECTIONS {
 	/* startup code must be first in binary, given 0x2000 as fixed entry point */
 	.startup (0x2000) : {
-		startup.o(.text)
+		startup_ram.o(.text)
 	} > RAM
 
 	.text : ALIGN(0x4) {
