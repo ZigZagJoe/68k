@@ -1,5 +1,6 @@
 stack_size = DEFINED(stack_size) ? stack_size : 4096;
 __start_func = DEFINED(__start_func) ? __start_func : main ;
+__data_ram_start = 0x2000;
 
 ENTRY(_start)
 
@@ -37,7 +38,7 @@ SECTIONS {
 	/* offset in ROM */
 	__data_rom_start = .;
 	  
-	.data (0x2000) : AT (__data_rom_start) {	  
+	.data (__data_ram_start) : AT (__data_rom_start) {	  
 	    /* offset relative to load address */
 	    __data_start = .;
 		*(.data)

@@ -1,4 +1,4 @@
-stack_size = 32768;
+stack_size = DEFINED(stack_size) ? stack_size : 4096;
 __start_func = DEFINED(__start_func) ? __start_func : main ;
 
 ENTRY(_start)
