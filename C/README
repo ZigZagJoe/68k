@@ -1,0 +1,15 @@
+Top level directory for C projects
+
+Important files/directories:
+
+Makefile_exe.mk     Universal makefile for executable projects
+Makefile_lib        Universal makefile for libraries (.a)
+startup_ram.s       RAM startup code. Clears BSS, then boots user code.
+startup_rom.s       ROM startup code. Copies data segment into RAM, clears BSS, then boots user code.
+lksr_ram.s          Linker script for RAM-based executables
+lksr_rom.s          Linker script for ROM-based executable
+include/            All header files for libraries
+lib/                Directory for built libraries (.a)
+libcore/            Source of core library 
+libkernel/          Source of multitasking kernel
+loader-C/           Current bootloader - hybrid c and asm
