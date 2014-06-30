@@ -1,0 +1,34 @@
+This is my initial bootloader, presented for historical reasons only.
+bootloader (loader-C) is 100% backwards compatible with the interface
+presented by strapper-r2 onwards.
+
+It must be compiled with a compiler that supports the motorola syntax.
+
+I used a custom version of asm68k from the asmx suite, modified to output 
+raw binary files, but I wouldn't recommend using asm68k for anything -
+it is horribly coded, and full of bugs left, right and center.
+
+strapper-r1 is the first revision, which booted on GPIO low. Used for a very short time.
+strapper-r2 introduced the command byte, allowing address reset OR boot
+strapper-r3 added code to generate a baud rate with timer C
+
+Operating procedure:
+
+Copy 512 bytes, starting from label 'reloc' to 0x1000 in RAM
+Jump to 0x1000
+Set up MFP's UART
+
+Read byte, when ready
+Display byte on TIL311 displays
+
+if GPIO0 is low, 
+  interpret as command
+otherwise,
+  store to address, increment address, echo byte back
+
+Loop back to read byte
+
+if command byte:
+  if byte is 0xBB, then jump to 0x2000
+  if byte is 0xCF, reset write address and loop
+  otherwise display BC on TIL311 and loop

@@ -1,0 +1,4 @@
+This is the sketch I used in conjunction with flashtool to allow me 
+to write the bootloader program into the FLASH ROM initially.
+
+Written for Teensy 2.0++ under the Arduino environment. 

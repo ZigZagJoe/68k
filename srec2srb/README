@@ -1,0 +1,1 @@
+This utility converts normal hex s-records into my binary s-record format - just replace everything after S[0-9] with bytes instead of hex digit pairs.

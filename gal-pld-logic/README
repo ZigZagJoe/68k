@@ -1,0 +1,8 @@
+Here lie the PLD logic files for programming the GAL. All implement the basic 
+glue logic required for the 68008 system to function: they vary in what extra
+features are baked in utilizing the free pins (not required for fundamental stuff).
+
+REV4      DS_I output and SLOW_DTACK generation with one enable
+REV4-B    SLOW_DTACK with two enable inputs (shared timing input)
+REV5      DS_I output and IACK5 output
+REV5-B    IACK5 and IACK7 outputs
