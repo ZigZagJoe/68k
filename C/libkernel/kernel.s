@@ -335,9 +335,7 @@ _sleep_for:
 | returns:
 | struct pointer in %d0 high word and id in low word, or 0 on failure
 _create_task:
-    move.l %a1, -(%sp)
-    move.l %a2, -(%sp)
-    move.l %a3, -(%sp)                  | save %a3
+    movem.l %a1-%a3, -(%sp)
 
     cli                                 | ensure list is not modified while we are working
     
@@ -381,7 +379,6 @@ _no_args:
     add.w #1, (task_count)
     add.w #1, (_next_thread_id)
     
-    
     move.l (_active_task), %a1          | load linked list node
     
     cmp.l #0, %a1                       | _active_task =? 0
@@ -398,9 +395,8 @@ _nz:
      
 _cr_finished:
     sei
-    move.l (%sp)+,%a3
-    move.l (%sp)+,%a2
-    move.l (%sp)+,%a1
+    
+    movem.l (%sp)+, %a1-%a3
     rte
     
 _cr_failed:
