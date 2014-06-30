@@ -356,7 +356,7 @@ end:
     move.b #' ', %d0
     jsr putc
     
-    move.b #62, %d1
+    move.w #62, %d1
     jsr putbash
     newline
 	
