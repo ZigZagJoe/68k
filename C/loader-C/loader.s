@@ -15,7 +15,7 @@
 .global getw
 .global getl
 
-.extern entry_point
+| see c_funcs.c
 .extern handle_srec
 
 | display a constant byte
@@ -37,7 +37,10 @@
 .set TCDR,  MFP + 0x23         | timer c data
 .set UCR,   MFP + 0x29         | uart ctrl
 
+/* default write address */
 .set default_addr,   0x2000
+
+/* sector 1 start address */
 .set sector1_entry, 0x81000
 
 .set bootable_magic, 0xc141c340
@@ -52,6 +55,7 @@
    misc: a flash address can be nulled later without erasing the sector
 */  
 
+/* command byte for reboot into bootloader/reset address */
 .set CMD_RESET, 0xCF
 
 /* could save 32 bytes and increase speed by storing offsets relative to jump point */
@@ -103,7 +107,7 @@ loader_start:
     beq wait_for_command       | if it is, wait for a command to stay in bootloader
      
 reset_addr:
-    TILDBG B8                  | bootloader ready!
+    TILDBG B7                  | bootloader ready!
     clr.w 0x400
     
     | initialize variables
