@@ -404,8 +404,6 @@ puts:
 
 rdc:
 	move.b (%A0)+, %D0
-	
-	cmp.b #0, %D0
 	jeq done
 	
 	jsr putc

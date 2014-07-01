@@ -17,6 +17,7 @@
 
 | see c_funcs.c
 .extern handle_srec
+.extern init_vectors
 
 | display a constant byte
 .macro TILDBG byte
@@ -97,6 +98,8 @@ loader_start:
     move.b #0b10001000, (UCR)  | /16, 8 bits, 1 stop bit, no parity
     move.b #1, (RSR)           | receiver enable
     move.b #1, (TSR)           | transmitter enable
+    
+    jsr init_vectors
     
     cmp.w #0xB007, 0x400       | check addr
     beq reset_addr             | if it is set to magic val, do not (possibly) boot from rom

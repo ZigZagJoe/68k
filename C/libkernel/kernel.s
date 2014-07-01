@@ -541,4 +541,5 @@ puthexbyte:
 _system_halted: .string "\n\n*** All tasks exited. System halted. ***\n"
 _system_exit: .string "\n\n*** Program exited with code 0x"
 _system_exit_2: .string ". System halted. ***\n"
+_hexchars: .ascii "0123456789ABCDEF"
 
