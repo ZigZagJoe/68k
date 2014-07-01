@@ -9,29 +9,33 @@
 .set RSR, MFP_BASE + 0x2B | receiver status reg
 .set TIL311, 0xC8000      | til311 displays
 
-test_funct:
-    move.l (4, %sp), %d0
-    jsr puthexlong
+exception_handler:
+    movem.l %d0-%d7/%a0-%a7, -(%sp)
     
-    move.l (8, %sp), %d0
-    jsr puthexlong
+    lea (%pc), %a0
+    move.l %a0, %d0
+    swap %d0
+    lsr.w #8, %d0
+    jsr puthexbyte
     
-    move.l (12, %sp), %d0
-    jsr puthexlong
-    
-    rts
+spi: bra spi
+    rte
 
 
 main:
+
+    move.l #0, %a0
+    clr.b %d0
+    move.w #255, %d1
     
-    move.l #0xF1A6F1A6, %d5
-    move.l #0x1E71E71E, %d7
-    move.l #0xDEADC0DE, %a5
-    
-    movem.l %a5/%d7/%d5,-(%sp) 
-    
-    jsr test_funct
+load_vec:
+    move.l #exception_handler, (%a0)
+    move.b %d0, (%a0)
+    addq.l #4, %a0
+    addq.b #1, %d0
+    dbra %d1, load_vec
   
+    trap #1
     
 
 spin: bra spin

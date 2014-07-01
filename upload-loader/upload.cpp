@@ -206,7 +206,8 @@ int main (int argc, char ** argv) {
                     dumparg[i] = 0; 
                 }
             }
-                
+            
+            addr = -1;    
             addr = parse_num(addr_s);
             
             if (len_s)
@@ -218,7 +219,7 @@ int main (int argc, char ** argv) {
                 return 1;
             }
             
-            if (addr == 0 || addr > 768 * 1024) {
+            if (addr == -1 || addr > 768 * 1024) {
                 printf("Bad address argument: value of %d is invalid.\n",addr);
                 return 1;
             }
@@ -800,7 +801,7 @@ void hex_dump(uint8_t *array, uint32_t cnt, uint32_t baseaddr) {
         if (++c == 16) {
             printf("  %s\n",ascii);
             if ((i+1) < cnt)
-                printf("%8X   ", baseaddr+i);
+                printf("%8X   ", baseaddr+i+1);
             c = 0;
         }
     }
