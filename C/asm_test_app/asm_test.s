@@ -16,7 +16,24 @@
 
 main:
 
-    divu #0, %d0
+
+    trap #15
+    
+    ori #0x8000, %sr
+    
+    
+    move.l #0xDEADBEEF, %d0
+    move.l #0xDBEEFEAD, %d1
+    move.l #0xCAFEBABE, %d2
+    move.l #0x8BADF00D, %d3
+    move.l #0xDEADC0DE, %d4
+    move.l #0xBEEFCAFE, %d5
+    move.l #0xC0DEBAC0, %d6
+    move.l #0xB0771011, %d7
+    
+    andi #0x7FFF, %sr
+    
+sp: bra sp
 
     move.w #0, %sr
     move.w #0, %sr

@@ -91,10 +91,12 @@ _fl:
     | dump registers
     move.l %sp, %a0
     
+    | D0-D7
     move.b #0xD0, %d2
     moveq #8, %d3
     jsr dump_regs
     
+    | A0-A6
     move.b #0xA0, %d2
     moveq #7, %d3
     jsr dump_regs
@@ -106,12 +108,26 @@ _fl:
     put_str _PC 
     
     | get PC off stack
-	move.l 66(%SP), %D0
-	jsr puthexlong
-	
-	| flags
-	move.w 64(%SP), %D1
-	
+    move.l 66(%SP), %D0
+    jsr puthexlong
+    
+    cmp.b #9, %d7
+    bne not_tr
+      
+    jsr trisp
+    put_str _INST
+    
+    move.l 66(%SP), %a0
+    move.w (%a0), %d0
+ 
+    jsr puthexword
+    jsr put_sp
+    
+not_tr:
+    
+    | flags
+    move.w 64(%SP), %D1
+    
     bra contp
     
     | larger exception frame for group 0 exceptions
@@ -119,50 +135,50 @@ group0:
     jsr trisp
     
     put_str _PC
-	move.l 74(%SP), %D0
-	jsr puthexlong
-	
-	put_str _ADDR
-	move.l 66(%SP), %D0
-	jsr puthexlong
+    move.l 74(%SP), %D0
+    jsr puthexlong
+    
+    put_str _ADDR
+    move.l 66(%SP), %D0
+    jsr puthexlong
 
-	put_str _INST
-	move.w 70(%SP), %D0
-	jsr puthexword
-	
-	| get access type flags
-	move.w 64(%SP), %D2
-	
-	move.l #_WRITE, %a0
-	btst #4, %d2
-	beq _wr
-	move.l #_READ, %a0
+    put_str _INST
+    move.w 70(%SP), %D0
+    jsr puthexword
+    
+    | get access type flags
+    move.w 64(%SP), %D2
+    
+    move.l #_WRITE, %a0
+    btst #4, %d2
+    beq _wr
+    move.l #_READ, %a0
 _wr:
-	jsr puts
-	
-	btst #3, %d2
-	beq _not
-	
-	move.l #_INSTR, %a0
-	jsr puts
+    jsr puts
+    
+    btst #3, %d2
+    beq _not
+    
+    move.l #_INSTR, %a0
+    jsr puts
 _not:
-	
-	move.l #_USR, %a0
-	btst #2, %d2
-	beq _usr
-	move.l #_SUPR, %a0
+    
+    move.l #_USR, %a0
+    btst #2, %d2
+    beq _usr
+    move.l #_SUPR, %a0
 _usr:
-	jsr puts
-	
-	move.l #_PGM, %a0
-	btst #0, %d2
-	beq _pgm
-	move.l #_DATA, %a0
+    jsr puts
+    
+    move.l #_PGM, %a0
+    btst #0, %d2
+    beq _pgm
+    move.l #_DATA, %a0
 _pgm:
-	jsr puts
+    jsr puts
 
-	| flags
-	move.w 72(%SP), %D1
+    | flags
+    move.w 72(%SP), %D1
     
     jsr dblnewl
     
@@ -171,67 +187,78 @@ contp:
     
     jsr dblsp
     put_str _usersp
-	move.l %USP, %A0
-	move.l %A0, %D0
-	jsr puthexlong
-	
-	jsr dblsp
+    move.l %USP, %A0
+    move.l %A0, %D0
+    jsr puthexlong
+    
+    jsr dblsp
     put_str _supsp
-	move.l 60(%sp), %D0
-	jsr puthexlong
-	
-	jsr dblnewl
-	
-	put_str _flags	
-	
-	| %d1 is assumed to contain flags!
-	
-	move.w #15, %D2
-	jsr put_bin
+    move.l 60(%sp), %D0
+    jsr puthexlong
+    
+    jsr dblnewl
+    
+    put_str _flags    
+    
+    | %d1 is assumed to contain flags!
+    
+    move.w #15, %D2
+    jsr put_bin
     
     jsr dblnewl
     move.w #62, %d1
     jsr putbash
     jsr dblnewl
      
+    cmp.b #9, %d7
+    beq return_eh
+    
+    cmp.b #47, %d7
+    beq return_eh
+    
 | end of handler:
 | loop forever, toggling between 0xEE and relevant number
-loop_forever:
-	move.b #0xEE, (TIL311)
-	jsr half_sec_delay
-	
-	move.b %d6, (TIL311)
-	jsr half_sec_delay
+wait_for_reset:
+    move.b #0xEE, (TIL311)
+    jsr half_sec_delay
+    
+    move.b %d6, (TIL311)
+    jsr half_sec_delay
 
-	bra loop_forever
+    bra wait_for_reset
+    
+return_eh:
+    movem.l (%sp)+, %d0-%d7/%a0-%a7
+    rte
+    
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | wait for half a second, while waiting for boot
 half_sec_delay:
-	move.l #40000,%d0    	                         
+    move.l #40000,%d0                                 
 delay: 
-	jsr check_boot
-	sub.l #1, %d0
-	jne delay
-	rts
+    jsr check_boot
+    sub.l #1, %d0
+    jne delay
+    rts
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| check if boot char recvd	
+| check if boot char recvd    
 check_boot:
-	btst #7, (RSR)           | test if buffer full (bit 7) is set.
+    btst #7, (RSR)             | test if buffer full (bit 7) is set.
     beq retu                 
     
     move.b (UDR), %D1
     cmp.b #0xCF, %D1
     bne retu
     
-	btst #0, (GPDR)          | gpio data register - test input 0. Z=!bit
-    bne retu              	 | gpio is 1, not bootoclock
+    btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
+    bne retu                   | gpio is 1, not bootoclock
      
-	jmp 0x80008
-	
+    jmp 0x80008
+    
 retu:
-	rts
+    rts
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | resolve a vector number to a string in %a0
@@ -343,92 +370,93 @@ put_sp:
 ||||||||||||||||||||||||||||||||||||||
 | put string in %a0 
 puts:
-	move.b (%A0)+, %D0
-	jeq done
-	
-	jsr putc
-	bra puts
-	
+    move.b (%A0)+, %D0
+    jeq done
+    
+    jsr putc
+    bra puts
+    
 done:
-	rts
+    rts
   
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | print %d2 bits from %d1  
 put_bin: 
-	move.b #'0', %D0
-	btst %D2, %D1
-	jeq not1
-	move.b #'1', %D0
+    move.b #'0', %D0
+    btst %D2, %D1
+    jeq not1
+    move.b #'1', %D0
 not1:
-	jsr putc
-	move.b #' ', %D0
-	jsr putc
-	
-	dbra %D2, put_bin
-	rts
-	
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||	
+    jsr putc
+    move.b #' ', %D0
+    jsr putc
+    
+    dbra %D2, put_bin
+    rts
+    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
 | put hex long in %d0 
 puthexlong:
-	move.l %D0, -(%SP)
+    move.l %D0, -(%SP)
 
-	swap %D0
-	jsr puthexword
-	
-	move.l (%SP), %D0
-	and.l #0xFFFF, %D0
-	jsr puthexword
+    swap %D0
+    jsr puthexword
+    
+    move.l (%SP), %D0
+    and.l #0xFFFF, %D0
+    jsr puthexword
 
-	move.l (%SP)+, %D0
-	rts
-	
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||	
-| put hex word in %d0 		
+    move.l (%SP)+, %D0
+    rts
+    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
+| put hex word in %d0         
 puthexword:
-	move.w %D0, -(%SP)
+    move.w %D0, -(%SP)
 
-	lsr.w #8, %D0
-	jsr puthexbyte
-	
-	move.w (%SP), %D0
-	and.w #0xFF, %D0
-	jsr puthexbyte
+    lsr.w #8, %D0
+    jsr puthexbyte
+    
+    move.w (%SP), %D0
+    and.w #0xFF, %D0
+    jsr puthexbyte
 
-	move.w (%SP)+, %D0
-	rts
-	
+    move.w (%SP)+, %D0
+    rts
+    
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | put hex byte in %d0 
 puthexbyte:
-	movem.l %A0/%D0, -(%SP)     | save regs
-	
-	movea.l #_hexchars, %A0
-	
-	lsr #4, %D0				    | shift top 4 bits over
-	and.w #0xF, %D0
-	move.b (%A0, %D0.W), %D0    | look up char
-	jsr putc
-	
-	move.w (2, %SP), %D0		| restore D0 from stack	
-	and.w #0xF, %D0			    | take bottom 4 bits
-	move.b (%A0, %D0.W), %D0	| look up char
-	jsr putc
-	
-	movem.l (%SP)+, %A0/%D0		| restore regs
+    movem.l %A0/%D0, -(%SP)        | save regs
+    
+    movea.l #_hexchars, %A0
+    
+    lsr #4, %D0                    | shift top 4 bits over
+    and.w #0xF, %D0
+    move.b (%A0, %D0.W), %D0       | look up char
+    jsr putc
+    
+    move.w (2, %SP), %D0           | restore D0 from stack    
+    and.w #0xF, %D0                | take bottom 4 bits
+    move.b (%A0, %D0.W), %D0       | look up char
+    jsr putc
+    
+    movem.l (%SP)+, %A0/%D0        | restore regs
 
-	rts
-	
+    rts
+    
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| put char in %d0	
+| put char in %d0    
 putc:
-	btst #7, (TSR)              | test buffer empty (bit 7)
-    beq putc                    | Z=1 (bit = 0) ? branch
-	move.b %D0, (UDR)		    | write char to buffer
-	rts
+    btst #7, (TSR)                 | test buffer empty (bit 7)
+    beq putc                       | Z=1 (bit = 0) ? branch
+    move.b %D0, (UDR)              | write char to buffer
+    rts
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| Strings
 
 .section .rodata 
-
-| Strings ETC
 
 _PC: .string "PC: "
 _usersp: .string "USP: "

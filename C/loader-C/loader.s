@@ -107,7 +107,7 @@ loader_start:
 
     | check if boot magic is present on sector 1
     cmp.l #bootable_magic, (sector1_entry)
-    beq wait_for_command       | if it is, wait for a command to stay in bootloader
+   | beq wait_for_command       | if it is, wait for a command to stay in bootloader
      
 reset_addr:
     TILDBG B7                  | bootloader ready!
