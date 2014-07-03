@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <binary.h>
+#include <random.h>
 
 extern uint8_t *__heap_start;
 extern uint8_t *__heap_end;
@@ -49,6 +50,6 @@ extern void sleep_for(uint32_t time);
 #define abs(x) ((x)>0?(x):-(x))
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
   
-uint32_t rand(void);
+#define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))
 
 #endif

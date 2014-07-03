@@ -12,13 +12,18 @@
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | macros
 
+.extern _print_dec
+.extern _puthexlong
+.extern _puthexword
+.extern _puthexbyte
+
 .macro sei
     and.w #0xF8FF, %SR     
 .endm
 
 .macro put_char ch
     move.b #\ch, %d0
-    jsr putc
+    jsr _putb
 .endm
 
 .macro put_str str
@@ -52,11 +57,19 @@ exception_handler:
     lsr.w #8, %d7
     | %d7 should contain calling vector
     
+    move.w #24, %d2              | char count
+
     put_str _HEAD
+    
     move.b %d7, %d0
-    jsr puthexbyte
+    andi.l #0xFF, %d0
+    
+    jsr _print_dec
+    
+    add.b %d0, %d2
+    
     move.b #':', %d0
-    jsr putc
+    jsr _putb
     jsr put_sp
     
     move.b %d7, %d0
@@ -68,8 +81,7 @@ exception_handler:
     jsr puts
     
     movea.l %a1, %a0
-    move.w #27, %d2
-
+    
 _lf:
     tst.b (%A1)+
     jeq _fl
@@ -109,7 +121,7 @@ _fl:
     
     | get PC off stack
     move.l 66(%SP), %D0
-    jsr puthexlong
+    jsr _puthexlong
     
     cmp.b #9, %d7
     bne not_tr
@@ -120,7 +132,7 @@ _fl:
     move.l 66(%SP), %a0
     move.w (%a0), %d0
  
-    jsr puthexword
+    jsr _puthexword
     jsr put_sp
     
 not_tr:
@@ -136,15 +148,15 @@ group0:
     
     put_str _PC
     move.l 74(%SP), %D0
-    jsr puthexlong
+    jsr _puthexlong
     
     put_str _ADDR
     move.l 66(%SP), %D0
-    jsr puthexlong
+    jsr _puthexlong
 
     put_str _INST
     move.w 70(%SP), %D0
-    jsr puthexword
+    jsr _puthexword
     
     | get access type flags
     move.w 64(%SP), %D2
@@ -189,12 +201,12 @@ contp:
     put_str _usersp
     move.l %USP, %A0
     move.l %A0, %D0
-    jsr puthexlong
+    jsr _puthexlong
     
     jsr dblsp
     put_str _supsp
     move.l 60(%sp), %D0
-    jsr puthexlong
+    jsr _puthexlong
     
     jsr dblnewl
     
@@ -310,14 +322,14 @@ dr_l:
     
     move.b %d1, %d0
     add.b %d2, %d0
-    jsr puthexbyte
+    jsr _puthexbyte
     
     put_char ':'
     
     jsr put_sp
     
     move.l (%a0)+, %d0
-    jsr puthexlong
+    jsr _puthexlong
     
     addi.b #1, %d1
     
@@ -340,9 +352,9 @@ putbash:
     jsr put_sp
     move.b #'#', %d0
     subq.b #1, %d1
-_putcl:
-    jsr putc
-    dbra %d1, _putcl
+__putbl:
+    jsr _putb
+    dbra %d1, __putbl
     rts
    
 | two newlines   
@@ -366,19 +378,7 @@ dblsp:
 put_sp:
     put_char ' '
     rts
-    
-||||||||||||||||||||||||||||||||||||||
-| put string in %a0 
-puts:
-    move.b (%A0)+, %D0
-    jeq done
-    
-    jsr putc
-    bra puts
-    
-done:
-    rts
-  
+ 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | print %d2 bits from %d1  
 put_bin: 
@@ -387,70 +387,11 @@ put_bin:
     jeq not1
     move.b #'1', %D0
 not1:
-    jsr putc
+    jsr _putb
     move.b #' ', %D0
-    jsr putc
+    jsr _putb
     
     dbra %D2, put_bin
-    rts
-    
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
-| put hex long in %d0 
-puthexlong:
-    move.l %D0, -(%SP)
-
-    swap %D0
-    jsr puthexword
-    
-    move.l (%SP), %D0
-    and.l #0xFFFF, %D0
-    jsr puthexword
-
-    move.l (%SP)+, %D0
-    rts
-    
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
-| put hex word in %d0         
-puthexword:
-    move.w %D0, -(%SP)
-
-    lsr.w #8, %D0
-    jsr puthexbyte
-    
-    move.w (%SP), %D0
-    and.w #0xFF, %D0
-    jsr puthexbyte
-
-    move.w (%SP)+, %D0
-    rts
-    
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| put hex byte in %d0 
-puthexbyte:
-    movem.l %A0/%D0, -(%SP)        | save regs
-    
-    movea.l #_hexchars, %A0
-    
-    lsr #4, %D0                    | shift top 4 bits over
-    and.w #0xF, %D0
-    move.b (%A0, %D0.W), %D0       | look up char
-    jsr putc
-    
-    move.w (2, %SP), %D0           | restore D0 from stack    
-    and.w #0xF, %D0                | take bottom 4 bits
-    move.b (%A0, %D0.W), %D0       | look up char
-    jsr putc
-    
-    movem.l (%SP)+, %A0/%D0        | restore regs
-
-    rts
-    
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| put char in %d0    
-putc:
-    btst #7, (TSR)                 | test buffer empty (bit 7)
-    beq putc                       | Z=1 (bit = 0) ? branch
-    move.b %D0, (UDR)              | write char to buffer
     rts
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -471,7 +412,7 @@ _USR: .string "user "
 _SUPR: .string "supervisor "
 _PGM: .string "program "
 _DATA: .string "data "
-_HEAD: .string "\n ########## Exception $"
+_HEAD: .string "\n ########## Exception "
 _EX: .string "Unknown"
 
 | vectors
@@ -493,7 +434,6 @@ _VEC_AUTOVEC:   .byte 0xA7;.string "Autovectored"
 _VEC_RESERVED:  .byte 0x5E;.string "{reserved}"
 _VEC_UNINIT:    .byte 0x1A;.string "Uninitialized ISR"
 
-_hexchars: .ascii "0123456789ABCDEF"
 
 .align 2
 vec_lookup:

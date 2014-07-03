@@ -9,39 +9,84 @@
 .set RSR, MFP_BASE + 0x2B | receiver status reg
 .set TIL311, 0xC8000      | til311 displays
 
-
-
-	
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
+print_hex:
+    tst.l %d0              | check for zero
+    beq rz
+    
+    move.l #_hexchars, %a0
+    
+    jsr puthex             | begin recursive print
+    
+dec_r:
+    rts
+    
+rz: 
+    move.b #'0', %d0
+    jsr putc
+    bra dec_r
+
+puthex:
+    tst.l %d0
+    jeq ret_hex
+    
+    tst.b %d1
+    jeq ret_hex
+    
+    subi #1, %d1
+    
+    move.b %d0, %d2
+    and.w #0xF, %d2
+    
+    move.b (%a0, %d2.W), -(%sp)
+    
+    lsr.l #4, %d0
+    jsr puthex
+    
+    move.b (%sp)+, %d0
+    jsr putc
+   
+ret_hex: 
+    rts
+
+
+
+
 main:
+    move.b #0x11, TIL311
+  
+    move.b #8, %d1
+    move.l #0x1003123, %d0
+    jsr print_hex
+    
+  
+  
+    jsr return_to_loader
 
 
-    trap #15
-    
-    ori #0x8000, %sr
-    
-    
-    move.l #0xDEADBEEF, %d0
-    move.l #0xDBEEFEAD, %d1
-    move.l #0xCAFEBABE, %d2
-    move.l #0x8BADF00D, %d3
-    move.l #0xDEADC0DE, %d4
-    move.l #0xBEEFCAFE, %d5
-    move.l #0xC0DEBAC0, %d6
-    move.l #0xB0771011, %d7
-    
-    andi #0x7FFF, %sr
-    
-sp: bra sp
+||||||||||||
 
-    move.w #0, %sr
-    move.w #0, %sr
+return_to_loader:
+    move.b #'\n', %d0
+    jsr putc
+    jsr putc
+    move.l #100000, %d0
+    
+wit: 
+    subi.l #1, %d0
+    bne wit
 
-    |trap #1
-    |jmp 0xFFFFFF
-    move.b #0, 0xFFFFFF
+    move.w #0xB007, 0x400
+    jmp 0x80008
 
-spin: bra spin
+putc:
+    btst #7, (TSR)                 | test buffer empty (bit 7)
+    beq putc                       | Z=1 (bit = 0) ? branch
+    move.b %D0, (UDR)              | write char to buffer
+    rts
+    
+ 
+   _hexchars: .ascii "0123456789ABCDEF"
 
 

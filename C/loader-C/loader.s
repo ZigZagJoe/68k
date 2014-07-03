@@ -19,6 +19,14 @@
 .extern handle_srec
 .extern init_vectors
 
+| see loader_funcs.s
+.extern getw
+.extern getl
+.extern getb
+.extern _putb
+.extern _putw
+.extern _putl
+
 | display a constant byte
 .macro TILDBG byte
      move.b #0x\byte, (TIL311)
@@ -367,74 +375,5 @@ check_reset_cmd:
 _end_chk:
     tst.b %d0
     rts
-    
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| serial comm routines
-
-| fetch a long from uart into %d0
-getl:
-    jsr getb
-    lsl.w #8, %d0
-    jsr getb
-    lsl.l #8, %d0
-    jsr getb
-    lsl.l #8, %d0
-    jsr getb
-    rts
-    
-| fetch a word from uart into %d0
-getw:
-    jsr getb
-    lsl.w #8, %d0
-    jsr getb
-    rts  
-    
-| get a character from uart, store in %d0
-getb:
-    | see if there is a byte pending
-    btst #7, (RSR)             | test if buffer full (bit 7) is set
-    beq getb                   | buffer empty, loop (Z=1)
-
-    move.b (UDR), %d0          | read char from buffer
-    rts
-    
-| c binding for putl
-putl:
-    move.l (4,%sp), %d0
-    
-| write long in %d0 to serial
-_putl:
-   swap %d0
-   jsr _putw
-   swap %d0
-   jsr _putw
-   rts
-
-| c binding for putw
-putw:
-    move.w (6,%sp), %d0
-    
-| write word in %d0 to serial
-_putw:
-   move.w %d0, -(%sp)
-
-   lsr.w #8, %d0
-   jsr _putb
-   
-   move.w (%sp)+, %d0
-   jsr _putb
-
-   rts
-   
-| c binding for putb
-putb:  
-    move.b (7,%sp), %d0
-    
-| write byte in %d0 to serial
-_putb:
-   btst #7, (TSR)             | test buffer empty (bit 7)
-   beq _putb                  | Z=1 (bit = 0) ? branch
-   move.b %d0, (UDR)          | write char to buffer
-   rts
    
 # EOF loader.s
