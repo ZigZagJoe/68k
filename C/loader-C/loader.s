@@ -64,9 +64,6 @@
    misc: a flash address can be nulled later without erasing the sector
 */  
 
-/* command byte for reboot into bootloader/reset address */
-.set CMD_RESET, 0xCF
-
 /* could save 32 bytes and increase speed by storing offsets relative to jump point */
 cmd_jmp_table:
     .long __bad_cmd         | C0
@@ -354,26 +351,6 @@ init_vars:
     clr.l %d6                  | bytecount = 0
     clr.l %d5                  | flash writes disallowed
     move.l #0xDEADC0DE, %d7    | init qcrc
-    rts
-    
-| check if reset command was recieved
-| returns bool in %d0
-| sets Z if return code is zero
-check_reset_cmd:
-    clr.b %d0
-    
-    btst #7, (RSR)             | test if buffer full (bit 7) is set
-    beq _end_chk               | buffer empty, continue
-
-    cmp.b #CMD_RESET, (UDR)
-    bne _end_chk
-    
-    btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
-    bne _end_chk               | if Z is not set (gpio = 1)
-
-    move.b #1, %d0
-_end_chk:
-    tst.b %d0
     rts
    
 # EOF loader.s

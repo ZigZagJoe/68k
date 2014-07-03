@@ -1,21 +1,22 @@
-.global init_vectors
+
 .text
 .align 2
 
-.set MFP_BASE, 0xC0000    | start of IO range for MFP
-.set GPDR, MFP_BASE + 0x1 | gpio data reg
-.set UDR, MFP_BASE + 0x2F | uart data register
-.set TSR, MFP_BASE + 0x2D | transmitter status reg
-.set RSR, MFP_BASE + 0x2B | receiver status reg
 .set TIL311, 0xC8000      | til311 displays
 
+
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| macros
+| function imports/exports
+.global init_vectors
 
 .extern _print_dec
 .extern _puthexlong
 .extern _puthexword
 .extern _puthexbyte
+.extern
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| macros
 
 .macro sei
     and.w #0xF8FF, %SR     
@@ -249,29 +250,16 @@ return_eh:
 half_sec_delay:
     move.l #40000,%d0                                 
 delay: 
-    jsr check_boot
+    jsr check_reset_cmd
+    bne do_reset
+    
     sub.l #1, %d0
     jne delay
     rts
 
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| check if boot char recvd    
-check_boot:
-    btst #7, (RSR)             | test if buffer full (bit 7) is set.
-    beq retu                 
-    
-    move.b (UDR), %D1
-    cmp.b #0xCF, %D1
-    bne retu
-    
-    btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
-    bne retu                   | gpio is 1, not bootoclock
-     
+do_reset:
     jmp 0x80008
     
-retu:
-    rts
-
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | resolve a vector number to a string in %a0
 vec_num_to_str:
@@ -415,7 +403,7 @@ _DATA: .string "data "
 _HEAD: .string "\n ########## Exception "
 _EX: .string "Unknown"
 
-| vectors
+| Vector strings. First byte is what to flash on TIL311.
 _VEC_00:        .byte 0xE0;.string "{unknown}"
 _VEC_01:        .byte 0xE0;.string "{unknown}"
 _VEC_02:        .byte 0xBE;.string "Bus Error"
@@ -428,12 +416,11 @@ _VEC_08:        .byte 0xA1;.string "Privilege Violation"
 _VEC_09:        .byte 0x7E;.string "Trace"
 _VEC_10:        .byte 0xE0;.string "Line 1010"
 _VEC_11:        .byte 0xE1;.string "Line 1111"
-_VEC_USER:      .byte 0xAA;.string "User Vector"
+_VEC_USER:      .byte 0xAA;.string "User"
 _VEC_TRAP:      .byte 0x7A;.string "Trap"
-_VEC_AUTOVEC:   .byte 0xA7;.string "Autovectored"
+_VEC_AUTOVEC:   .byte 0xA7;.string "Autovector"
 _VEC_RESERVED:  .byte 0x5E;.string "{reserved}"
 _VEC_UNINIT:    .byte 0x1A;.string "Uninitialized ISR"
-
 
 .align 2
 vec_lookup:

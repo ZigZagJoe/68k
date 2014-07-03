@@ -15,6 +15,12 @@
 .set TCDR,  MFP + 0x23         | timer c data
 .set UCR,   MFP + 0x29         | uart ctrl
 
+/* command byte for reboot into bootloader/reset address */
+.set CMD_RESET, 0xCF
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| Function exports
+
 | ASM only functions
 .global _putb
 .global _putw
@@ -42,6 +48,9 @@
 .global getw
 .global getl
 .global getb
+.global check_reset_cmd
+
+.global _hexchars
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | serial comm routines
@@ -73,7 +82,7 @@ getb:
     move.b (UDR), %d0          | read char from buffer
     rts
     
-| c binding for putl
+## C binding
 putl:
     move.l (4,%sp), %d0
     
@@ -85,7 +94,7 @@ _putl:
    jsr _putw
    rts
 
-| c binding for putw
+## C binding
 putw:
     move.w (6,%sp), %d0
     
@@ -101,7 +110,7 @@ _putw:
 
    rts
    
-| c binding for putb
+## C binding
 putb:  
     move.b (7,%sp), %d0
     
@@ -112,7 +121,7 @@ _putb:
    move.b %d0, (UDR)          | write char to buffer
    rts
 
-   
+## C binding   
 puts:
     move.l (4,%sp), %a0
     
@@ -128,6 +137,7 @@ _puts:
 done:
     rts
  
+## C binding
 pithexlong:
     move.l 4(%sp), %d0 
      
@@ -145,7 +155,8 @@ _puthexlong:
 
     move.l (%SP)+, %D0
     rts
-
+    
+## C binding
 puthexword:
     move.l 4(%sp), %d0
         
@@ -164,6 +175,8 @@ _puthexword:
     move.w (%SP)+, %D0
     rts
     
+    
+## C binding   
 puthexbyte:
     move.l 4(%sp), %d0
     
@@ -187,7 +200,8 @@ _puthexbyte:
     movem.l (%SP)+, %A0/%D0        | restore regs
 
     rts
-
+    
+## C binding
 print_dec:
     move.l 4(%sp), %d0
     
@@ -195,17 +209,17 @@ print_dec:
 | print number in %d0, return character count in %d0
 | %d0 max value: 655359    
 _print_dec:
-    move.w %d1, -(%sp)     | save %d1
-    clr.b %d1              | character count
+    move.w %d1, -(%sp)         | save %d1
+    clr.b %d1                  | character count
     
-    tst.l %d0              | check for zero
+    tst.l %d0                  | check for zero
     beq rz
     
-    jsr pr_dec_rec         | begin recursive print
+    jsr pr_dec_rec             | begin recursive print
     
 dec_r:
-    move.b %d1, %d0        | set up return value
-    move.w (%sp)+, %d1     | restore %d1
+    move.b %d1, %d0            | set up return value
+    move.w (%sp)+, %d1         | restore %d1
     rts
     
 rz: 
@@ -219,25 +233,47 @@ pr_dec_rec:
     
     divu #10, %d0
     swap %d0
-    move.w %d0, -(%sp)    | save remainder
-    clr.w %d0             | clear remainder
-    swap %d0              | back to normal
-    jsr pr_dec_rec        | get next digit
-    move.w (%sp)+, %d0    | restore remainder
+    move.w %d0, -(%sp)         | save remainder
+    clr.w %d0                  | clear remainder
+    swap %d0                   | back to normal
+    jsr pr_dec_rec             | get next digit
+    move.w (%sp)+, %d0         | restore remainder
 ret_zero:
-    addi.b #'0', %d0      | turn it into a character
-    jsr putc              | print
-    addi.b #1, %d1        | increment char count
+    addi.b #'0', %d0           | turn it into a character
+    jsr putc                   | print
+    addi.b #1, %d1             | increment char count
 pr_ret:
     rts
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | put char in %d0    
 putc:
-    btst #7, (TSR)                 | test buffer empty (bit 7)
-    beq putc                       | Z=1 (bit = 0) ? branch
-    move.b %D0, (UDR)              | write char to buffer
+    btst #7, (TSR)             | test buffer empty (bit 7)
+    beq putc                   | Z=1 (bit = 0) ? branch
+    move.b %D0, (UDR)          | write char to buffer
+    rts
+    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| check if reset command was recieved
+| returns bool in %d0
+| sets Z if return code is zero
+check_reset_cmd:
+    clr.b %d0
+    
+    btst #7, (RSR)             | test if buffer full (bit 7) is set
+    beq _end_chk               | buffer empty, continue
+
+    cmp.b #CMD_RESET, (UDR)
+    bne _end_chk
+    
+    btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
+    bne _end_chk               | if Z is not set (gpio = 1)
+
+    move.b #1, %d0
+_end_chk:
+    tst.b %d0
     rts
 
 .section .rodata
-_hexchars: .ascii "0123456789ABCDEF"
+
+_hexchars: .string "0123456789ABCDEF"
