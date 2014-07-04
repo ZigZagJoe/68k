@@ -33,6 +33,8 @@
 .global _puthexword
 .global _puthexbyte
 
+.global put_bin
+
 | C-callable wrappers
 .global putb
 .global putw
@@ -131,7 +133,7 @@ _puts:
     move.b (%A0)+, %D0
     jeq done
     
-    jsr putc
+    jsr _putb
     bra puts
     
 done:
@@ -190,12 +192,12 @@ _puthexbyte:
     lsr #4, %D0                    | shift top 4 bits over
     and.w #0xF, %D0
     move.b (%A0, %D0.W), %D0       | look up char
-    jsr putc
+    jsr _putb
     
     move.w (2, %SP), %D0           | restore D0 from stack    
     and.w #0xF, %D0                | take bottom 4 bits
     move.b (%A0, %D0.W), %D0       | look up char
-    jsr putc
+    jsr _putb
     
     movem.l (%SP)+, %A0/%D0        | restore regs
 
@@ -240,19 +242,26 @@ pr_dec_rec:
     move.w (%sp)+, %d0         | restore remainder
 ret_zero:
     addi.b #'0', %d0           | turn it into a character
-    jsr putc                   | print
+    jsr _putb                  | print
     addi.b #1, %d1             | increment char count
 pr_ret:
     rts
-    
+ 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| put char in %d0    
-putc:
-    btst #7, (TSR)             | test buffer empty (bit 7)
-    beq putc                   | Z=1 (bit = 0) ? branch
-    move.b %D0, (UDR)          | write char to buffer
-    rts
+| print %d2 bits from %d1  
+put_bin: 
+    move.b #'0', %D0
+    btst %D2, %D1
+    jeq not1
+    move.b #'1', %D0
+not1:
+    jsr _putb
+    move.b #' ', %D0
+    jsr _putb
     
+    dbra %D2, put_bin
+    rts
+       
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | check if reset command was recieved
 | returns bool in %d0

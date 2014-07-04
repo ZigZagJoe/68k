@@ -13,7 +13,6 @@
 .extern _puthexlong
 .extern _puthexword
 .extern _puthexbyte
-.extern
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | macros
@@ -365,21 +364,6 @@ dblsp:
 | one space   
 put_sp:
     put_char ' '
-    rts
- 
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| print %d2 bits from %d1  
-put_bin: 
-    move.b #'0', %D0
-    btst %D2, %D1
-    jeq not1
-    move.b #'1', %D0
-not1:
-    jsr _putb
-    move.b #' ', %D0
-    jsr _putb
-    
-    dbra %D2, put_bin
     rts
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
