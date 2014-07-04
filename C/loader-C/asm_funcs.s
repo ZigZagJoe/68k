@@ -79,7 +79,7 @@ getw:
 getb:
     | see if there is a byte pending
     btst #7, (RSR)             | test if buffer full (bit 7) is set
-    beq getb                   | buffer empty, loop (Z=1)
+    jeq getb                   | buffer empty, loop (Z=1)
 
     move.b (UDR), %d0          | read char from buffer
     rts
@@ -118,10 +118,10 @@ putb:
     
 | write byte in %d0 to serial
 _putb:
-   btst #7, (TSR)             | test buffer empty (bit 7)
-   beq _putb                  | Z=1 (bit = 0) ? branch
-   move.b %d0, (UDR)          | write char to buffer
-   rts
+    btst #7, (TSR)             | test buffer empty (bit 7)
+    jeq _putb                  | Z=1 (bit = 0) ? branch
+    move.b %d0, (UDR)          | write char to buffer
+    rts
 
 ## C binding   
 puts:
@@ -189,7 +189,7 @@ _puthexbyte:
     
     movea.l #_hexchars, %A0
     
-    lsr #4, %D0                    | shift top 4 bits over
+    lsr.b #4, %D0                  | shift top 4 bits over
     and.w #0xF, %D0
     move.b (%A0, %D0.W), %D0       | look up char
     jsr _putb
@@ -215,7 +215,7 @@ _print_dec:
     clr.b %d1                  | character count
     
     tst.l %d0                  | check for zero
-    beq rz
+    jeq rz
     
     jsr pr_dec_rec             | begin recursive print
     
@@ -231,7 +231,7 @@ rz:
 | recursive decimal print routine
 pr_dec_rec:
     tst.l %d0
-    beq pr_ret
+    jeq pr_ret
     
     divu #10, %d0
     swap %d0
@@ -270,13 +270,13 @@ check_reset_cmd:
     clr.b %d0
     
     btst #7, (RSR)             | test if buffer full (bit 7) is set
-    beq _end_chk               | buffer empty, continue
+    jeq _end_chk               | buffer empty, continue
 
     cmp.b #CMD_RESET, (UDR)
-    bne _end_chk
+    jne _end_chk
     
     btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
-    bne _end_chk               | if Z is not set (gpio = 1)
+    jne _end_chk               | if Z is not set (gpio = 1)
 
     move.b #1, %d0
 _end_chk:

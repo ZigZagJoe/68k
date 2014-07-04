@@ -107,12 +107,12 @@ loader_start:
     jsr init_vectors
     
     cmp.w #0xB007, 0x400       | check addr
-    beq reset_addr             | if it is set to magic val, do not (possibly) boot from rom
+    jeq reset_addr             | if it is set to magic val, do not (possibly) boot from rom
                                | as we were reset while waiting for command to stay in loader
 
     | check if boot magic is present on sector 1
     cmp.l #bootable_magic, (sector1_entry)
-   | beq wait_for_command       | if it is, wait for a command to stay in bootloader
+    jeq wait_for_command       | if it is, wait for a command to stay in bootloader
      
 reset_addr:
     TILDBG B7                  | bootloader ready!
@@ -131,7 +131,7 @@ loop:
     
     | check to see if the GPIO for command byte is low
     btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
-    beq cmd_byte               | gpio is 0; command byte!
+    jeq cmd_byte               | gpio is 0; command byte!
     
     move.b %d0, (UDR)          | not a command, echo it back
     move.b %d0, (%a4)+         | store to address, postincrement
@@ -154,7 +154,7 @@ wait_for_command:
     
 _cmd_w_loop:
     jsr check_reset_cmd
-    bne reset_addr             | enter bootloader mode
+    jne reset_addr             | enter bootloader mode
 
     subi.l #1, %d2
     jne _cmd_w_loop            | timeout, boot from flash
@@ -171,8 +171,8 @@ cmd_byte:
     subi.b #0xC0, %d0          | get table offset
     
     cmp.b #0xF, %d0
-    beq reset_addr             | reset is not a subroutine... jump directly.
-    bhi __cmd_oor              | out of range command (ie. not valid)
+    jeq reset_addr             | reset is not a subroutine... jump directly.
+    jhi __cmd_oor              | out of range command (ie. not valid)
     
     and.w #0xF, %d0
     lsl.w #2, %d0              | ind * 4 (size of long)
@@ -248,13 +248,13 @@ memory_dump:
 
     jsr getw                   | get final confirmation to go (len correct)
     cmp.w #0x1F07, %d0
-    bne dump_end               | host aborted / out of sync
+    jne dump_end               | host aborted / out of sync
     
     move.l #0xDEADC0DE, %d2    | qcrc initial value
     
 dump_loop:
     jsr check_reset_cmd
-    bne dump_end
+    jne dump_end
         
     move.b (%a4)+, %d0         | read a byte
     move.b %d0, TIL311
@@ -265,7 +265,7 @@ dump_loop:
     jsr _putb                  | send it out
     
     subi.l #1, %d1
-    bne dump_loop   
+    jne dump_loop   
    
     move.l %d2, %d0            | send out the crc
     jsr _putl
@@ -309,7 +309,7 @@ do_parse_srec:
     clr.b %d5                  | clear write flags
    
     cmp.b #0, %d0
-    bne bad_srec
+    jne bad_srec
     
     TILDBG 0C    
     rts

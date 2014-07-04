@@ -124,8 +124,9 @@ _fl:
     jsr _puthexlong
     
     cmp.b #9, %d7
-    bne not_tr
-      
+    jne not_tr
+    
+    | read instruction if in trace mode
     jsr trisp
     put_str _INST
     
@@ -161,15 +162,18 @@ group0:
     | get access type flags
     move.w 64(%SP), %D2
     
+    
+    | print access info string
+    
     move.l #_WRITE, %a0
     btst #4, %d2
-    beq _wr
+    jeq _wr
     move.l #_READ, %a0
 _wr:
     jsr puts
     
     btst #3, %d2
-    beq _not
+    jeq _not
     
     move.l #_INSTR, %a0
     jsr puts
@@ -177,17 +181,19 @@ _not:
     
     move.l #_USR, %a0
     btst #2, %d2
-    beq _usr
+    jeq _usr
     move.l #_SUPR, %a0
 _usr:
     jsr puts
     
     move.l #_PGM, %a0
     btst #0, %d2
-    beq _pgm
+    jeq _pgm
     move.l #_DATA, %a0
 _pgm:
     jsr puts
+
+    | end access info string
 
     | flags
     move.w 72(%SP), %D1
@@ -222,11 +228,13 @@ contp:
     jsr putbash
     jsr dblnewl
      
+    | are we tracing?
     cmp.b #9, %d7
-    beq return_eh
+    jeq return_eh
     
+    | or are we trap 15?
     cmp.b #47, %d7
-    beq return_eh
+    jeq return_eh
     
 | end of handler:
 | loop forever, toggling between 0xEE and relevant number
@@ -250,7 +258,7 @@ half_sec_delay:
     move.l #40000,%d0                                 
 delay: 
     jsr check_reset_cmd
-    bne do_reset
+    jne do_reset
     
     sub.l #1, %d0
     jne delay
@@ -321,12 +329,12 @@ dr_l:
     addi.b #1, %d1
     
     cmp.b #4, %d1
-    bne sk
+    jne sk
     jsr put_newl
     
 sk:
     cmp.b %d3, %d1
-    bne dr_l
+    jne dr_l
     
     jsr dblnewl
     rts

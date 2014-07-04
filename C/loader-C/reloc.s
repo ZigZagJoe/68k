@@ -27,8 +27,8 @@
 | boot stack pointer and program counter
 | comment these out if testing in RAM...
 
-|_isp: .long stack_pointer      | initial spvr stack pointer
-|_ipc: .long 0x80008            | initial program counter 
+_isp: .long stack_pointer      | initial spvr stack pointer
+_ipc: .long 0x80008            | initial program counter 
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | bootloader entry point
