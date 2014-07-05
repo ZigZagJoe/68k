@@ -198,23 +198,23 @@ _pgm:
     | flags
     move.w 72(%SP), %D1
     
-    bsr dblnewl
+    bsr.s dblnewl
     
 contp: 
     | continue: print out stack pointers, flags (in D1).
     
-    bsr dblsp
+    bsr.s dblsp
     put_str _usersp
     move.l %USP, %A0
     move.l %A0, %D0
     bsr _puthexlong
     
-    bsr dblsp
+    bsr.s dblsp
     put_str _supsp
     move.l 60(%sp), %D0
     bsr _puthexlong
     
-    bsr dblnewl
+    bsr.s dblnewl
     
     put_str _flags    
     
@@ -223,10 +223,10 @@ contp:
     move.w #15, %D2
     bsr put_bin
     
-    bsr dblnewl
+    bsr.s dblnewl
     move.w #62, %d1
-    bsr putbash
-    bsr dblnewl
+    bsr.s putbash
+    bsr.s dblnewl
      
     | are we tracing?
     cmp.b #9, %d7
@@ -240,17 +240,51 @@ contp:
 | loop forever, toggling between 0xEE and relevant number
 wait_for_reset:
     move.b #0xEE, (TIL311)
-    bsr half_sec_delay
+    bsr.s half_sec_delay
     
     move.b %d6, (TIL311)
-    bsr half_sec_delay
+    bsr.s half_sec_delay
 
     jra wait_for_reset
     
 return_eh:
     movem.l (%sp)+, %d0-%d7/%a0-%a7
     rte
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| various quick character put routines
+   
+| two newlines   
+dblnewl:
+    bsr put_newl
+ 
+| one newline  
+put_newl:
+    put_char '\n'
+    rts
+
+| three spaces
+trisp:
+    bsr.s put_sp
     
+| two spaces
+dblsp:
+    bsr put_sp
+    
+| one space   
+put_sp:
+    put_char ' '
+    rts  
+
+| put space, then %d1 bash characters
+putbash: 
+    bsr.s put_sp
+    move.b #'#', %d0
+    subq.b #1, %d1
+__putbl:
+    bsr _putb
+    dbra %d1, __putbl
+    rts
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | wait for half a second, while waiting for boot
@@ -267,6 +301,40 @@ delay:
 do_reset:
     jmp 0x80008
     
+  
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| dump %d3 registers starting at %a0, newline after 4th
+| reg base name in %d2
+
+dump_regs:
+    clr.b %d1
+dr_l:  
+    bsr.s trisp
+    
+    move.b %d1, %d0
+    add.b %d2, %d0
+    bsr _puthexbyte
+    
+    put_char ':'
+    
+    bsr put_sp
+    
+    move.l (%a0)+, %d0
+    bsr _puthexlong
+    
+    addq.b #1, %d1
+    
+    cmp.b #4, %d1
+    jne sk
+    bsr.s put_newl
+    
+sk:
+    cmp.b %d3, %d1
+    jne dr_l
+    
+    bsr.s dblnewl
+    rts
+
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | resolve a vector number to a string in %a0
 vec_num_to_str:
@@ -305,75 +373,7 @@ vec_num_to_str:
     move.l (%a0, %d0.w), %a0
 end:
     rts
-    
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| dump %d3 registers starting at %a0, newline after 4th
-| reg base name in %d2
-
-dump_regs:
-    clr.b %d1
-dr_l:  
-    bsr trisp
-    
-    move.b %d1, %d0
-    add.b %d2, %d0
-    bsr _puthexbyte
-    
-    put_char ':'
-    
-    bsr put_sp
-    
-    move.l (%a0)+, %d0
-    bsr _puthexlong
-    
-    addq.b #1, %d1
-    
-    cmp.b #4, %d1
-    jne sk
-    bsr put_newl
-    
-sk:
-    cmp.b %d3, %d1
-    jne dr_l
-    
-    bsr dblnewl
-    rts
-
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| various quick character put routines
-
-| put space, then %d1 bash characters
-putbash: 
-    bsr put_sp
-    move.b #'#', %d0
-    subq.b #1, %d1
-__putbl:
-    bsr _putb
-    dbra %d1, __putbl
-    rts
-   
-| two newlines   
-dblnewl:
-    bsr put_newl
- 
-| one newline  
-put_newl:
-    put_char '\n'
-    rts
-
-| three spaces
-trisp:
-    bsr put_sp
-    
-| two spaces
-dblsp:
-    bsr put_sp
-    
-| one space   
-put_sp:
-    put_char ' '
-    rts
-
+  
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | Strings
 
