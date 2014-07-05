@@ -104,7 +104,7 @@ loader_start:
     move.b #1, (RSR)           | receiver enable
     move.b #1, (TSR)           | transmitter enable
     
-    jsr init_vectors
+    bsr init_vectors
     
     cmp.w #0xB007, 0x400       | check addr
     jeq reset_addr             | if it is set to magic val, do not (possibly) boot from rom
@@ -120,12 +120,12 @@ reset_addr:
     
     | initialize variables
     move.l #default_addr, %d0
-    jsr init_vars
+    bsr init_vars
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | main bootloader loop
 loop:
-    jsr getb
+    bsr getb
     
     move.b %d0, (TIL311)       | display on device
     
@@ -141,7 +141,7 @@ loop:
     eor.b %d0, %d7             | qcrc update
     rol.l #1, %d7
     
-    bra loop                   | and back to start we go
+    jra loop                   | and back to start we go
  
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | wait for a command to stay in bootloader, otherwise boot
@@ -153,10 +153,10 @@ wait_for_command:
     move.l #100000, %d2        | number of loops - should result about a second delay
     
 _cmd_w_loop:
-    jsr check_reset_cmd
+    bsr check_reset_cmd
     jne reset_addr             | enter bootloader mode
 
-    subi.l #1, %d2
+    subq.l #1, %d2
     jne _cmd_w_loop            | timeout, boot from flash
     
     clr.w 0x400                | booting from rom, clear magic
@@ -181,11 +181,11 @@ cmd_byte:
     move.l (%a0, %d0.W), %a0   | read address at offset
     jsr (%a0)                  | jump to address
     
-    bra loop
+    jra loop
     
 __cmd_oor:
     TILDBG B0                  | command out of range
-    bra loop
+    jra loop
     
 __bad_cmd:
     TILDBG BC                  | not an implemented command
@@ -197,21 +197,21 @@ __bad_cmd:
 | parse binary srec
 set_binary_srec:
     move.l #0xB17AC5EC, %d0
-    jsr _putl
+    bsr _putl
     ori.b #FLAG_BIN_SREC, %d5
     rts
     
 | set to allow s record to write flash
 set_flash_wr:
     move.l #0xF1A5C0DE, %d0
-    jsr _putl
+    bsr _putl
     ori.b #FLAG_WR_FLASH, %d5
     rts
     
 | set to allow s record to write loader
 set_loader_wr:
     move.l #0x10ADC0DE, %d0
-    jsr _putl
+    bsr _putl
     ori.b #FLAG_WR_LOADER, %d5
     rts
 
@@ -221,13 +221,13 @@ set_addr:
     TILDBG 1A
     
     move.l #0xCE110C00, %d0
-    jsr _putl
+    bsr _putl
     
-    jsr getl                   | get address
-    jsr _putl                  | echo it back
-    jsr init_vars              | init vars with addr in %d0
+    bsr getl                   | get address
+    bsr _putl                  | echo it back
+    bsr init_vars              | init vars with addr in %d0
     move.w #0xACC0, %d0        | send tail
-    jsr _putw
+    bsr _putw
     
     rts
     
@@ -237,23 +237,23 @@ memory_dump:
     TILDBG D0
     
     move.w #0x10AD, %d0
-    jsr _putw
+    bsr _putw
     
     move.l %a4, %d0
-    jsr _putl                  | put address
+    bsr _putl                  | put address
     
-    jsr getl                   | read length
-    jsr _putl                  | echo length
+    bsr getl                   | read length
+    bsr _putl                  | echo length
     move.l %d0, %d1            | %d1 = num bytes    
 
-    jsr getw                   | get final confirmation to go (len correct)
+    bsr getw                   | get final confirmation to go (len correct)
     cmp.w #0x1F07, %d0
     jne dump_end               | host aborted / out of sync
     
     move.l #0xDEADC0DE, %d2    | qcrc initial value
     
 dump_loop:
-    jsr check_reset_cmd
+    bsr check_reset_cmd
     jne dump_end
         
     move.b (%a4)+, %d0         | read a byte
@@ -262,17 +262,17 @@ dump_loop:
     eor.b %d0, %d2             | qcrc update
     rol.l #1, %d2
     
-    jsr _putb                  | send it out
+    bsr _putb                  | send it out
     
-    subi.l #1, %d1
+    subq.l #1, %d1
     jne dump_loop   
    
     move.l %d2, %d0            | send out the crc
-    jsr _putl
+    bsr _putl
    
 dump_end:
     move.w #0xEEAC, %d0        | finale 
-    jsr _putw
+    bsr _putw
     
     rts
     
@@ -282,17 +282,17 @@ do_parse_srec:
     TILDBG DC
     
     move.l #0xD0E881CC, %d0    | tell host we are initiating write
-    jsr _putl
+    bsr _putl
     
     move.b %d5, %d0            | write mode
-    jsr _putb
+    bsr _putb
     
     | push arguments
     move.l %d5, -(%sp)         | write mode
     move.l %d6, -(%sp)         | byte count
     move.l %a5, -(%sp)         | byte addr
     
-    jsr handle_srec            | enter c code
+    bsr handle_srec            | enter c code
     | d0-d1, a0-a1 will be clobbered, return code in d0
     
     | dealloc arguments
@@ -301,10 +301,10 @@ do_parse_srec:
     swap %d0                   | %d0 = [ RET]xxxx
     move.w #0xC0DE, %d0        | %d0 = [ RET]C0DE 
     swap %d0                   | %d0 = C0DE[ RET]
-    jsr _putl          
+    bsr _putl          
     
     move.w #0xEF00, %d0        | trailing null
-    jsr _putw
+    bsr _putw
     
     clr.b %d5                  | clear write flags
    
@@ -325,13 +325,13 @@ get_qcrc:
     TILDBG CC                  | display code
     
     move.w #0xFCAC, %d0        | intro
-    jsr _putw
+    bsr _putw
     
     move.l %d7, %d0            | crc data
-    jsr _putl                  
+    bsr _putl                  
     
     clr.b %d0                  | tail
-    jsr _putb
+    bsr _putb
     
     rts
 

@@ -59,20 +59,20 @@
 
 | fetch a long from uart into %d0
 getl:
-    jsr getb
+    bsr getb
     lsl.w #8, %d0
-    jsr getb
+    bsr getb
     lsl.l #8, %d0
-    jsr getb
+    bsr getb
     lsl.l #8, %d0
-    jsr getb
+    bsr getb
     rts
     
 | fetch a word from uart into %d0
 getw:
-    jsr getb
+    bsr getb
     lsl.w #8, %d0
-    jsr getb
+    bsr getb
     rts  
     
 | get a character from uart, store in %d0
@@ -91,9 +91,9 @@ putl:
 | write long in %d0 to serial
 _putl:
    swap %d0
-   jsr _putw
+   bsr _putw
    swap %d0
-   jsr _putw
+   bsr _putw
    rts
 
 ## C binding
@@ -105,10 +105,10 @@ _putw:
    move.w %d0, -(%sp)
 
    lsr.w #8, %d0
-   jsr _putb
+   bsr _putb
    
    move.w (%sp)+, %d0
-   jsr _putb
+   bsr _putb
 
    rts
    
@@ -119,7 +119,7 @@ putb:
 | write byte in %d0 to serial
 _putb:
     btst #7, (TSR)             | test buffer empty (bit 7)
-    jeq _putb                  | Z=1 (bit = 0) ? branch
+    jeq _putb                  | Z=1 (bit = 0) ? jranch
     move.b %d0, (UDR)          | write char to buffer
     rts
 
@@ -133,8 +133,8 @@ _puts:
     move.b (%A0)+, %D0
     jeq done
     
-    jsr _putb
-    bra puts
+    bsr _putb
+    jra puts
     
 done:
     rts
@@ -149,11 +149,11 @@ _puthexlong:
     move.l %D0, -(%SP)
 
     swap %D0
-    jsr puthexword
+    bsr puthexword
     
     move.l (%SP), %D0
     and.l #0xFFFF, %D0
-    jsr puthexword
+    bsr puthexword
 
     move.l (%SP)+, %D0
     rts
@@ -168,11 +168,11 @@ _puthexword:
     move.w %D0, -(%SP)
 
     lsr.w #8, %D0
-    jsr puthexbyte
+    bsr puthexbyte
     
     move.w (%SP), %D0
     and.w #0xFF, %D0
-    jsr puthexbyte
+    bsr puthexbyte
 
     move.w (%SP)+, %D0
     rts
@@ -192,12 +192,12 @@ _puthexbyte:
     lsr.b #4, %D0                  | shift top 4 bits over
     and.w #0xF, %D0
     move.b (%A0, %D0.W), %D0       | look up char
-    jsr _putb
+    bsr _putb
     
     move.w (2, %SP), %D0           | restore D0 from stack    
     and.w #0xF, %D0                | take bottom 4 bits
     move.b (%A0, %D0.W), %D0       | look up char
-    jsr _putb
+    bsr _putb
     
     movem.l (%SP)+, %A0/%D0        | restore regs
 
@@ -217,7 +217,7 @@ _print_dec:
     tst.l %d0                  | check for zero
     jeq rz
     
-    jsr pr_dec_rec             | begin recursive print
+    bsr pr_dec_rec             | begin recursive print
     
 dec_r:
     move.b %d1, %d0            | set up return value
@@ -225,8 +225,8 @@ dec_r:
     rts
     
 rz: 
-    jsr ret_zero
-    bra dec_r
+    bsr ret_zero
+    jra dec_r
 
 | recursive decimal print routine
 pr_dec_rec:
@@ -238,12 +238,12 @@ pr_dec_rec:
     move.w %d0, -(%sp)         | save remainder
     clr.w %d0                  | clear remainder
     swap %d0                   | back to normal
-    jsr pr_dec_rec             | get next digit
+    bsr pr_dec_rec             | get next digit
     move.w (%sp)+, %d0         | restore remainder
 ret_zero:
     addi.b #'0', %d0           | turn it into a character
-    jsr _putb                  | print
-    addi.b #1, %d1             | increment char count
+    bsr _putb                  | print
+    addq.b #1, %d1             | increment char count
 pr_ret:
     rts
  
@@ -255,9 +255,9 @@ put_bin:
     jeq not1
     move.b #'1', %D0
 not1:
-    jsr _putb
+    bsr _putb
     move.b #' ', %D0
-    jsr _putb
+    bsr _putb
     
     dbra %D2, put_bin
     rts

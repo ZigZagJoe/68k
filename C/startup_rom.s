@@ -29,7 +29,7 @@ _start:
    
    move.l #__data_size, %d0   
 
-   cmp.l #0, %d0                    | check if empty data section
+   tst.l %d0                       | check if empty data section
    beq clrbss
 
    move.l #__data_rom_start, %a0   | A0 = data start
@@ -45,14 +45,14 @@ clrbss:
    
    move.l #__bss_size, %d0
    
-   cmp.l #0, %d0                   | check for empty bss section
+   tst.l %d0                       | check for empty bss section
    beq run_main
    
    move.l #__bss_start, %a0        | A0 = _bss start
    
    | due to use of dbra, we can clear a max of 256kb of RAM (65536 * sizeof(long))
 cbss:
-   clr.l (%a0)+                    | clear [A0.l]
+   moveq.l #0, (%a0)+              | clear [A0.l], save two cycles
    dbra %d0, cbss                  | D0 != 0
    
    /* ready to run c code */

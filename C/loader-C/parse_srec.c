@@ -28,7 +28,7 @@ uint8_t erased_sectors[SECTOR_COUNT];
 uint8_t readch() {
     if (pos >= srec_sz) {
         errno |= EARLY_EOF;
-        dbgprintf("EOF encountered in readch\n");
+        dbgprintf("Unexpected EOF in readch()\n");
         return 0;
     }
     
