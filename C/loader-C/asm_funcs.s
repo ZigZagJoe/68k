@@ -105,10 +105,10 @@ _putw:
    move.w %d0, -(%sp)
 
    lsr.w #8, %d0
-   bsr _putb
+   jbsr _putb
    
    move.w (%sp)+, %d0
-   bsr _putb
+   jbsr _putb
 
    rts
    
@@ -133,7 +133,7 @@ _puts:
     move.b (%A0)+, %D0
     jeq done
     
-    bsr _putb
+    jbsr _putb
     jra puts
     
 done:
@@ -149,11 +149,11 @@ _puthexlong:
     move.l %D0, -(%SP)
 
     swap %D0
-    bsr puthexword
+    jbsr puthexword
     
     move.l (%SP), %D0
     and.l #0xFFFF, %D0
-    bsr puthexword
+    jbsr puthexword
 
     move.l (%SP)+, %D0
     rts
@@ -168,11 +168,11 @@ _puthexword:
     move.w %D0, -(%SP)
 
     lsr.w #8, %D0
-    bsr puthexbyte
+    jbsr puthexbyte
     
     move.w (%SP), %D0
     and.w #0xFF, %D0
-    bsr puthexbyte
+    jbsr puthexbyte
 
     move.w (%SP)+, %D0
     rts
@@ -192,12 +192,12 @@ _puthexbyte:
     lsr.b #4, %D0                  | shift top 4 bits over
     and.w #0xF, %D0
     move.b (%A0, %D0.W), %D0       | look up char
-    bsr _putb
+    jbsr _putb
     
     move.w (2, %SP), %D0           | restore D0 from stack    
     and.w #0xF, %D0                | take bottom 4 bits
     move.b (%A0, %D0.W), %D0       | look up char
-    bsr _putb
+    jbsr _putb
     
     movem.l (%SP)+, %A0/%D0        | restore regs
 
@@ -217,7 +217,7 @@ _print_dec:
     tst.l %d0                  | check for zero
     jeq rz
     
-    bsr pr_dec_rec             | begin recursive print
+    jbsr pr_dec_rec             | begin recursive print
     
 dec_r:
     move.b %d1, %d0            | set up return value
@@ -225,7 +225,7 @@ dec_r:
     rts
     
 rz: 
-    bsr ret_zero
+    jbsr ret_zero
     jra dec_r
 
 | recursive decimal print routine
@@ -238,11 +238,11 @@ pr_dec_rec:
     move.w %d0, -(%sp)         | save remainder
     clr.w %d0                  | clear remainder
     swap %d0                   | back to normal
-    bsr pr_dec_rec             | get next digit
+    jbsr pr_dec_rec            | get next digit
     move.w (%sp)+, %d0         | restore remainder
 ret_zero:
     addi.b #'0', %d0           | turn it into a character
-    bsr _putb                  | print
+    jbsr _putb                 | print
     addq.b #1, %d1             | increment char count
 pr_ret:
     rts

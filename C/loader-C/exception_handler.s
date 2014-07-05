@@ -198,23 +198,23 @@ _pgm:
     | flags
     move.w 72(%SP), %D1
     
-    bsr.s dblnewl
+    jbsr dblnewl
     
 contp: 
     | continue: print out stack pointers, flags (in D1).
     
-    bsr.s dblsp
+    jbsr dblsp
     put_str _usersp
     move.l %USP, %A0
     move.l %A0, %D0
     bsr _puthexlong
     
-    bsr.s dblsp
+    jbsr dblsp
     put_str _supsp
     move.l 60(%sp), %D0
     bsr _puthexlong
     
-    bsr.s dblnewl
+    jbsr dblnewl
     
     put_str _flags    
     
@@ -223,10 +223,10 @@ contp:
     move.w #15, %D2
     bsr put_bin
     
-    bsr.s dblnewl
+    jbsr dblnewl
     move.w #62, %d1
-    bsr.s putbash
-    bsr.s dblnewl
+    jbsr putbash
+    jbsr dblnewl
      
     | are we tracing?
     cmp.b #9, %d7
@@ -240,10 +240,10 @@ contp:
 | loop forever, toggling between 0xEE and relevant number
 wait_for_reset:
     move.b #0xEE, (TIL311)
-    bsr.s half_sec_delay
+    jbsr half_sec_delay
     
     move.b %d6, (TIL311)
-    bsr.s half_sec_delay
+    jbsr half_sec_delay
 
     jra wait_for_reset
     
@@ -265,7 +265,7 @@ put_newl:
 
 | three spaces
 trisp:
-    bsr.s put_sp
+    jbsr put_sp
     
 | two spaces
 dblsp:
@@ -278,7 +278,7 @@ put_sp:
 
 | put space, then %d1 bash characters
 putbash: 
-    bsr.s put_sp
+    jbsr put_sp
     move.b #'#', %d0
     subq.b #1, %d1
 __putbl:
@@ -309,7 +309,7 @@ do_reset:
 dump_regs:
     clr.b %d1
 dr_l:  
-    bsr.s trisp
+    jbsr trisp
     
     move.b %d1, %d0
     add.b %d2, %d0
@@ -326,13 +326,13 @@ dr_l:
     
     cmp.b #4, %d1
     jne sk
-    bsr.s put_newl
+    jbsr put_newl
     
 sk:
     cmp.b %d3, %d1
     jne dr_l
     
-    bsr.s dblnewl
+    jbsr dblnewl
     rts
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
