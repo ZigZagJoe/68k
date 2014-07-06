@@ -27,15 +27,16 @@
 .endm
 
 .macro put_str str
-    movea.l #\str, %a0
+    lea (%pc,\str), %a0
     bsr _puts
 .endm
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | load all vectors with exception_handler
 init_vectors:
-    move.l #0, %a0
-    clr.b %d0
+    clr.l %d0
+    move.l %d0, %a0
+    
     move.w #255, %d1
     
 load_vec:
@@ -162,31 +163,31 @@ group0:
     | get access type flags
     move.w 64(%SP), %D2
     
-    move.l #_WRITE, %a0
+    lea (%pc, _WRITE), %a0
     btst #4, %d2
     beq _wr
-    move.l #_READ, %a0
+    lea (%pc, _READ), %a0
 _wr:
     bsr _puts
     
     btst #3, %d2
     beq _not
     
-    move.l #_INSTR, %a0
+    lea (%pc, _INSTR), %a0
     bsr _puts
 _not:
     
-    move.l #_USR, %a0
+    lea (%pc, _USR), %a0
     btst #2, %d2
     beq _usr
-    move.l #_SUPR, %a0
+    lea (%pc, _SUPR), %a0
 _usr:
     bsr _puts
     
-    move.l #_PGM, %a0
+    lea (%pc, _PGM), %a0
     btst #0, %d2
     beq _pgm
-    move.l #_DATA, %a0
+    lea (%pc, _DATA), %a0
 _pgm:
     bsr _puts
 
@@ -330,37 +331,37 @@ do_reset:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | resolve a vector number to a string in %a0
 vec_num_to_str:
-    move.l #_VEC_USER, %a0
+    lea (%pc,_VEC_USER), %a0
     cmp.b #64, %d0
     jge end
     
-    move.l #_VEC_RESERVED, %a0
+    lea (%pc,_VEC_RESERVED), %a0
     cmp.b #48, %d0
     jge end
     
-    move.l #_VEC_TRAP, %a0
+    lea (%pc,_VEC_TRAP), %a0
     cmp.b #32, %d0
     jge end
      
-    move.l #_VEC_AUTOVEC, %a0
+    lea (%pc,_VEC_AUTOVEC), %a0
     cmp.b #25, %d0
     jge end   
              
-    move.l #_VEC_RESERVED, %a0
+    lea (%pc,_VEC_RESERVED), %a0
     cmp.b #16, %d0
     jge end   
     
-    move.l #_VEC_UNINIT, %a0
+    lea (%pc,_VEC_UNINIT), %a0
     cmp.b #15, %d0
     jge end   
     
-    move.l #_VEC_RESERVED, %a0
+    lea (%pc,_VEC_RESERVED), %a0
     cmp.b #12, %d0
     jge end 
         
     andi.w #0xF, %d0
     lsl.b #2, %d0
-    move.l #vec_lookup, %a0
+    lea (%pc,vec_lookup), %a0
     
     move.l (%a0, %d0.w), %a0
 end:
