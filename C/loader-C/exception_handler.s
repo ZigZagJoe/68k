@@ -27,7 +27,7 @@
 .endm
 
 .macro put_str str
-    movea.l #\str, %a0
+    movea.l (%pc,\str), %a0
     bsr puts
 .endm
 
@@ -55,7 +55,8 @@ exception_handler:
     move.l %a0, %d7
     swap %d7
     lsr.w #8, %d7
-    | %d7 should contain calling vector
+    
+    | %d7 contains calling vector (highest byte of %pc)
     
     move.w #24, %d2              | char count
 
@@ -338,37 +339,37 @@ sk:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | resolve a vector number to a string in %a0
 vec_num_to_str:
-    move.l #_VEC_USER, %a0
+    move.l (%pc,_VEC_USER), %a0
     cmp.b #64, %d0
     jge end
     
-    move.l #_VEC_RESERVED, %a0
+    move.l (%pc,_VEC_RESERVED), %a0
     cmp.b #48, %d0
     jge end
     
-    move.l #_VEC_TRAP, %a0
+    move.l (%pc,_VEC_TRAP), %a0
     cmp.b #32, %d0
     jge end
      
-    move.l #_VEC_AUTOVEC, %a0
+    move.l (%pc,_VEC_AUTOVEC), %a0
     cmp.b #25, %d0
     jge end   
              
-    move.l #_VEC_RESERVED, %a0
+    move.l (%pc,_VEC_RESERVED), %a0
     cmp.b #16, %d0
     jge end   
     
-    move.l #_VEC_UNINIT, %a0
+    move.l (%pc,_VEC_UNINIT), %a0
     cmp.b #15, %d0
     jge end   
     
-    move.l #_VEC_RESERVED, %a0
+    move.l (%pc,_VEC_RESERVED), %a0
     cmp.b #12, %d0
     jge end 
         
     andi.w #0xF, %d0
     lsl.b #2, %d0
-    move.l #vec_lookup, %a0
+    move.l (%pc,vec_lookup), %a0
     
     move.l (%a0, %d0.w), %a0
 end:
@@ -397,7 +398,6 @@ _EX: .string "Unknown"
 
 | Vector strings. First byte is what to flash on TIL311.
 _VEC_00:        .byte 0xE0;.string "{unknown}"
-_VEC_01:        .byte 0xE0;.string "{unknown}"
 _VEC_02:        .byte 0xBE;.string "Bus Error"
 _VEC_03:        .byte 0xAE;.string "Address Error"
 _VEC_04:        .byte 0x11;.string "Illegal Instruction"
@@ -417,7 +417,7 @@ _VEC_UNINIT:    .byte 0x1A;.string "Uninitialized ISR"
 .align 2
 vec_lookup:
     .long _VEC_00
-    .long _VEC_01
+    .long _VEC_00
     .long _VEC_02
     .long _VEC_03
     .long _VEC_04

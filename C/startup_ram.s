@@ -22,7 +22,7 @@
 
     move.l #__bss_size, %d0
     
-    tst.l %d0                 | check if empty bss section
+    tst.l %d0                     | check if empty bss section
     beq run
         
     move.l #__bss_start, %a0      | A0 = _bss start
