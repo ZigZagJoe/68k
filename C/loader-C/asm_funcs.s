@@ -140,7 +140,7 @@ done:
     rts
  
 ## C binding
-pithexlong:
+puthexlong:
     move.l 4(%sp), %d0 
      
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
@@ -152,7 +152,6 @@ _puthexlong:
     jbsr _puthexword
     
     move.l (%SP), %D0
-    and.l #0xFFFF, %D0
     jbsr _puthexword
 
     move.l (%SP)+, %D0
@@ -171,7 +170,6 @@ _puthexword:
     jbsr _puthexbyte
     
     move.w (%SP), %D0
-    and.w #0xFF, %D0
     jbsr _puthexbyte
 
     move.w (%SP)+, %D0
@@ -187,7 +185,7 @@ puthexbyte:
 _puthexbyte:
     movem.l %A0/%D0, -(%SP)        | save regs
     
-    movea.l #_hexchars, %A0
+    lea (%pc,_hexchars), %A0
     
     lsr.b #4, %D0                  | shift top 4 bits over
     and.w #0xF, %D0
@@ -211,17 +209,17 @@ print_dec:
 | print number in %d0, return character count in %d0
 | %d0 max value: 655359    
 _print_dec:
-    move.w %d1, -(%sp)         | save %d1
-    clr.b %d1                  | character count
+    move.w %d1, -(%sp)             | save %d1
+    clr.b %d1                      | character count
     
-    tst.l %d0                  | check for zero
+    tst.l %d0                      | check for zero
     jeq rz
     
-    jbsr pr_dec_rec             | begin recursive print
+    jbsr pr_dec_rec                | begin recursive print
     
 dec_r:
-    move.b %d1, %d0            | set up return value
-    move.w (%sp)+, %d1         | restore %d1
+    move.b %d1, %d0                | set up return value
+    move.w (%sp)+, %d1             | restore %d1
     rts
     
 rz: 

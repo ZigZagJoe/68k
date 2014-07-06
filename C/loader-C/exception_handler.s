@@ -22,7 +22,7 @@
 .endm
 
 .macro put_char ch
-    move.b #\ch, %d0
+    moveq #\ch, %d0
     bsr _putb
 .endm
 
