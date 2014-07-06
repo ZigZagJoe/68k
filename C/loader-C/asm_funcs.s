@@ -134,7 +134,7 @@ _puts:
     jeq done
     
     jbsr _putb
-    jra puts
+    jra _puts
     
 done:
     rts
@@ -149,11 +149,11 @@ _puthexlong:
     move.l %D0, -(%SP)
 
     swap %D0
-    jbsr puthexword
+    jbsr _puthexword
     
     move.l (%SP), %D0
     and.l #0xFFFF, %D0
-    jbsr puthexword
+    jbsr _puthexword
 
     move.l (%SP)+, %D0
     rts
@@ -168,11 +168,11 @@ _puthexword:
     move.w %D0, -(%SP)
 
     lsr.w #8, %D0
-    jbsr puthexbyte
+    jbsr _puthexbyte
     
     move.w (%SP), %D0
     and.w #0xFF, %D0
-    jbsr puthexbyte
+    jbsr _puthexbyte
 
     move.w (%SP)+, %D0
     rts

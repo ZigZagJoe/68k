@@ -27,8 +27,8 @@
 .endm
 
 .macro put_str str
-    movea.l (%pc,\str), %a0
-    bsr puts
+    movea.l #\str, %a0
+    bsr _puts
 .endm
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -56,7 +56,7 @@ exception_handler:
     swap %d7
     lsr.w #8, %d7
     
-    | %d7 contains calling vector (highest byte of %pc)
+    | %d7 should contain calling vector
     
     move.w #24, %d2              | char count
 
@@ -79,7 +79,7 @@ exception_handler:
     
     movea.l %a0, %a1
    
-    bsr puts
+    bsr _puts
     
     movea.l %a1, %a0
     
@@ -88,7 +88,7 @@ _lf:
     jeq _fl
     
     addq.b #1, %d2
-    jra _lf
+    bra _lf
     
 _fl:
 
@@ -125,9 +125,8 @@ _fl:
     bsr _puthexlong
     
     cmp.b #9, %d7
-    jne not_tr
-    
-    | read instruction if in trace mode
+    bne not_tr
+      
     bsr trisp
     put_str _INST
     
@@ -142,7 +141,7 @@ not_tr:
     | flags
     move.w 64(%SP), %D1
     
-    jra contp
+    bra contp
     
     | larger exception frame for group 0 exceptions
 group0:
@@ -163,59 +162,54 @@ group0:
     | get access type flags
     move.w 64(%SP), %D2
     
-    
-    | print access info string
-    
     move.l #_WRITE, %a0
     btst #4, %d2
-    jeq _wr
+    beq _wr
     move.l #_READ, %a0
 _wr:
-    bsr puts
+    bsr _puts
     
     btst #3, %d2
-    jeq _not
+    beq _not
     
     move.l #_INSTR, %a0
-    bsr puts
+    bsr _puts
 _not:
     
     move.l #_USR, %a0
     btst #2, %d2
-    jeq _usr
+    beq _usr
     move.l #_SUPR, %a0
 _usr:
-    bsr puts
+    bsr _puts
     
     move.l #_PGM, %a0
     btst #0, %d2
-    jeq _pgm
+    beq _pgm
     move.l #_DATA, %a0
 _pgm:
-    bsr puts
-
-    | end access info string
+    bsr _puts
 
     | flags
     move.w 72(%SP), %D1
     
-    jbsr dblnewl
+    bsr dblnewl
     
 contp: 
     | continue: print out stack pointers, flags (in D1).
     
-    jbsr dblsp
+    bsr dblsp
     put_str _usersp
     move.l %USP, %A0
     move.l %A0, %D0
     bsr _puthexlong
     
-    jbsr dblsp
+    bsr.s dblsp
     put_str _supsp
     move.l 60(%sp), %D0
     bsr _puthexlong
     
-    jbsr dblnewl
+    bsr.s dblnewl
     
     put_str _flags    
     
@@ -224,37 +218,35 @@ contp:
     move.w #15, %D2
     bsr put_bin
     
-    jbsr dblnewl
+    bsr.s dblnewl
     move.w #62, %d1
-    jbsr putbash
-    jbsr dblnewl
+    bsr putbash
+    bsr.s dblnewl
      
-    | are we tracing?
     cmp.b #9, %d7
-    jeq return_eh
+    beq return_eh
     
-    | or are we trap 15?
     cmp.b #47, %d7
-    jeq return_eh
+    beq return_eh
     
 | end of handler:
 | loop forever, toggling between 0xEE and relevant number
 wait_for_reset:
     move.b #0xEE, (TIL311)
-    jbsr half_sec_delay
+    bsr.s half_sec_delay
     
     move.b %d6, (TIL311)
-    jbsr half_sec_delay
+    bsr.s half_sec_delay
 
-    jra wait_for_reset
+    bra wait_for_reset
     
 return_eh:
     movem.l (%sp)+, %d0-%d7/%a0-%a7
     rte
-
+    
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | various quick character put routines
-   
+  
 | two newlines   
 dblnewl:
     bsr put_newl
@@ -266,7 +258,7 @@ put_newl:
 
 | three spaces
 trisp:
-    jbsr put_sp
+    bsr.s put_sp
     
 | two spaces
 dblsp:
@@ -275,34 +267,8 @@ dblsp:
 | one space   
 put_sp:
     put_char ' '
-    rts  
-
-| put space, then %d1 bash characters
-putbash: 
-    jbsr put_sp
-    move.b #'#', %d0
-    subq.b #1, %d1
-__putbl:
-    bsr _putb
-    dbra %d1, __putbl
     rts
 
-|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| wait for half a second, while waiting for boot
-half_sec_delay:
-    move.l #40000,%d0                                 
-delay: 
-    bsr check_reset_cmd
-    jne do_reset
-    
-    sub.l #1, %d0
-    jne delay
-    rts
-
-do_reset:
-    jmp 0x80008
-    
-  
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | dump %d3 registers starting at %a0, newline after 4th
 | reg base name in %d2
@@ -310,7 +276,7 @@ do_reset:
 dump_regs:
     clr.b %d1
 dr_l:  
-    jbsr trisp
+    bsr.s trisp
     
     move.b %d1, %d0
     add.b %d2, %d0
@@ -318,63 +284,89 @@ dr_l:
     
     put_char ':'
     
-    bsr put_sp
+    bsr.s put_sp
     
     move.l (%a0)+, %d0
     bsr _puthexlong
     
-    addq.b #1, %d1
+    addi.b #1, %d1
     
     cmp.b #4, %d1
-    jne sk
-    jbsr put_newl
+    bne sk
+    bsr put_newl
     
 sk:
     cmp.b %d3, %d1
-    jne dr_l
+    bne dr_l
     
-    jbsr dblnewl
+    bsr.s dblnewl
     rts
 
+| put space, then %d1 bash characters
+putbash: 
+    bsr.s put_sp
+    move.b #'#', %d0
+    subq.b #1, %d1
+__putbl:
+    bsr _putb
+    dbra %d1, __putbl
+    rts
+ 
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| wait for half a second, while waiting for boot
+half_sec_delay:
+    move.l #40000,%d2                             
+delay: 
+    bsr check_reset_cmd
+    bne do_reset
+    
+    subq.l #1, %d2
+    jne delay
+    rts
+
+do_reset:
+    jmp 0x80008
+    
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | resolve a vector number to a string in %a0
 vec_num_to_str:
-    move.l (%pc,_VEC_USER), %a0
+    move.l #_VEC_USER, %a0
     cmp.b #64, %d0
     jge end
     
-    move.l (%pc,_VEC_RESERVED), %a0
+    move.l #_VEC_RESERVED, %a0
     cmp.b #48, %d0
     jge end
     
-    move.l (%pc,_VEC_TRAP), %a0
+    move.l #_VEC_TRAP, %a0
     cmp.b #32, %d0
     jge end
      
-    move.l (%pc,_VEC_AUTOVEC), %a0
+    move.l #_VEC_AUTOVEC, %a0
     cmp.b #25, %d0
     jge end   
              
-    move.l (%pc,_VEC_RESERVED), %a0
+    move.l #_VEC_RESERVED, %a0
     cmp.b #16, %d0
     jge end   
     
-    move.l (%pc,_VEC_UNINIT), %a0
+    move.l #_VEC_UNINIT, %a0
     cmp.b #15, %d0
     jge end   
     
-    move.l (%pc,_VEC_RESERVED), %a0
+    move.l #_VEC_RESERVED, %a0
     cmp.b #12, %d0
     jge end 
         
     andi.w #0xF, %d0
     lsl.b #2, %d0
-    move.l (%pc,vec_lookup), %a0
+    move.l #vec_lookup, %a0
     
     move.l (%a0, %d0.w), %a0
 end:
     rts
-  
+    
+
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | Strings
 
