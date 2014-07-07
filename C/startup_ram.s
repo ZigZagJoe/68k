@@ -29,7 +29,7 @@
     
     | due to use of dbra, we can clear a max of 256kb of RAM (65536 * sizeof(long))
 cbss:
-    moveq.l #0, (%a0)+            | clear [A0.l], save two cycles
+    clr.l (%a0)+                  | clear [A0.l]
     dbra %d0, cbss                | D0 != 0
      
 run:

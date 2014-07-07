@@ -3,13 +3,19 @@
 #include <loader.h>
 #include <flash.h>
 
+uint8_t base_per;
+
 // C handler called by ASM
 uint16_t handle_srec(uint8_t * start, uint32_t len, uint8_t fl) { 
+    base_per = 0;
+    
     // do sanity check parse run
     uint8_t ret = parseSREC(start,len,fl,0);
     
     if (ret) 
         return ret;
+        
+    base_per = 50;
     
     // if no errors, do programming
     // allow flash writes

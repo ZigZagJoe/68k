@@ -70,7 +70,7 @@ void putl(uint32_t l);
 uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed);
 
 //########################################################################
-#ifndef UPLOADER    /* ############ code for loader-C ################# */
+#ifdef BOOTLOADER            /* ############ code for loader-C ################# */
 
 #include <io.h>
 
@@ -78,7 +78,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
 // comment out the function call 
 // have ; so that if (x) dbgprintf(...) does not break stuff
 
-#else               /* ############ code for upload-loader ############ */
+#elif defined(UPLOADER)      /* ############ code for upload-loader ############ */
           
 #include <stdio.h>
 #define dbgprintf printf
@@ -92,7 +92,7 @@ extern uint8_t MEMORY[0x100000];
 #define flash_write_byte(A,V)  MEMORY[A] = V
 #define MEM(X)                 MEMORY[X]
 #define ADDR_TO_SECTOR(X)      (((X) & 0x3FFFF) >> 12)  
-    
+
 #endif
 
 #endif

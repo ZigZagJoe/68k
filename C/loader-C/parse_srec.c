@@ -9,7 +9,7 @@
 
 // global state vars
 uint8_t *srec;          // pointer to memory containing s record
-uint32_t pos;           // current position in srec
+uint32_t srec_pos;      // current position in srec
 uint32_t srec_sz;       // size of srec, including trailing null
 uint8_t write_armed;    // boolean if writes are enabled or not
 
@@ -24,15 +24,19 @@ uint8_t checksum;       // checksum char
 uint8_t erased_sectors[SECTOR_COUNT];
                         // array containing sectors that were erased
 
+#ifndef UPLOADER 
+uint16_t perc_interv;
+#endif
+
 // read a character from srec
 uint8_t readch() {
-    if (pos >= srec_sz) {
+    if (srec_pos >= srec_sz) {
         errno |= EARLY_EOF;
         dbgprintf("Unexpected EOF in readch()\n");
         return 0;
     }
     
-    char ch = srec[pos++];
+    char ch = srec[srec_pos++];
 
     // if not a binary srec, throw an exception if character is not in a valid range
     if (!(wr_flags & BINARY_SREC) && ((ch < '0' || ch > 'z') && ch !='\n' && ch != '\r')) {
@@ -162,7 +166,7 @@ uint8_t write(uint32_t addr, uint8_t byte) {
 
 // parse a s-record, either test writing or writing for real (based on armed)
 uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed) {
-    
+
     // local variables 
     char Sc; // char to hold 'S'
     uint8_t typ, len, file_crc, loc_crc;
@@ -176,10 +180,25 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
     write_armed = armed;
 
     rec_cnt = 0;
-    pos = 0;
+    srec_pos = 0;
     errno = 0;
     entry_point = 0;
     program_sz = 0;
+
+#ifndef UPLOADER     
+    // i hate gcc inline ASM so much
+    // calculate number of bytes per percentage point
+    // seriously fuck gcc inline asm
+    // we need to make use of the fact the 68k divu instruction
+    // takes in a 32 bit number to be divided
+    __asm ( 
+            "move.l %1, %%d0\n"
+            "divu #100, %%d0\n"
+            "move.w %%d0, (%0)\n"      
+        :"=m"(perc_interv)
+        :"d"(buffer_len)
+        :"%%d0"); 
+#endif
     
     // clear sector count array
     for (uint8_t i = 0; i < SECTOR_COUNT; i++)
@@ -281,8 +300,12 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
             
         BREAK_IF_ERROR();
         
-        if (srec[pos] == 0) // we're done
+        if (srec[srec_pos] == 0) // we're done
             break;        
+            
+#ifndef UPLOADER       
+        disp_pos();
+#endif
     }
 
     return errno;

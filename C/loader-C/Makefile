@@ -6,6 +6,7 @@ LINK_SCRIPT = loader-C.ld
 NO_CORELIB = 1
 NO_STARTUP = 1
 OPTIMIZE = s
+CFLAGS += -DBOOTLOADER
 
 DATE := $(shell date)
 OBJS += build_date.o

@@ -108,7 +108,7 @@ loader_start:
     
     cmp.w #0xB007, 0x400       | check addr
     jeq reset_addr             | if it is set to magic val, do not (possibly) boot from rom
-                               | as we were reset while waiting for command to stay in loader
+                               | as we were reset during the last stay-in-loader timeout period
 
     | check if boot magic is present on sector 1
     cmp.l #bootable_magic, (sector1_entry)
@@ -234,7 +234,7 @@ set_addr:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | command to dump a region of memory
 memory_dump:
-    TILDBG D0
+    TILDBG DC
     
     move.w #0x10AD, %d0
     bsr _putw
@@ -279,7 +279,7 @@ dump_end:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | command to handle s-record loaded into RAM
 do_parse_srec:
-    TILDBG DC
+    TILDBG D0
     
     move.l #0xD0E881CC, %d0    | tell host we are initiating write
     bsr _putl

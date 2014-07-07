@@ -15,26 +15,21 @@ print_hex:
     tst.l %d0              | check for zero
     beq rz
     
-    move.l #_hexchars, %a0
+    lea (%pc,_hexchars), %a0
     
-    jsr puthex             | begin recursive print
+    bsr puthex             | begin recursive print
     
 dec_r:
     rts
     
 rz: 
     move.b #'0', %d0
-    jsr putc
+    bsr putc
     bra dec_r
 
 puthex:
-    tst.l %d0
-    jeq ret_hex
-    
-    tst.b %d1
-    jeq ret_hex
-    
-    subi #1, %d1
+    subi.b #1, %d1
+    jmi ret_hex
     
     move.b %d0, %d2
     and.w #0xF, %d2
@@ -42,10 +37,13 @@ puthex:
     move.b (%a0, %d2.W), -(%sp)
     
     lsr.l #4, %d0
-    jsr puthex
+    jeq begin_ret    | if result is 0
     
+    bsr puthex
+     
+begin_ret: 
     move.b (%sp)+, %d0
-    jsr putc
+    bsr putc
    
 ret_hex: 
     rts
@@ -54,7 +52,18 @@ ret_hex:
 
 
 main:
-    move.b #0x11, TIL311
+
+    move.l #0x11111111, %d0
+    move.l #0x22222222, %d1
+    move.l #0x33333333, %d2
+    move.l #0x44444444, %d3
+    move.l #0x55555555, %d4
+    move.l #0x66666666, %d5
+    move.l #0x77777777, %d6
+    move.l #0x88888888, %d7
+    
+    
+    trap #14
   
     move.b #8, %d1
     move.l #0x1003123, %d0
