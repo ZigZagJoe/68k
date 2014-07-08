@@ -56,15 +56,6 @@
 // 256kb / 4kb sectors
 #define SECTOR_COUNT      64
 
-// serial utility functions
-// provided by loader.s
-uint32_t getl();
-uint16_t getw();
-uint8_t  getb();
-void putb(uint8_t  b);
-void putw(uint16_t w);
-void putl(uint32_t l);
-
 // srec parsing
 // provided by parse_srec.c
 uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed);
@@ -74,9 +65,29 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
 
 #include <io.h>
 
+// prototypes for ASM functions
+uint8_t getb();
+uint16_t getw();
+uint32_t getl();
+
+void putw();
+void putb();
+void putl();
+
+void puts(char * str);
+
+void print_dec(uint32_t d);
+void puthexlong(uint32_t l);
+void puthexword(uint32_t w);
+void puthexbyte(uint32_t b);
+
+uint8_t check_reset_cmd();
+
+void srec_progress();
+
 #define dbgprintf ; //
 // comment out the function call 
-// have ; so that if (x) dbgprintf(...) does not break stuff
+// have ; so that if (x) dbgprintf(...) does not break
 
 #elif defined(UPLOADER)      /* ############ code for upload-loader ############ */
           

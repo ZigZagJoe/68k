@@ -3,6 +3,7 @@
 #include <loader.h>
 #include <flash.h>
 
+// used in percentage readout
 uint8_t base_per;
 
 // C handler called by ASM

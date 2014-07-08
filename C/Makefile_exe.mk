@@ -86,7 +86,7 @@ commit:
 
 # Open source in default editor, on mac.
 open:
-	-edit $(SRCS) 
+	-edit $(SRCS) Makefile
 	
 run:	$(BIN)
 ifeq ($(CODE_LOC),rom)

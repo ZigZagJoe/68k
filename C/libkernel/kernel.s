@@ -270,8 +270,8 @@ _ret_swap:
     rte
 
 | ensure the next task will not get less than its fair share of time due 
-| to the task before yielding. instead, cause the next automatic interrupt 
-| to be skipped. the swapped task then gets 10ms + yielding task remaining time
+| to the previous task yielding. instead, cause the next automatic interrupt 
+| to be skipped, so the swapped task then gets 10ms + yielding task time left
 _user_swap:
     move.b #1, (_skip_next_tick)
     bra _swap_task
@@ -369,7 +369,7 @@ _no_args:
     move.l #_task_entry, 90(%a2)        | set PC to task begin struct
     
     move.l %a3, 86(%a2)                 | set stack pointer
-    move.w #0, 94(%a2)                  | set flags (none)
+    move.w #0, 94(%a2)                  | set flags (none - currently)
     move.b #1, (3, %a2)                 | mark as runnable
              
     move.l %a2, %d0                     | pointer in %d0 high word...

@@ -24,7 +24,7 @@ uint8_t checksum;       // checksum char
 uint8_t erased_sectors[SECTOR_COUNT];
                         // array containing sectors that were erased
 
-#ifndef UPLOADER 
+#ifdef BOOTLOADER 
 uint16_t perc_interv;
 #endif
 
@@ -185,19 +185,20 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
     entry_point = 0;
     program_sz = 0;
 
-#ifndef UPLOADER     
-    // i hate gcc inline ASM so much
+#ifdef BOOTLOADER      
+    // i hate gcc inline ASM so many
     // calculate number of bytes per percentage point
-    // seriously fuck gcc inline asm
-    // we need to make use of the fact the 68k divu instruction
-    // takes in a 32 bit number to be divided
+    // we need to make use of the fact the 68k divu 
+    // instruction takes a 32 bit number to be divided
+    // this allows a max file size of 6,553,599 bytes
     __asm ( 
             "move.l %1, %%d0\n"
             "divu #100, %%d0\n"
             "move.w %%d0, (%0)\n"      
-        :"=m"(perc_interv)
-        :"d"(buffer_len)
-        :"%%d0"); 
+         :"=m"(perc_interv)    // outputs
+         :"d"(buffer_len)      // inputs
+         :"%%d0"               // clobber list
+    );        
 #endif
     
     // clear sector count array
@@ -303,9 +304,10 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
         if (srec[srec_pos] == 0) // we're done
             break;        
             
-#ifndef UPLOADER       
-        disp_pos();
+#ifdef BOOTLOADER        
+        srec_progress();
 #endif
+
     }
 
     return errno;
