@@ -1,7 +1,6 @@
 /* S-record parsing */
 
 #include <stdint.h>
-
 #include <loader.h>
 
 #define BREAK_IF_ERROR()    if (errno) break
@@ -22,10 +21,6 @@ uint8_t checksum;       // checksum char
 
 uint8_t erased_sectors[SECTOR_COUNT];
                         // array containing sectors that were erased
-
-#ifdef BOOTLOADER 
-uint16_t perc_interv;
-#endif
 
 // read a character from srec
 uint8_t readch() {
@@ -183,22 +178,6 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
     errno = 0;
     entry_point = 0;
     program_sz = 0;
-
-#ifdef BOOTLOADER      
-    // i hate gcc inline ASM so many
-    // calculate number of bytes per percentage point
-    // we need to make use of the fact the 68k divu 
-    // instruction takes a 32 bit number to be divided
-    // this allows a max file size of 6,553,599 bytes
-    __asm ( 
-            "move.l %1, %%d0\n"
-            "divu #100, %%d0\n"
-            "move.w %%d0, (%0)\n"      
-         :"=m"(perc_interv)    // outputs
-         :"d"(buffer_len)      // inputs
-         :"%%d0"               // clobber list
-    );        
-#endif
     
     // clear sector count array
     for (uint8_t i = 0; i < SECTOR_COUNT; i++)

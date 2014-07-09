@@ -13,3 +13,5 @@
 
 void srec_progress();
 // update progress % on TIL311 displays (in decimal!)
+
+extern uint16_t perc_interv;
