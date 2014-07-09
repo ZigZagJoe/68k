@@ -3,12 +3,8 @@
 // global var to contain a magic arm variable
 volatile uint32_t flash_protect_var = 0x12345678;
 
-// this function is first, so if execution rolls through this region, 
-// the flash protect var will be thrashed and the flash erase will fail
-
-void flash_arm(uint32_t magic) {
-    flash_protect_var = magic;
-}
+// break execution if it rolls through this region
+__asm("illegal");
 
 void flash_erase_sector(uint8_t sector) {
     if (flash_protect_var != FLASH_ARM) 
@@ -42,4 +38,8 @@ void flash_write_byte(uint8_t *ptr, uint8_t ch) {
 
     *ptr = ch;
     DELAY(3);              // waste approximately 20 us to wait for write to complete
+}
+
+void flash_arm(uint32_t magic) {
+    flash_protect_var = magic;
 }

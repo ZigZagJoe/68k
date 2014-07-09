@@ -1,9 +1,8 @@
-
+| 68k global bootloader code
 .text
 .align 2
 
 .set TIL311, 0xC8000      | til311 displays
-
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | function imports/exports
@@ -34,9 +33,8 @@
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | load all vectors with exception_handler
 init_vectors:
-    clr.l %d0
+    moveq.l #0, %d0
     move.l %d0, %a0
-    
     move.w #255, %d1
     
 load_vec:
@@ -97,9 +95,6 @@ _fl:
     sub.b %d2, %d1
     
     bsr putbash
-    
-    | 27 in header
-    
     bsr dblnewl
     
     | dump registers
@@ -333,40 +328,62 @@ do_reset:
 vec_num_to_str:
     lea (%pc,_VEC_USER), %a0
     cmp.b #64, %d0
-    jge end
+    jge vec_end
     
     lea (%pc,_VEC_RESERVED), %a0
     cmp.b #48, %d0
-    jge end
+    jge vec_end
     
     lea (%pc,_VEC_TRAP), %a0
     cmp.b #32, %d0
-    jge end
+    jge vec_end
      
     lea (%pc,_VEC_AUTOVEC), %a0
     cmp.b #25, %d0
-    jge end   
+    jge vec_end   
              
     lea (%pc,_VEC_RESERVED), %a0
     cmp.b #16, %d0
-    jge end   
+    jge vec_end   
     
     lea (%pc,_VEC_UNINIT), %a0
     cmp.b #15, %d0
-    jge end   
+    jge vec_end   
     
     lea (%pc,_VEC_RESERVED), %a0
     cmp.b #12, %d0
-    jge end 
-        
+    jge vec_end 
+      
+    | clear %d0 upper bits  
     andi.w #0xF, %d0
-    lsl.b #2, %d0
-    lea (%pc,vec_lookup), %a0
     
-    move.l (%a0, %d0.w), %a0
-end:
+    | quick %d0 * 2 (size of word)
+    add.b %d0, %d0
+
+    | read offset from vec_lookup[%d0] (pc-relative addressing)
+    move.w (vec_lookup, %pc, %d0.W), %d0
+    
+    | load address relative to %pc into %a0
+    | i do not know why the two is required.
+    lea (2, %pc, %d0.W), %a0
+    
+vec_end:
     rts
     
+| vector lookup table
+vec_lookup:
+    .word _VEC_00 - vec_end
+    .word _VEC_00 - vec_end
+    .word _VEC_02 - vec_end
+    .word _VEC_03 - vec_end
+    .word _VEC_04 - vec_end
+    .word _VEC_05 - vec_end
+    .word _VEC_06 - vec_end
+    .word _VEC_07 - vec_end
+    .word _VEC_08 - vec_end
+    .word _VEC_09 - vec_end
+    .word _VEC_10 - vec_end
+    .word _VEC_11 - vec_end
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | Strings
@@ -406,18 +423,3 @@ _VEC_TRAP:      .byte 0x7A;.string "Trap"
 _VEC_AUTOVEC:   .byte 0xA7;.string "Autovector"
 _VEC_RESERVED:  .byte 0x5E;.string "{reserved}"
 _VEC_UNINIT:    .byte 0x1A;.string "Uninitialized ISR"
-
-.align 2
-vec_lookup:
-    .long _VEC_00
-    .long _VEC_00
-    .long _VEC_02
-    .long _VEC_03
-    .long _VEC_04
-    .long _VEC_05
-    .long _VEC_06
-    .long _VEC_07
-    .long _VEC_08
-    .long _VEC_09
-    .long _VEC_10
-    .long _VEC_11
