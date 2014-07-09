@@ -60,10 +60,9 @@
 // provided by parse_srec.c
 uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t armed);
 
-//########################################################################
-#ifdef BOOTLOADER            /* ############ code for loader-C ################# */
+#include <srec_private.h>
 
-#include <io.h>
+#ifdef BOOTLOADER
 
 // prototypes for ASM functions
 uint8_t getb();
@@ -83,27 +82,7 @@ void puthexbyte(uint32_t b);
 
 uint8_t check_reset_cmd();
 
-void srec_progress();
-
-#define dbgprintf ; //
-// comment out the function call 
-// have ; so that if (x) dbgprintf(...) does not break
-
-#elif defined(UPLOADER)      /* ############ code for upload-loader ############ */
-          
-#include <stdio.h>
-#define dbgprintf printf
-
-extern uint8_t MEMORY[0x100000];
-
-// disable these functions.
-#define flash_erase_sector ; //
-#define flash_arm ;//
-
-#define flash_write_byte(A,V)  MEMORY[A] = V
-#define MEM(X)                 MEMORY[X]
-#define ADDR_TO_SECTOR(X)      (((X) & 0x3FFFF) >> 12)  
-
 #endif
 
 #endif
+

@@ -1,6 +1,5 @@
 /* S-record parsing */
 
-#include <flash.h>
 #include <stdint.h>
 
 #include <loader.h>

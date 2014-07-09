@@ -171,7 +171,7 @@ cmd_byte:
     subi.b #0xC0, %d0          | get table offset
     
     cmp.b #0xF, %d0
-    jeq reset_addr             | reset is not a subroutine... jump directly.
+    jeq reset_addr             | 'reset' is not a subroutine, so jump directly.
     jhi __cmd_oor              | out of range command (ie. not valid)
     
     and.w #0xF, %d0
