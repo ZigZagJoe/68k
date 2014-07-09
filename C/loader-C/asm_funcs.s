@@ -85,6 +85,8 @@ srec_progress:
     or.b %d0, %d1             | d1 = 0x72
     
     move.b %d1, (TIL311)
+    move.b %d1, %d0
+    bsr _putb
 
     rts
 

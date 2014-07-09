@@ -455,7 +455,7 @@ int main (int argc, char ** argv) {
    			}
     
             if (i % 512 == 0) {
-                printf("%6.2f %%\x8\x8\x8\x8\x8\x8\x8\x8",((float)i * 100) / size);
+                printf("%3d %%\x8\x8\x8\x8\x8",(int)((float)i * 100) / size);
                 fflush(stdout);
                 msleep(BAUD_DELAY);
                 // sleep because the ftdi driver is terrible, so we hard rate limit
@@ -472,7 +472,7 @@ int main (int argc, char ** argv) {
         }
         
         // done!
-        printf("%6.2f %%\n\n",((float)100));
+        printf("%3d %%\n\n",100);
         
         uint64_t start = millis();
         
@@ -561,10 +561,10 @@ int main (int argc, char ** argv) {
                 uint32_t ok = readl();
                 
                 if (ok != SREC_GREET_MAGIC) {
-                    printf("\nSync error executing srec (bad greeting). Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0E881CC);
+                    printf("\nSync error writing srec (bad greeting). Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0E881CC);
                     return 1;
                 } else {
-                    printf(" in progress... ");
+                    printf(" in progress...\n");
                     fflush(stdout);
                 }
                 
@@ -572,22 +572,26 @@ int main (int argc, char ** argv) {
                 
                 uint8_t wr_flags = readb();
     
-                /*char ch;
-                
-                while ((ch = sergetc(fd)) != 0xC0) {
-                    printf("%c",ch);
-                    fflush(stdout);
-                }*/
-                
                 // this can take a while, so disable serial timeouts
                 can_timeout = false;
-                uint32_t c0de = readw();
+                
+                uint8_t ch;
+                
+                while ((ch = readb()) != 0xC0) {
+                    printf("%3hhX %%\x8\x8\x8\x8\x8",ch);
+                    fflush(stdout);
+                }
+                
+                printf("100 %%\n\n");
+                
+                uint32_t c0de = (((uint16_t)ch)<< 8) | readb();
+                
                 can_timeout = true;
                 
                 uint64_t end = millis();
                 
                 if (c0de != SREC_CODE_MAGIC) {
-                    printf("\nSync error executing srec (bad c0de). Reset board and try again.\nGot %04X, expected %04X\n\n", c0de, SREC_CODE_MAGIC);
+                    printf("Sync error writing srec (bad c0de). Reset board and try again.\nGot %04X, expected %04X\n\n", c0de, SREC_CODE_MAGIC);
                     return 1;
                 }
                 
@@ -595,7 +599,7 @@ int main (int argc, char ** argv) {
                 uint16_t tail_magic = readw();
                 
                 if (tail_magic != SREC_TAIL_MAGIC) {
-                    printf("\nSync error executing srec (bad tail). Reset board and try again.\nGot %04X, expected %04X\n\n", tail_magic, SREC_TAIL_MAGIC);
+                    printf("Sync error writing srec (bad tail). Reset board and try again.\nGot %04X, expected %04X\n\n", tail_magic, SREC_TAIL_MAGIC);
                     return 1;
                 }    
                 
@@ -610,7 +614,7 @@ int main (int argc, char ** argv) {
                     return 1;
                 }
               
-                printf(" completed successfully in %d ms.\n\n", end-start);
+                printf("Write completed successfully in %d ms.\n\n", end-start);
                 
                 if (!boot_srec) {
                     no_terminal = true;
