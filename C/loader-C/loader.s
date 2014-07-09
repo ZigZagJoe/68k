@@ -2,7 +2,7 @@
 | 68k bootloader - main code
 
 .align 2
-.data
+.text
 
 | entry point
 .global loader_start
@@ -64,31 +64,11 @@
    misc: a flash address can be nulled later without erasing the sector
 */  
 
-/* could save 32 bytes and increase speed by storing offsets relative to jump point */
-cmd_jmp_table:
-    .long __bad_cmd         | C0
-    .long set_flash_wr      | C1
-    .long set_loader_wr     | C2
-    .long set_binary_srec   | C3
-    .long __bad_cmd         | C4
-    .long __bad_cmd         | C5
-    .long __bad_cmd         | C6
-    .long __bad_cmd         | C7
-    .long __bad_cmd         | C8
-    .long __bad_cmd         | C9
-    .long memory_dump       | CA
-    .long boot_ram          | CB
-    .long get_qcrc          | CC
-    .long do_parse_srec     | CD
-    .long set_addr          | CE
-    .long reset_addr        | CF (never used as reset_addr can not use rts)
-
 | srec flags
 .set FLAG_WR_FLASH,    1
 .set FLAG_WR_LOADER,   2
 .set FLAG_BIN_SREC,    4
   
-.text
 #####################################################################
 | entry point of bootloader code in RAM
 loader_start: 
@@ -115,7 +95,7 @@ loader_start:
     jeq wait_for_command       | if it is, wait for a command to stay in bootloader
      
 reset_addr:
-    TILDBG B7                  | bootloader ready!
+    TILDBG B9                  | bootloader ready!
     clr.w 0x400
     
     | initialize variables
@@ -131,7 +111,7 @@ loop:
     
     | check to see if the GPIO for command byte is low
     btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
-    jeq cmd_byte               | gpio is 0; command byte!
+    jeq handle_cmd             | gpio is 0; command byte!
     
     move.b %d0, (UDR)          | not a command, echo it back
     move.b %d0, (%a4)+         | store to address, postincrement
@@ -142,7 +122,7 @@ loop:
     rol.l #1, %d7
     
     jra loop                   | and back to start we go
- 
+
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | wait for a command to stay in bootloader, otherwise boot
 wait_for_command:
@@ -164,9 +144,10 @@ _cmd_w_loop:
     TILDBG BF   
     jmp (sector1_entry)
     
+    
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | execute commmand byte in %d0
-cmd_byte:
+handle_cmd:
     
     subi.b #0xC0, %d0          | get table offset
     
@@ -174,25 +155,59 @@ cmd_byte:
     jeq reset_addr             | 'reset' is not a subroutine, so jump directly.
     jhi __cmd_oor              | out of range command (ie. not valid)
     
+    | put return address on stack as subroutines use RTS
+    | so, we return straight to the loop function!
+    pea loop
+    
     and.w #0xF, %d0
-    lsl.w #2, %d0              | ind * 4 (size of long)
     
-    movea.l #cmd_jmp_table, %a0 | load table address
-    move.l (%a0, %d0.W), %a0   | read address at offset
-    jsr (%a0)                  | jump to address
+    | quick %d0 * 2 (size of word)
+    add.b %d0, %d0
     
-    jra loop
+    | read offset from cmd_jmp_table[%d0] (w/ pc-relative addressing)
+    move.w (cmd_jmp_table, %pc, %d0.W), %d0
+
+    | jump to address relative to %pc
+    | 2: %pc has moved past instruction word when calculating address
+    | 'The value in the PC is the address of the extension word'
+    jmp (2, %pc, %d0.W)        | jump to address
     
+jmp_pt:
+    | point for calculating jump offsets against
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| commands
+
+| jump table for commands
+cmd_jmp_table:
+    .word __bad_cmd        - jmp_pt | C0
+    .word set_flash_wr     - jmp_pt | C1
+    .word set_loader_wr    - jmp_pt | C2
+    .word set_binary_srec  - jmp_pt | C3
+    .word __bad_cmd        - jmp_pt | C4
+    .word __bad_cmd        - jmp_pt | C5
+    .word __bad_cmd        - jmp_pt | C6
+    .word __bad_cmd        - jmp_pt | C7
+    .word __bad_cmd        - jmp_pt | C8
+    .word __bad_cmd        - jmp_pt | C9
+    .word memory_dump      - jmp_pt | CA
+    .word boot_ram         - jmp_pt | CB
+    .word get_qcrc         - jmp_pt | CC
+    .word do_parse_srec    - jmp_pt | CD
+    .word set_addr         - jmp_pt | CE
+
+| command out of range
 __cmd_oor:
-    TILDBG B0                  | command out of range
+    TILDBG B0                  
     jra loop
-    
+   
+| not an implemented command 
 __bad_cmd:
-    TILDBG BC                  | not an implemented command
+    TILDBG BC                  
     rts
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||  
-| flag setting handlers
+| flag setting commands
  
 | parse binary srec
 set_binary_srec:
@@ -216,7 +231,7 @@ set_loader_wr:
     rts
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||       
-| set address to load data to
+| command: set address to load data to
 set_addr:
     TILDBG 1A
     
@@ -232,7 +247,7 @@ set_addr:
     rts
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
-| command to dump a region of memory
+| command: dump a region of memory
 memory_dump:
     TILDBG DC
     
@@ -277,7 +292,7 @@ dump_end:
     rts
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
-| command to handle s-record loaded into RAM
+| command: handle s-record loaded into RAM
 do_parse_srec:
     TILDBG D0
     
@@ -320,7 +335,7 @@ bad_srec:
     rts
         
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
-| get crc command
+| command: get current qcrc
 get_qcrc:
     TILDBG CC                  | display code
     
@@ -336,7 +351,7 @@ get_qcrc:
     rts
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
-| boot command
+| command: boot from last address loaded
 boot_ram:
     TILDBG BB                  | display boot code
     jmp (%a5)                  | jump to the code loaded into RAM

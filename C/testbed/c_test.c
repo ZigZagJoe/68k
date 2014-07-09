@@ -50,6 +50,22 @@ int main() {
     memset(0x4000,0,0x30000);
     memset(0x34000,0,0x30000);
     
+    switch (getc()) {
+        case 1:
+          __asm volatile ("nop\n");
+        case 2:
+          __asm volatile ("nop\n");
+        case 3:
+          __asm volatile ("nop\n");
+        case 4:
+          __asm volatile ("nop\n");
+        case 5:
+              __asm volatile ("nop\n");
+        case 6:
+            __asm volatile ("nop\n");
+            break;
+    }
+    
     //mem_dump(0x4000, 2500);
     
   //  uint32_t i = 0;

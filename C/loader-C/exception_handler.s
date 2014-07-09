@@ -364,7 +364,8 @@ vec_num_to_str:
     move.w (vec_lookup, %pc, %d0.W), %d0
     
     | load address relative to %pc into %a0
-    | i do not know why the two is required.
+    | 2: %pc has moved past instruction word when calculating address
+    | 'The value in the PC is the address of the extension word'
     lea (2, %pc, %d0.W), %a0
     
 vec_end:
