@@ -543,7 +543,7 @@ int main (int argc, char ** argv) {
 
                 // apply relevant flags
                     
-                if (flash_wr   && !SET_FLAG("flash write", CMD_SET_FLWR, FLWR_MAGIC))
+                if (flash_wr && !SET_FLAG("flash write", CMD_SET_FLWR, FLWR_MAGIC))
                     return 1;
                     
                 if (loader_wr && !SET_FLAG("loader write", CMD_SET_LDWR, LDWR_MAGIC))
@@ -573,10 +573,12 @@ int main (int argc, char ** argv) {
                 uint8_t wr_flags = readb();
     
                 // this can take a while, so disable serial timeouts
+                // only relevant for older bootloader versions
                 can_timeout = false;
                 
                 uint8_t ch;
                 
+                // echo progress
                 while ((ch = readb()) != 0xC0) {
                     printf("%3hhX %%\x8\x8\x8\x8\x8",ch);
                     fflush(stdout);
@@ -584,6 +586,7 @@ int main (int argc, char ** argv) {
                 
                 printf("100 %%\n\n");
                 
+                // read the lower byte of what hopefully is 0xC0DE
                 uint32_t c0de = (((uint16_t)ch)<< 8) | readb();
                 
                 can_timeout = true;

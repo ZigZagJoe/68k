@@ -14,7 +14,7 @@
 #define FAILED_WRITE         4
 #define FORMAT_ERROR         8
 #define EARLY_EOF           16
-#define INVALID_CHAR        32
+#define __UNUSED_ERROR      32
 #define CRC_ERROR           64
 #define PROG_FAILURE       128
 

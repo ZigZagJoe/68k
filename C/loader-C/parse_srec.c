@@ -30,16 +30,7 @@ uint8_t readch() {
         return 0;
     }
     
-    char ch = srec[srec_pos++];
-
-    // if not a binary srec, throw an exception if character is not in a valid range
-    if (!(wr_flags & BINARY_SREC) && ((ch < '0' || ch > 'z') && ch !='\n' && ch != '\r')) {
-        dbgprintf("Invalid character encountered\n");
-        errno |= INVALID_CHAR;
-        return 0;
-    }
-    
-    return ch;
+    return srec[srec_pos++];
 }
 
 // read a nibble (one hex char)
