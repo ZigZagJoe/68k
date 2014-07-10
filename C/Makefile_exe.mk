@@ -22,6 +22,10 @@ else
     CODE_LOC := $(shell echo $(CODE_LOC) | tr A-Z a-z)
 endif
 
+ifeq ($(CODE_LOC),rom)
+    ULFLAGS += -f
+endif
+
 ifdef USE_KERNEL
     LIBS+= -lkernel
     # Only required if using kernel
@@ -77,7 +81,7 @@ LSTS  = $(SRC_C:.c=.lst)
 all:	$(BIN)
 
 clean:
-	$(RM) $(OBJS) $(BIN) $(LSTS) $(PRJ).bin $(PRJ).l68 $(PRJ).srb
+	$(RM) $(OBJS) $(BIN) $(LSTS) $(PRJ).bin $(PRJ).l68
 	
 commit:
 	git diff
@@ -90,14 +94,14 @@ open:
 	
 run:	$(BIN)
 ifeq ($(CODE_LOC),rom)
-	@echo ERROR: Can only upload a ROM project.
+	@echo ERROR: Can only upload a ROM project!
 else
 	upload-strapper $(PRJ).bin
 endif
 	
 upload: $(BIN)
 	srec2srb $(BIN) /tmp/_$(PRJ).srb
-	upload-strapper -x -b -s -f /tmp/_$(PRJ).srb
+	upload-strapper -x -b -s $(ULFLAGS) /tmp/_$(PRJ).srb
     
 listing: $(LSTS)
 	
