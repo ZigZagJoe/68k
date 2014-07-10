@@ -99,9 +99,9 @@ getl:
     bsr getb
     lsl.w #8, %d0
     bsr getb
-    lsl.l #8, %d0
+    swap %d0
     bsr getb
-    lsl.l #8, %d0
+    lsl.w #8, %d0
     bsr getb
     rts
     
@@ -246,17 +246,17 @@ print_dec:
 | print number in %d0, return character count in %d0
 | %d0 max value: 655359    
 _print_dec:
-    move.w %d1, -(%sp)             | save %d1
-    clr.b %d1                      | character count
+    move.w %d1, -(%sp)          | save %d1
+    clr.b %d1                   | character count
     
-    tst.l %d0                      | check for zero
+    tst.l %d0                   | check for zero
     jeq rz
     
-    jbsr pr_dec_rec                | begin recursive print
+    jbsr pr_dec_rec             | begin recursive print
     
 dec_r:
-    move.b %d1, %d0                | set up return value
-    move.w (%sp)+, %d1             | restore %d1
+    move.b %d1, %d0             | set up return value
+    move.w (%sp)+, %d1          | restore %d1
     rts
     
 rz: 
@@ -265,16 +265,18 @@ rz:
 
 | recursive decimal print routine
 pr_dec_rec:
-    tst.l %d0
-    jeq pr_ret
-    
     divu #10, %d0
     swap %d0
     move.w %d0, -(%sp)         | save remainder
     clr.w %d0                  | clear remainder
     swap %d0                   | back to normal
+    jeq no_more_digits         | swap sets Z if reg is zero - how cool!
+    
     jbsr pr_dec_rec            | get next digit
+    
+no_more_digits:
     move.w (%sp)+, %d0         | restore remainder
+    
 ret_zero:
     addi.b #'0', %d0           | turn it into a character
     jbsr _putb                 | print

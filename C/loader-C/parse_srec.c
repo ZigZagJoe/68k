@@ -266,7 +266,7 @@ uint8_t parseSREC(uint8_t * buffer, uint32_t buffer_len, uint8_t fl, uint8_t arm
             break;
         }
         
-        while (readch() != '\n' && !errno); // garbage at end of line...
+        while (readch() != '\n' && !errno); // garbage at end of line, like \r
             
         BREAK_IF_ERROR();
         

@@ -7,19 +7,11 @@
 | entry point
 .global loader_start
 
-| C-callable serial functions
-.global putb
-.global putw
-.global putl
-.global getb
-.global getw
-.global getl
-
 | see c_funcs.c
 .extern handle_srec
 .extern init_vectors
 
-| see loader_funcs.s
+| see asm_funcs.s
 .extern getw
 .extern getl
 .extern getb
@@ -86,7 +78,7 @@ loader_start:
     
     bsr init_vectors
     
-    cmp.w #0xB007, 0x400       | check addr
+    cmpi.w #0xB007, 0x400      | check addr
     jeq reset_addr             | if it is set to magic val, do not (possibly) boot from rom
                                | as we were reset during the last stay-in-loader timeout period
 
@@ -116,7 +108,7 @@ loop:
     move.b %d0, (UDR)          | not a command, echo it back
     move.b %d0, (%a4)+         | store to address, postincrement
 
-    addi.l #1, %d6             | bytecount ++
+    addq.l #1, %d6             | bytecount ++
     
     eor.b %d0, %d7             | qcrc update
     rol.l #1, %d7
@@ -323,7 +315,7 @@ do_parse_srec:
     
     clr.b %d5                  | clear write flags
    
-    cmp.b #0, %d0
+    tst.b %d0
     jne bad_srec
     
     TILDBG 0C    
@@ -359,13 +351,13 @@ boot_ram:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
 | functions
 
-| initialize registers with load address in %d0
+| initialize var-registers with address in %d0
 init_vars:
     movea.l %d0, %a4           | set address to load to ...
     movea.l %d0, %a5           | ... and save boot address
     clr.l %d6                  | bytecount = 0
-    clr.l %d5                  | flash writes disallowed
-    move.l #0xDEADC0DE, %d7    | init qcrc
+    clr.l %d5                  | clear flags
+    move.l #0xDEADC0DE, %d7    | init qcrc value
     rts
    
 # EOF loader.s

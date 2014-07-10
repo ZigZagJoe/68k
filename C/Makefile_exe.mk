@@ -81,7 +81,7 @@ LSTS  = $(SRC_C:.c=.lst)
 all:	$(BIN)
 
 clean:
-	$(RM) $(OBJS) $(BIN) $(LSTS) $(PRJ).bin $(PRJ).l68
+	$(RM) $(OBJS) $(BIN) $(LSTS) $(PRJ).bin $(PRJ).l68 $(PRJ).map
 	
 commit:
 	git diff
@@ -90,7 +90,7 @@ commit:
 
 # Open source in default editor, on mac.
 open:
-	-edit $(SRCS) Makefile
+	-edit $(SRC_C) $(SRC_S) Makefile
 	
 run:	$(BIN)
 ifeq ($(CODE_LOC),rom)
@@ -106,7 +106,7 @@ upload: $(BIN)
 listing: $(LSTS)
 	
 $(BIN): $(OBJS) 
-	$(LD)  $(OBJS) $(LIBS) $(LDFLAGS) -o $(BIN)
+	$(LD)  $(OBJS) $(LIBS) $(LDFLAGS) -o $(BIN) -Map $(PRJ).map
 	$(OBJCOPY) -I srec $(BIN) -O binary $(PRJ).bin
 	$(OBJDUMP) -D $(BIN) -m68000 > $(PRJ).l68
 	@echo

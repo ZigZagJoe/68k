@@ -56,7 +56,7 @@ cpy_reloc:
     move.l (%a0)+, (%a1)+      | *a1++ = *a0++
     dbra %d0, cpy_reloc        | branch if (--d0) != -1
 
-    TILDBG CD                  | debugging message
+    TILDBG CB                  | debugging message
                
     jmp loader_start           | absolute jump to relocated code
     
