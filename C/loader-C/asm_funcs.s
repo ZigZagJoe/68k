@@ -87,7 +87,7 @@ srec_progress:
     move.b %d1, (TIL311)
     
     move.b %d1, %d0           | put on serial port
-    bsr _putb
+    jbsr _putb
 
     rts
 
@@ -126,11 +126,11 @@ putl:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | write long in %d0 to serial
 _putl:
-   swap %d0
-   bsr.s _putw
-   swap %d0
-   bsr.s _putw
-   rts
+    swap %d0
+    bsr.s _putw
+    swap %d0
+    bsr.s _putw
+    rts
 
 ## C binding
 putw:
@@ -139,15 +139,15 @@ putw:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | write word in %d0 to serial
 _putw:
-   move.w %d0, -(%sp)
+    move.w %d0, -(%sp)
 
-   lsr.w #8, %d0
-   bsr.s _putb
+    lsr.w #8, %d0
+    bsr.s _putb
    
-   move.w (%sp)+, %d0
-   bsr.s _putb
+    move.w (%sp)+, %d0
+    bsr.s _putb
 
-   rts
+    rts
    
 ## C binding
 putb:  
@@ -198,6 +198,7 @@ _puthexlong:
     move.l (%SP)+, %D0
     rts
     
+    
 ## C binding
 puthexword:
     move.l 4(%sp), %d0
@@ -215,7 +216,7 @@ _puthexword:
 
     move.w (%SP)+, %D0
     rts
-    
+        
     
 ## C binding   
 puthexbyte:

@@ -91,7 +91,7 @@ _lf:
     
 _fl:
 
-    move.w #62, %d1
+    moveq #62, %d1
     sub.b %d2, %d1
     
     bsr putbash
@@ -211,11 +211,11 @@ contp:
     
     | %d1 is assumed to contain flags!
     
-    move.w #15, %D2
+    moveq #15, %D2
     bsr put_bin
     
     bsr.s dblnewl
-    move.w #62, %d1
+    moveq #62, %d1
     bsr putbash
     bsr.s dblnewl
      

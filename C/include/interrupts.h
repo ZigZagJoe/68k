@@ -55,7 +55,7 @@ extern void exception_generic(void);
 extern void exception_privilege(void);
 
 // sets up addr, bus, illegal inst, bad isr, spurious int, trap 0 exceptions
-void default_interrupts();
+__attribute__ ((deprecated)) void default_interrupts();
 
 // user mode soft reset (calls _soft_reset via trap 14)
 void soft_reset();
