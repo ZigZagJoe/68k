@@ -96,27 +96,25 @@ srec_progress:
 
 | fetch a long from uart into %d0
 getl:
-    bsr getb
-    lsl.w #8, %d0
-    bsr getb
+    bsr.s getw
     swap %d0
-    bsr getb
-    lsl.w #8, %d0
-    bsr getb
+    bsr.s getw
     rts
     
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
 | fetch a word from uart into %d0
 getw:
-    bsr getb
+    bsr.s getb
     lsl.w #8, %d0
-    bsr getb
-    rts  
-    
+    bsr.s getb
+    rts 
+     
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
 | get a character from uart, store in %d0
 getb:
-    | see if there is a byte pending
-    btst #7, (RSR)             | test if buffer full (bit 7) is set
-    jeq getb                   | buffer empty, loop (Z=1)
+    | see if there is a byte pending (uppermost bit = 1)
+    tst.b (RSR)                | set N according to uppermost bit
+    jpl getb                   | if N is not set, branch.
 
     move.b (UDR), %d0          | read char from buffer
     rts
@@ -125,27 +123,29 @@ getb:
 putl:
     move.l (4,%sp), %d0
     
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | write long in %d0 to serial
 _putl:
    swap %d0
-   bsr _putw
+   bsr.s _putw
    swap %d0
-   bsr _putw
+   bsr.s _putw
    rts
 
 ## C binding
 putw:
     move.w (6,%sp), %d0
     
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | write word in %d0 to serial
 _putw:
    move.w %d0, -(%sp)
 
    lsr.w #8, %d0
-   jbsr _putb
+   bsr.s _putb
    
    move.w (%sp)+, %d0
-   jbsr _putb
+   bsr.s _putb
 
    rts
    
@@ -153,10 +153,13 @@ _putw:
 putb:  
     move.b (7,%sp), %d0
     
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | write byte in %d0 to serial
 _putb:
-    btst #7, (TSR)             | test buffer empty (bit 7)
-    jeq _putb                  | Z=1 (bit = 0) ? jranch
+    | see if transmitter is idle (uppermost bit = 1)
+    tst.b (TSR)                | set N according to uppermost bit
+    jpl _putb                  | if N is not set, branch.
+
     move.b %d0, (UDR)          | write char to buffer
     rts
 
@@ -164,7 +167,8 @@ _putb:
 puts:
     move.l (4,%sp), %a0
     
-||||||||||||||||||||||||||||||||||||||
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
 | put string in %a0    
 _puts:
     move.b (%A0)+, %D0
@@ -180,7 +184,7 @@ done:
 puthexlong:
     move.l 4(%sp), %d0 
      
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | put hex long in %d0 
 _puthexlong:
     move.l %D0, -(%SP)
@@ -198,7 +202,7 @@ _puthexlong:
 puthexword:
     move.l 4(%sp), %d0
         
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | put hex word in %d0         
 _puthexword:
     move.w %D0, -(%SP)
@@ -217,7 +221,7 @@ _puthexword:
 puthexbyte:
     move.l 4(%sp), %d0
     
-||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | put hex byte in %d0 
 _puthexbyte:
     movem.l %A0/%D0, -(%SP)        | save regs
@@ -287,13 +291,13 @@ pr_ret:
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | print %d2 bits from %d1  
 put_bin: 
-    move.b #'0', %D0
+    moveq #'0', %D0
     btst %D2, %D1
     jeq not1
-    move.b #'1', %D0
+    moveq #'1', %D0
 not1:
     bsr _putb
-    move.b #' ', %D0
+    moveq #' ', %D0
     bsr _putb
     
     dbra %D2, put_bin
@@ -304,7 +308,7 @@ not1:
 | returns bool in %d0
 | sets Z if return code is zero
 check_reset_cmd:
-    clr.b %d0
+    moveq #0, %d0
     
     btst #7, (RSR)             | test if buffer full (bit 7) is set
     jeq _end_chk               | buffer empty, continue
@@ -315,7 +319,7 @@ check_reset_cmd:
     btst #0, (GPDR)            | gpio data register - test input 0. Z=!bit
     jne _end_chk               | if Z is not set (gpio = 1)
 
-    move.b #1, %d0
+    moveq #1, %d0
 _end_chk:
     tst.b %d0
     rts
