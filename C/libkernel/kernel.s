@@ -21,7 +21,6 @@
 .extern __stack_start
 .extern __bss_start
 .extern __bss_end
-.extern default_interrupts
 .extern _hexchars
  
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -99,8 +98,6 @@ _kernel_start:
     move.b #0xE1, (TIL311) | what up my glip glops!
     
     move.l #__stack_start, %a7
-
-    jsr default_interrupts
 
     /* initialize scheduler state */
     clr.l (millis_counter)

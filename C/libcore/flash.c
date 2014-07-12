@@ -6,7 +6,7 @@ volatile uint32_t flash_protect_var = 0x12345678;
 // break execution if it rolls through this region
 __asm("illegal");
 
-void flash_erase_sector(uint8_t sector) {
+__attribute__ ((noinline)) void flash_erase_sector(uint8_t sector) {
     if (flash_protect_var != FLASH_ARM) 
         __asm("illegal");
         
@@ -24,7 +24,7 @@ void flash_erase_sector(uint8_t sector) {
     DELAY_MS(25);          // wait for erase
 }
 
-void flash_write_byte(uint8_t *ptr, uint8_t ch) {
+__attribute__ ((noinline)) void flash_write_byte(uint8_t *ptr, uint8_t ch) {
     if (flash_protect_var != FLASH_ARM) 
         __asm("illegal");
         
@@ -40,6 +40,6 @@ void flash_write_byte(uint8_t *ptr, uint8_t ch) {
     DELAY(3);              // waste approximately 20 us to wait for write to complete
 }
 
-void flash_arm(uint32_t magic) {
+__attribute__ ((noinline)) void flash_arm(uint32_t magic) {
     flash_protect_var = magic;
 }

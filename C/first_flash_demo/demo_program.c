@@ -28,9 +28,7 @@ void lcd_printf(char *fmt, ...)
 
 int main() {
     TIL311 = 0x01;
-    
-    default_interrupts();
-    
+
     serial_start(SERIAL_SAFE);
     millis_start();
     sei();

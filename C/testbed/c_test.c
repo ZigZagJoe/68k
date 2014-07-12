@@ -42,7 +42,6 @@ void mem_dump(uint8_t *addr, uint32_t cnt) {
 int main() {
    // TIL311 = 0x01;
 
-	default_interrupts();
     serial_start(SERIAL_SAFE);
    // millis_start();
     sei();
