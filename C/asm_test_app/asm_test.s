@@ -53,6 +53,16 @@ ret_hex:
 
 main:
 
+    movem.l %d1-%d7/%a2-%a6, -(%sp)
+    
+cpy_l:
+    movem.l (%a0)+, %d1-%d7/%a2-%a6
+    movem.l %d1-%d7/%a2-%a6, (%a1)
+    adda.l #(12*4), %a1
+    dbra %d0, cpy_l
+    
+    movem.l (%sp)+, %d1-%d7/%a2-%a6
+
     move.l #0x11111111, %d0
     move.l #0x22222222, %d1
     move.l #0x33333333, %d2

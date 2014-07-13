@@ -47,7 +47,7 @@ _boot:
     
     lea (__begin, %pc), %a0    | load address of start of loader, relative to %PC
                                        
-    movea.l #reloc_addr, %a1   | load relocation target address into %a1
+    movea.w #reloc_addr, %a1   | load word relocation target address into %a1
     move.w #__size, %d0        | copy bootloader size (in longs) into %d0
 
     TILDBG 1C                  | debugging message

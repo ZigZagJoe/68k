@@ -12,7 +12,7 @@ uint32_t srec_sz;       // size of srec, including trailing null
 uint8_t write_armed;    // boolean if writes are enabled or not
 
 // info vars
-uint16_t rec_cnt = 0;   // number of records
+uint16_t rec_cnt;       // number of records
 uint32_t entry_point;   // entry point, specified in S7-S9 records, 0 if none
 uint32_t program_sz;    // number of data bytes written
 uint8_t wr_flags;       // write flags (see loader.h)

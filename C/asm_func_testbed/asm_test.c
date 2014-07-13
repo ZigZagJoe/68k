@@ -12,6 +12,8 @@
 
 void simp_printf(char * str, ...);
 
+uint32_t do_test1();
+uint32_t do_test2();
 
 
 int main() {
@@ -21,8 +23,17 @@ int main() {
     millis_start();
     sei();
     
-    srand();
+    //srand();
     
+    
+    uint32_t t = do_test1();
+    printf("Cpy 1: %d\n", t * 10);
+    
+    
+    t = do_test2();
+    printf("Cpy 2: %d\n", t * 10);
+    
+    while(true);
     
    /*
    char * str2 = "embedded str";
