@@ -6,12 +6,11 @@
 
 #include <io.h>
 #include <flash.h>
+#include "asm_funcs.h"
 
 #define dbgprintf ; //
-// comment out the function call 
-// have ; so that if (x) dbgprintf(...) does not break
+// comment out the debug printf 
+// put ; so that if (x) dbgprintf(...) does not break
 
 void srec_progress();
 // update progress % on TIL311 displays (in decimal!)
-
-extern uint16_t perc_interv;
