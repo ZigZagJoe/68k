@@ -48,6 +48,9 @@ memset:
 	subi.l #1, %d0
 	
 _aligned_set:
+    cmp.l #128, %d0
+    jge _super_set       | use super set if >= 128 bytes
+
 	move.l %d0, %a1
 		
 	lsr.l #2, %d0        | number of longs to copy
@@ -61,6 +64,9 @@ _qlset:
 	
 	move.w %a1, %d0      | get count lowest word
 	andi.w #3, %d0       | %4 
+	
+_qlset_done:
+    tst.b %d0
 	beq _endset          | if nonzero, there are odd bytes to copy
 
 _small_set:	             | byte copy routine for small counts and odd bytes
@@ -73,6 +79,39 @@ _qbset:
 _endset:
 	move.l 4(%sp),%d0
 	rts
+	
+_super_set:
+    divu #48, %d0        | figure out block count
+	swap %d0
+	move.w %d0, %a1      | save remainder to clear afterwards
+	swap %d0
+	
+	sub.w #1, %d0        | compensate dbra -1 requirement
+	
+	movem.l %d2-%d7/%a2-%a6, -(%sp)
+	
+    | load registers with value
+    move.l %d1, %d2
+    move.l %d1, %d3
+    move.l %d1, %d4
+    move.l %d1, %d5
+    move.l %d1, %d6
+    move.l %d1, %d7
+    move.l %d1, %a2
+    move.l %d1, %a3
+    move.l %d1, %a4
+    move.l %d1, %a5
+    move.l %d1, %a6
+            
+_sup_qset:
+    movem.l %d1-%d7/%a2-%a6, (%a0)
+    add #(12*4), %a0
+    dbra %d0, _sup_qset
+	
+	movem.l (%sp)+, %d2-%d7/%a2-%a6
+    
+    move.l %a1, %d0
+    bra _qlset_done
 	
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | void *memcpy(void *dst, const void *src, size_t len) (return *dst)
@@ -103,7 +142,13 @@ memcpy:
 	subi.l #1, %d0
 	
 _aligned_cpy:
+    cmp.l #128, %d0
+    jge _super_cpy       | use super copy if >= 128 bytes
+
+    | longcopy routine
+    
 	move.b %d0, %d1      | save for later
+	andi.w #3, %d1       | check for any leftover bytes
 	lsr.l #2, %d0        | %d0 / 4 = num longs to copy
 	sub.w #1, %d0        | compensate dbra -1 requirement
 	
@@ -111,10 +156,11 @@ _qcpy:
 	move.l (%a0)+,(%a1)+ | do the copy!
 	dbra %d0, _qcpy
 	
-	andi.w #3, %d1       | check for any leftover bytes
-	beq _endcpy
+_qcpy_done:
+	tst.b %d1            | check for any leftover bytes
+	beq _endcpy          | none! leave!
 
-	subi.w #1, %d1       | dbra -1
+	subi.b #1, %d1       | dbra -1
 	
 _oddcpy:	
 	move.b (%a0)+,(%a1)+ | byte copy
@@ -136,6 +182,27 @@ _lbcpy:
 	bpl _lbcpy
 	
 	bra _endcpy
+	
+	| super copy routine: copy 48 byte chunks
+_super_cpy:
+    divu #48, %d0        | figure out block count
+	swap %d0
+	move.w %d0, %d1      | save remainder to copy afterwards
+	swap %d0
+	
+	sub.w #1, %d0        | compensate dbra -1 requirement
+	
+	movem.l %d1-%d7/%a2-%a6, -(%sp)
+    
+_sup_qcpy:
+	movem.l (%a0)+, %d1-%d7/%a2-%a6
+    movem.l %d1-%d7/%a2-%a6, (%a1)
+    add #(12*4), %a1
+    dbra %d0, _sup_qcpy
+	
+	movem.l (%sp)+, %d1-%d7/%a2-%a6
+    
+    bra _qcpy_done
 
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

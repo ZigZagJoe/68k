@@ -1,0 +1,12 @@
+    
+bus error:
+    move.b #1, 0xFFFFFF
+
+address error:
+    move.l #0xFFff, 01
+
+line1111:
+    .word 0xFF23
+    
+div/0:
+    divu #0, %d0

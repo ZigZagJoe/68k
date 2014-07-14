@@ -814,6 +814,7 @@ void hex_dump(uint8_t *array, uint32_t cnt, uint32_t baseaddr) {
     }
     
     if (c && c < 15) {
+        ascii[c] = 0;
         while (c++ < 16)
             printf("   ");
         printf("  %s\n",ascii);

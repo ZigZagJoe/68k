@@ -153,14 +153,14 @@ _the_end_times:
 
 _exit_cmd_check:                        | spin until reset command is received
     btst #7, (RSR)                      | test if buffer full (bit 7) is set.
-    beq _exit_cmd_check                 
+    jeq _exit_cmd_check                 
     
     move.b (UDR), %D1
     cmp.b #0xCF, %D1
-    bne _exit_cmd_check
+    jne _exit_cmd_check
     
     btst #0, (GPDR)                     | gpio data register - test input 0. Z=!bit
-    bne _exit_cmd_check                 | gpio is 1, not bootoclock
+    jne _exit_cmd_check                 | gpio is 1, not bootoclock
      
     move.l 0x80000, %sp                 | restore SP
     jmp 0x80008                         | jump to bootloader 
@@ -176,27 +176,27 @@ _exit:
     move.l #_system_exit_2, %a0
     jsr puts
         
-    bra _exit_cmd_check
+    jra _exit_cmd_check
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | trap used to manage tasks: exit current, force swap (yield), create new, etc.
 task_manager:
     cmp.b #TASK_YIELD, %d0
-    beq _user_swap
+    jeq _user_swap
     cmp.b #TASK_SLEEP, %d0
-    beq _sleep_for
+    jeq _sleep_for
     cmp.b #TASK_CREATE, %d0
-    beq _create_task
+    jeq _create_task
     cmp.b #TASK_EXIT, %d0
-    beq _exit_task
+    jeq _exit_task
     cmp.b #TASK_CRIT_ENTER, %d0
-    beq enter_critical
+    jeq enter_critical
     cmp.b #TASK_CRIT_LEAVE, %d0
-    beq leave_critical
+    jeq leave_critical
     cmp.b #TASK_ENTER, %d0
-    beq _run_task
+    jeq _run_task
     cmp.b #SYSTEM_EXIT, %d0
-    beq _exit
+    jeq _exit
     rte
 
 | skip this swap tick
@@ -210,12 +210,12 @@ _kern_millis_count:
     addi.l #1, (millis_counter)
     
     tst.b (_skip_next_tick)
-    bne _sknt_taken                      | if user task did yield, skip this swap
+    jne _sknt_taken                      | if user task did yield, skip this swap
 
 | swap out the current task 
 _swap_task:
     tas.b (_swap_in_progress)            | set swap_in_progress
-    bne _ret_swap                        | if it was already set; exit.
+    jne _ret_swap                        | if it was already set; exit.
 
     bset.b #1, (GPDR)                    | turn on the LED
     
@@ -238,12 +238,12 @@ _run_next_task:
 
 _check_runnable:
     cmp.b #2, 3(%a0)                    | is it in sleep?
-    bne _run_task
+    jne _run_task
         
     move.l (millis_counter), %d0        
     cmp.l 8(%a0), %d0                   
     
-    bls _run_next_task                  | not time for this process yet, next!
+    jls _run_next_task                | not time for this process yet, next!
     
     move.b #1, 3(%a0)                   | it is time: mark it as runnable
                                         | and fall through
@@ -271,7 +271,7 @@ _ret_swap:
 | to be skipped, so the swapped task then gets 10ms + yielding task time left
 _user_swap:
     move.b #1, (_skip_next_tick)
-    bra _swap_task
+    jra _swap_task
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | end the calling task & remove it from linked list
@@ -286,22 +286,22 @@ _exit_task:
     clr.b 3(%a0)                        | mark task as exited        
            
     cmp.l 4(%a0), %a0                   | if next task is self, we are the last task
-    beq _the_end_times                  | so take the special case and halt the system
+    jeq _the_end_times                  | so take the special case and halt the system
     
     move.l %a0, %a2                     | load start of linked list
                
 _next:  
     move.l 4(%a2), %a1                  | %a1 = node->next
     cmp.l %a0, %a1                      | node->next =? current
-    beq _found
+    jeq _found
     move.l %a1, %a2                     | node = node->next
-    bra _next
+    jra _next
 
 _found:
     move.l 4(%a0), 4(%a2)
 
     sei
-    bra _run_next_task                    
+    jra _run_next_task                    
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
 | causes a task to sleep at minimum the interval specified
@@ -322,7 +322,7 @@ _sleep_for:
  
  _sleep_short:   
     sei 
-    bra _user_swap
+    jra _user_swap
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
 | create a new task
@@ -344,7 +344,7 @@ _check_free:
     bge _cr_failed
     
     cmp.b #0, (3, %a2)
-    beq _got_free
+    jeq _got_free
     
     sub.l #USER_STACK_SIZE, %a3
     add.l #96, %a2
@@ -352,7 +352,7 @@ _check_free:
     
 _got_free:                              | copy the arguments to the new stack
     tst.b %d1
-    beq _no_args
+    jeq _no_args
     
     subi.w #1, %d1
     
@@ -379,12 +379,12 @@ _no_args:
     move.l (_active_task), %a1          | load linked list node
     
     cmp.l #0, %a1                       | _active_task =? 0
-    bne _nz                           
+    jne _nz                           
  
     move.l %a2, (_active_task)
     move.l %a2, 4(%a2)                  | me->next = me
    
-    bra _cr_finished
+    jra _cr_finished
 
 _nz:
     move.l (4, %a1), (4, %a2)           | me->next = node->next
@@ -398,7 +398,7 @@ _cr_finished:
     
 _cr_failed:
     clr.l %d0
-    bra _cr_finished
+    jra _cr_finished
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | this is the user mode where a task is started
@@ -473,11 +473,11 @@ wait_for_exit:
     
 _waitexit:    
     cmp.w (%a0), %d1                   | check if task id has changed
-    bne _waitdone
+    jne _waitdone
     tst.b 3(%a0)                       | check if task is still runnable
-    beq _waitdone
+    jeq _waitdone
     jsr yield
-    bra _waitexit
+    jra _waitexit
     
 _waitdone:
     rts
@@ -496,7 +496,7 @@ _read_ch:
     jeq _str_done
     
     jsr putc_sync
-    bra _read_ch
+    jra _read_ch
     
 _str_done:
     move.l (%SP)+, %A0
@@ -505,7 +505,7 @@ _str_done:
     
 putc_sync:
     btst #7, (TSR)                    | test buffer empty (bit 7)
-    beq putc                          | Z=1 (bit = 0) ? branch
+    jeq putc                          | Z=1 (bit = 0) ? jranch
     move.b %D0, (UDR)                 | write char to buffer
     rts
     

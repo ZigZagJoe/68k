@@ -10,11 +10,6 @@
 #include <lcd.h>
 #include <time.h>
 
-void simp_printf(char * str, ...);
-
-uint32_t do_test1();
-uint32_t do_test2();
-
 uint32_t crc_region (uint8_t * start, uint32_t sz) ;
 void test(uint32_t src, uint32_t dest, uint32_t len) ;
 uint32_t hash( uint32_t a);
@@ -27,15 +22,6 @@ int main() {
     millis_start();
     sei();
     
-    //srand();
-    
-    
-  /*  uint32_t t = do_test1();
-    printf("Cpy 1: %d\n", t * 10);
-    
-    
-    t = do_test2();
-    printf("Cpy 2: %d\n", t * 10);*/
     
     uint32_t ha = 124912341;
     uint8_t c = 0;
@@ -88,6 +74,10 @@ int main() {
 	test(0x10011, 0x30010, 1);
 	test(0x10000, 0x30011, 1);
 	test(0x10009, 0x30011, 4);
+	test(0x10000, 0x30000, 0x1000);
+	test(0x10000, 0x30000, 0x10000);
+	test(0x10000, 0x30000, 127);
+	test(0x10000, 0x30000, 128);
 	
     while(true);
     
@@ -160,18 +150,20 @@ uint32_t crc_region (uint8_t * start, uint32_t sz) {
 void test(uint32_t src, uint32_t dest, uint32_t len) {
 	uint32_t start, end;
 	
+	start = millis();
 	memset(dest, 0, len);
+	end = millis();
+	printf("Clear: %d elapsed\n", end-start);
+	
 	start = millis();
 	memcpy(dest, src, len);
 	end = millis();
 	
-	printf("\nCopy: %d elapsed\n", end-start);
+	printf("Copy: %d elapsed\n", end-start);
 	
-	start = millis();
 	if (crc_region(src, len) != crc_region(dest, len)) 
 		printf("ERROR: CRC MISMATCH!\n");
-	end = millis();
-	
-	printf("QCRC: %d elapsed\n", end-start);
+
+    putc('\n');
 }
 
