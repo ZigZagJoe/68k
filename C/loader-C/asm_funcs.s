@@ -197,7 +197,7 @@ _puthexlong:
 
     move.l (%SP)+, %D0
     rts
-    
+      
     
 ## C binding
 puthexword:
@@ -216,8 +216,8 @@ _puthexword:
 
     move.w (%SP)+, %D0
     rts
-        
     
+            
 ## C binding   
 puthexbyte:
     move.l 4(%sp), %d0
@@ -227,20 +227,21 @@ puthexbyte:
 _puthexbyte:
     movem.l %A0/%D0, -(%SP)        | save regs
     
-    lea (%pc,_hexchars), %A0
-    
     lsr.b #4, %D0                  | shift top 4 bits over
+    bsr.s _puthdigit
+    
+    move.w (2, %SP), %D0           | restore D0 from stack    
+    bsr.s _puthdigit
+    
+    movem.l (%SP)+, %A0/%D0        | restore regs
+    rts
+    
+| put single hex digit from %D0 (trashes D0, A0)
+_puthdigit:
+    lea (%pc,_hexchars), %A0
     and.w #0xF, %D0
     move.b (%A0, %D0.W), %D0       | look up char
     jbsr _putb
-    
-    move.w (2, %SP), %D0           | restore D0 from stack    
-    and.w #0xF, %D0                | take bottom 4 bits
-    move.b (%A0, %D0.W), %D0       | look up char
-    jbsr _putb
-    
-    movem.l (%SP)+, %A0/%D0        | restore regs
-
     rts
     
 ## C binding
@@ -297,9 +298,9 @@ put_bin:
     jeq not1
     moveq #'1', %D0
 not1:
-    bsr _putb
+    jbsr _putb
     moveq #' ', %D0
-    bsr _putb
+    jbsr _putb
     
     dbra %D2, put_bin
     rts
@@ -308,6 +309,7 @@ not1:
 | check if reset command was recieved
 | returns bool in %d0
 | sets Z if return code is zero
+| warning: consumes serial characters
 check_reset_cmd:
     moveq #0, %d0
     

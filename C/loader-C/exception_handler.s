@@ -121,7 +121,7 @@ _fl:
     bsr _puthexlong
     
     cmp.b #9, %d7
-    bne not_tr
+    jne not_tr
       
     bsr trisp
     put_str _INST
@@ -160,13 +160,13 @@ group0:
     
     lea (%pc, _WRITE), %a0
     btst #4, %d2
-    beq _wr
+    jeq _wr
     lea (%pc, _READ), %a0
 _wr:
     bsr _puts
     
     btst #3, %d2
-    beq _not
+    jeq _not
     
     lea (%pc, _INSTR), %a0
     bsr _puts
@@ -174,14 +174,14 @@ _not:
     
     lea (%pc, _USR), %a0
     btst #2, %d2
-    beq _usr
+    jeq _usr
     lea (%pc, _SUPR), %a0
 _usr:
     bsr _puts
     
     lea (%pc, _PGM), %a0
     btst #0, %d2
-    beq _pgm
+    jeq _pgm
     lea (%pc, _DATA), %a0
 _pgm:
     bsr _puts
@@ -220,10 +220,10 @@ contp:
     bsr.s dblnewl
      
     cmp.b #9, %d7
-    beq return_eh
+    jeq return_eh
     
     cmp.b #47, %d7
-    beq return_eh
+    jeq return_eh
     
 | end of handler:
 | loop forever, toggling between 0xEE and relevant number
@@ -288,12 +288,12 @@ dr_l:
     addi.b #1, %d1
     
     cmp.b #4, %d1
-    bne sk
+    jne sk
     bsr put_newl
     
 sk:
     cmp.b %d3, %d1
-    bne dr_l
+    jne dr_l
     
     bsr.s dblnewl
     rts
@@ -314,7 +314,7 @@ half_sec_delay:
     move.l #40000,%d2                             
 delay: 
     bsr check_reset_cmd
-    bne do_reset
+    jne do_reset
     
     subq.l #1, %d2
     jne delay

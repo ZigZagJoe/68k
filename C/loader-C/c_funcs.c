@@ -25,10 +25,10 @@ uint16_t handle_srec(uint8_t * start, uint32_t len, uint8_t fl) {
          :"%%d0"               // clobber list
     );        
     
-    // do sanity check parse run
-    uint8_t ret = parseSREC(start,len,fl,0);
+    // do sanity check run - parse srec, but don't perform writes
+    uint8_t ret = parseSREC(start,len,fl, 0 /* disarmed */);
     
-    if (ret) 
+    if (ret) // fail?
         return ret;
         
     base_per = 50;
@@ -36,7 +36,7 @@ uint16_t handle_srec(uint8_t * start, uint32_t len, uint8_t fl) {
     // if no errors, do programming
     // allow flash writes
     flash_arm(FLASH_ARM);
-    ret = parseSREC(start,len,fl,1);
+    ret = parseSREC(start,len,fl, 1 /* writes armed */);
     flash_arm(0);
     
     if (ret) 
