@@ -12,7 +12,7 @@ SECTIONS {
         reloc.o(.text)
 	} > RAM
 	
-	.body : ALIGN(0x4) {
+	.body : ALIGN(0x2) {
 	    build_date.o(.data)
 	    loader.o(.text)
 	    loader.o(.data)
