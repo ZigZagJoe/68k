@@ -5,7 +5,7 @@ CODE_LOC = RAM
 
 #USE_KERNEL = 1
 
-OPTIMIZE = 3
+OPTIMIZE = s
 #NO_CORELIB = true
 
 # Libraries

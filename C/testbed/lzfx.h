@@ -34,23 +34,10 @@
 #ifndef LZFX_H
 #define LZFX_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-/*  Documented behavior, including function signatures and error codes,
-    is guaranteed to remain unchanged for releases with the same major
-    version number.  Releases of the same major version are also able
-    to read each other's output, although the output itself is not
-    guaranteed to be byte-for-byte identical.
-*/
-#define LZFX_VERSION_MAJOR      0
-#define LZFX_VERSION_MINOR      1
-#define LZFX_VERSION_STRING     "0.1"
-
-/* Hashtable size (2**LZFX_HLOG entries) */
-#ifndef LZFX_HLOG
-# define LZFX_HLOG 16
 #endif
 
 /* Predefined errors. */
@@ -63,21 +50,12 @@ extern "C" {
     Supply pre-allocated input and output buffers via ibuf and obuf, and
     their size in bytes via ilen and olen.  Buffers may not overlap.
 
-    On success, the function returns a non-negative value and the argument
-    olen contains the uncompressed size in bytes.  On failure, a negative
-    value is returned.
+    On success, the function returns the number of bytes decompressed.
+    On failure, a negative value is returned.
 
-    If the failure code is LZFX_ESIZE, olen contains the minimum buffer size
-    required to hold the decompressed data.  Otherwise, olen is not modified.
-
-    Supplying a zero *olen is a valid and supported strategy to determine the
-    required buffer size.  This does not require decompression of the entire
-    stream and is consequently very fast.  Argument obuf may be NULL in
-    this case only.
 */
 int lzfx_decompress(const void* ibuf, unsigned int ilen,
-                          void* obuf, unsigned int *olen);
-
+                          void* obuf, unsigned int olen);
 
 #ifdef __cplusplus
 } /* extern "C" */

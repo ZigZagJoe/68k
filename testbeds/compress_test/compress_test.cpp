@@ -3,6 +3,12 @@
 #include "lzf.h"
 #include "lzfx.h"
 
+#define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))
+
+uint32_t qcrc_update (uint32_t inp, uint8_t v) {
+	return ROL(inp ^ v, 1);
+}
+
 int main(int argc, char ** argv) {
 
     char * filename = "md5_mt_demo.s68.srb";
@@ -38,6 +44,15 @@ int main(int argc, char ** argv) {
     
     fclose(in);
     
+    uint32_t crc;
+    
+    
+    crc = 0xDEADBEEF;
+    for (int i  = 0; i < size; i++)
+        crc = qcrc_update(crc, in_dat[i]);
+      
+    printf("Init QCRC: %08X\n",crc); 
+    
     /*
     /*  Buffer-to buffer compression.
 
@@ -68,6 +83,13 @@ int main(int argc, char ** argv) {
     
     printf("Return code: %d\n", ret);
     printf("Size: %d\n",out_sz);
+    
+     crc = 0xDEADBEEF;
+    for (int i  = 0; i < out_sz; i++)
+        crc = qcrc_update(crc, dec_dat[i]);
+      
+    printf("Out QCRC: %08X\n",crc); 
+    
     
     return 0;
 }

@@ -33,39 +33,6 @@
 
 #include "lzfx.h"
 
-#define LZFX_HSIZE (1 << (LZFX_HLOG))
-
-/* We need this for memset */
-#ifdef __cplusplus
-# include <cstring>
-#else
-# include <string.h>
-#endif
-
-#if __GNUC__ >= 3 && !DISABLE_EXPECT
-# define fx_expect_false(expr)  __builtin_expect((expr) != 0, 0)
-# define fx_expect_true(expr)   __builtin_expect((expr) != 0, 1)
-#else
-# define fx_expect_false(expr)  (expr)
-# define fx_expect_true(expr)   (expr)
-#endif
-
-#ifndef NULL
-#define NULL (0)
-#endif
-
-typedef unsigned char u8;
-typedef const u8 *LZSTATE[LZFX_HSIZE];
-
-/* Define the hash function */
-#define LZFX_FRST(p)     (((p[0]) << 8) | p[1])
-#define LZFX_NEXT(v,p)   (((v) << 8) | p[2])
-#define LZFX_IDX(h)      ((( h >> (3*8 - LZFX_HLOG)) - h  ) & (LZFX_HSIZE - 1))
-
-/* These cannot be changed, as they are related to the compressed format. */
-#define LZFX_MAX_LIT        (1 <<  5)
-#define LZFX_MAX_OFF        (1 << 13)
-#define LZFX_MAX_REF        ((1 << 8) + (1 << 3))
 
 /* Compressed format
 
@@ -88,34 +55,31 @@ typedef const u8 *LZSTATE[LZFX_HSIZE];
 
 /* Decompressor */
 int lzfx_decompress(const void* ibuf, unsigned int ilen,
-                          void* obuf, unsigned int *olen){
+                          void* obuf, unsigned int olen){
 
-    u8 const *ip = (const u8 *)ibuf;
-    u8 const *const in_end = ip + ilen;
-    u8 *op = (u8 *)obuf;
-    u8 const *const out_end = (olen == NULL ? NULL : op + *olen);
+    uint8_t const *in_ptr = (const uint8_t *)ibuf;
+    uint8_t *out_ptr = (uint8_t *)obuf;
     
-    unsigned int remain_len = 0;
-    int rc;
+    uint8_t const *const in_end = in_ptr + ilen;
+    uint8_t const *const out_end = out_ptr + olen;
     
     do {
-        unsigned int ctrl = *ip++;
+        uint16_t ctrl = *in_ptr++;
 
         /* Format 000LLLLL: a literal byte string follows, of length L+1 */
         if(ctrl < (1 << 5)) {
 
             ctrl++;
 
-            if(fx_expect_false(op + ctrl > out_end)){
+         /*   if((out_ptr + ctrl) > out_end)
                 return LZFX_ESIZE; // out of space
-            }
             
-            if(fx_expect_false(ip + ctrl > in_end)) 
+            if((in_ptr + ctrl) > in_end)
                 return LZFX_ECORRUPT; // missing input bytes
-
-            do
-                *op++ = *ip++;
-            while(--ctrl);
+*/
+            do {
+                *out_ptr++ = *in_ptr++;
+            } while(--ctrl);
 
         /*  Format #1 [LLLooooo oooooooo]: backref of length L+1+2
                           ^^^^^ ^^^^^^^^
@@ -126,38 +90,35 @@ int lzfx_decompress(const void* ibuf, unsigned int ilen,
             In both cases the location of the backref is computed from the
             remaining part of the data as follows:
 
-                location = op - A*256 - B - 1
+                location = out_ptr - A*256 - B - 1
         */
         } else {
+            uint16_t len = (ctrl >> 5);
+            uint8_t *ref = out_ptr - ((ctrl & 0x1f) << 8) - 1;
 
-            unsigned int len = (ctrl >> 5);
-            u8 *ref = op - ((ctrl & 0x1f) << 8) -1;
-
-            if(len==7) len += *ip++;    /* i.e. format #2 */
+            if(len == 7) /* format #2 */
+                len += *in_ptr++; 
 
             len += 2;    /* len is now #octets */
 
-            if(fx_expect_false(op + len > out_end)){
+            /*if((out_ptr + len) > out_end)
                 return LZFX_ESIZE; // out of space
-            }
             
-            if(fx_expect_false(ip >= in_end)) 
+            if(in_ptr >= in_end)
                 return LZFX_ECORRUPT; // missing input bytes
+*/
+            ref -= *in_ptr++;
 
-            ref -= *ip++;
-
-            if(fx_expect_false(ref < (u8*)obuf)) 
+          /*  if(ref < (uint8_t*)obuf)
                 return LZFX_ECORRUPT;
-
-            do
-                *op++ = *ref++;
-            while (--len);
+*/
+            do {
+                *out_ptr++ = *ref++;
+            } while (--len);
         }
 
-    } while (ip < in_end);
+    } while (in_ptr < in_end);
 
-    *olen = op - (u8 *)obuf;
-
-    return 0;
+    return out_ptr - (uint8_t *)obuf;
 }
 

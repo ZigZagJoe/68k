@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-//#include <string.h>
+#include <string.h>
 
 // IO devices for my specific machine
 #include <io.h>
@@ -65,13 +65,25 @@ int main() {
     uint32_t start, end;
     int ret_code;
     
+    uint8_t * dest = 0x40000;
+    
     start = millis();
-    ret_code = lzfx_decompress(out_bin, out_bin_len, 0x40000, &out_size);
+    for (uint8_t i = 0; i < 8; i ++)
+        ret_code = _lzfx_decompress(out_bin, out_bin_len, dest, out_size);
     end = millis();
     
     printf("Complete in %d ms\n", end-start);
     
-    printf("ret_code: %d\nout_size: %d\n", ret_code, out_size);
+    printf("ret_code: %d\n", ret_code);
+    
+    if (ret_code) {
+        uint32_t crc = CRC_INITIAL;
+        for (int i = 0; i < ret_code; i++)
+            crc = qcrc_update(crc, dest[i]);
+      
+        printf("QCRC: %08X\n",crc);  
+    }
+    
     //memset(0x4000,0,0x30000);
    //   lzfx_compress(0,100,0,100);
 //    lzfx_decompress(0,100,0,100);
