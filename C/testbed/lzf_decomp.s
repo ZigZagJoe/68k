@@ -2,11 +2,30 @@
 .align 2
 .global lzf_decompress
 
+/* Compressed format
+
+    There are two kinds of structures in LZF: literal runs and back
+    references. The length of a literal run is encoded as L - 1, as it must
+    contain at least one byte.  Literals are encoded as follows:
+
+    000LLLLL <L+1 bytes>
+
+    Back references are encoded as follows.  The smallest possible encoded
+    length value is 1, as otherwise the control byte would be recognized as
+    a literal run.  Since at least three bytes must match for a back reference
+    to be inserted, the length is encoded as L - 2 instead of L - 1.  The
+    offset (distance to the desired data in the output buffer) is encoded as
+    o - 1, as all offsets are at least 1.  The binary format is:
+
+    LLLooooo oooooooo           for backrefs of real length < 9   (1 <= L < 7)
+    111ooooo LLLLLLLL oooooooo  for backrefs of real length >= 9  (L > 7)  
+*/
+
 lzf_decompress:
 
 | init %fp & save regs
     link.w %fp, #0
-    movem.l %d2-%d3/%a2-%a4, -(%sp)
+    movem.l %d2/%a2-%a4, -(%sp)
     
 | arguments
     move.l 16(%fp), %d2
@@ -15,7 +34,7 @@ lzf_decompress:
     move.l %a1, %a4       
     add.l 12(%fp), %a4          | a4 <in_end>
     
-loop:
+loop_head:
     clr.w %d0
     move.b (%a1)+, %d0          | read ctrl byte
     
@@ -58,13 +77,12 @@ backref_copy:
     
 loop_chk:
     cmp.l %a1, %a4              | while (in_ptr != in_end)
-    jbhi loop
+    jbhi loop_head
 
-| return difference in output pointer    
     move.l %a3, %d0
-    sub.l %d2, %d0
+    sub.l %d2, %d0              | return difference in output pointer 
 
 | cleanup    
-    movm.l (%sp)+, %d2-%d3/%a2-%a4
+    movm.l (%sp)+, %d2/%a2-%a4
     unlk %fp
     rts
