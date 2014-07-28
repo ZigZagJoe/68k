@@ -1,8 +1,8 @@
 .text
 .align 2
-.global _lzfx_decompress
+.global lzf_decompress
 
-_lzfx_decompress:
+lzf_decompress:
 | init %fp & save regs
 	link.w %fp, #0
 	movem.l %d2-%d3/%a2-%a4, -(%sp)
@@ -19,7 +19,7 @@ loop:
 	move.b (%a1)+, %d0          | read ctrl byte
 	
 	cmp.b #31, %d0
-	jbhi backref                | if a high bit is set, then backref case
+	jbhi backref                | if any of b7-b5 is set, then backref
 	
 	| copy (ctrl+1) literal bytes
 literal_cpy:
@@ -30,9 +30,11 @@ literal_cpy:
 	
 backref:
 	move.w %d0, %d1
-	lsr.w #5, %d1
-	cmp.w #7, %d1               | %d1 = len 
-	jbne not_long_fmt           | upper 3 bits of control byte
+	lsr.b #5, %d1
+	cmp.b #7, %d1               | %d1 = len 
+	jbne not_long_fmt 
+	
+	| if upper 3 bytes are all 1, then read another byte of length
 	
 	move.b (%a1)+, %d1          | %d1 = (*in_ptr++)
 	addq.w #7, %d1

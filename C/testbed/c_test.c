@@ -69,7 +69,7 @@ int main() {
     
     start = millis();
     for (uint8_t i = 0; i < 8; i ++)
-        ret_code = _lzfx_decompress(out_bin, out_bin_len, dest, out_size);
+        ret_code = lzf_decompress(out_bin, out_bin_len, dest, out_size);
     end = millis();
     
     printf("Complete in %d ms\n", end-start);
