@@ -21,9 +21,9 @@
     111ooooo LLLLLLLL oooooooo  for backrefs of real length >= 9  (L > 7)  
 */
 
-# int lzf_decompress(const void* ibuf, unsigned int ilen,
-#                          void* obuf)
+# int lzf_decompress(const void* ibuf, unsigned int ilen, void* obuf)
 lzf_decompress:
+
 | save regs
     movem.l %a2-%a3, -(%sp)
     
@@ -51,14 +51,14 @@ backref:
     move.w %d0, %d1
     lsr.b #5, %d1               | %d1 <len> = b7-b5 of <ctrl>
     
-    cmp.b #7, %d1              
+    cmpi.b #7, %d1              
     jbne not_long_fmt           | if len = 7, read another byte for len
     
     move.b (%a1)+, %d1          | %d1 <len> = *in_ptr++
     addq.w #7, %d1              | %d1 <len> += 7
     
 not_long_fmt:
-    lsl.b #3, %d0               | %d0 = -------- AAAAA000
+    lsl.b #3, %d0               | %d0 = 00000000 AAAAA000
     lsl.w #5, %d0               | %d0 = 000AAAAA 00000000
     move.b (%a1)+, %d0          | %d0 = 000AAAAA BBBBBBBB
     
