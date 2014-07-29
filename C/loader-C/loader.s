@@ -87,7 +87,7 @@ loader_start:
     jeq wait_for_command       | if it is, wait for a command to stay in bootloader
      
 reset_addr:
-    TILDBG B9                  | bootloader ready!
+    TILDBG B1                  | bootloader ready!
     clr.w 0x400
     
     | initialize variables
@@ -181,7 +181,7 @@ cmd_jmp_table:
     .word __bad_cmd        - jmp_pt | C6
     .word __bad_cmd        - jmp_pt | C7
     .word __bad_cmd        - jmp_pt | C8
-    .word __bad_cmd        - jmp_pt | C9
+    .word decompress       - jmp_pt | C9
     .word memory_dump      - jmp_pt | CA
     .word boot_ram         - jmp_pt | CB
     .word get_qcrc         - jmp_pt | CC
@@ -281,6 +281,50 @@ dump_end:
     move.w #0xEEAC, %d0        | finale 
     bsr _putw
     
+    rts
+    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   
+| command: decompress %d6 bytes from %a5, store to address specified
+| set boot address/read address to address
+| set byte count to number of bytes decompressed
+decompress:
+    TILDBG DF
+    
+    move.l #0xD14F1A7E, %d0    | tell host we are doing inflate
+    bsr _putl
+    
+    bsr getl                   | read target
+    bsr _putl                  | echo target
+    
+    move.l %d0, -(%sp)         | target addr
+    move.l %d6, -(%sp)         | byte count
+    pea (%a5)                  | src addr
+    
+    bsr init_vars              | set address to target address          
+    
+    bsr lzf_decompress
+    add.l #12, %sp             | dealloc args
+    
+    move.l %d0, %d6            | set byte count to decompressed byte count
+    
+    move.w #0xC0DE, %d0        | echo 0xC0DE
+    bsr _putw
+    
+    move.l %d6, %d0  
+    bsr _putl                  | return code (should be num bytes)
+    
+    move.w #0x1F00, %d0        | trailing null
+    bsr _putw
+    
+    move.l %a5, %a0            | read addr
+    move.l %d6, %d1            | num of bytes
+    
+    bsr _compute_crc           | generate a crc of the decompressed data
+    
+    bsr _putl                  | send the crc out
+    
+    TILDBG FE
+   
     rts
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||   

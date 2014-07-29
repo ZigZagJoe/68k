@@ -18,6 +18,7 @@
 #define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))
 #define msleep(x) usleep((x) * 1000)
 
+#include "lzfx.h"
 
 // default port
 char port_def[] ="/dev/cu.usbserial-M68KV1BB";
@@ -79,7 +80,8 @@ void usage() {
         "-l             allow s-record to write loader (must also specify -f)\n"
         "-x             boot from entry point specified in s-record\n"
         "-b             s-record is in binary format from srec2srb\n"
-        "-c             enable qcrc validation (implicit in -s)\n"
+        "-c             use compression to improve speeds\n"
+        "-q             enable qcrc validation (implicit in -s)\n"
         "-p port        specify serial port (full path to device)\n"
         "-d addr[:len]  dump specified region of memory, in hex or dec.\n"
         "\n"
@@ -138,6 +140,8 @@ int main (int argc, char ** argv) {
     bool set_addr = false;
     bool bin_srec = false;
     
+    bool use_compression = false;
+    
     bool srec = false;
     
     // should allow setting of this
@@ -168,7 +172,8 @@ int main (int argc, char ** argv) {
                     case 'f': flash_wr = true; break;
                     case 'x': boot_srec = true; break;
                     case 'b': bin_srec = true; break;
-                    case 'c': use_qcrc = true; break;
+                    case 'q': use_qcrc = true; break;
+                    case 'c': use_compression = true; break;
                     case 'd': 
                                 do_dump = true; 
                                 if (ac + 1 == argc) {
@@ -409,6 +414,32 @@ int main (int argc, char ** argv) {
         }
     }
     
+    uint32_t orig_sz = size;
+    uint32_t orig_crc;
+    
+    if (use_compression) {
+        uint32_t comp_sz = size;
+        int ret = lzfx_compress(data, size, readback, &comp_sz);
+        if (ret < 0) {
+            printf("Incompressible data: disabling compression. %d\n", ret); 
+            use_compression = 0;
+        } else {
+            orig_crc = 0xDEADC0DE;
+            for (int i = 0; i < size; i ++)
+                 orig_crc = crc_update(orig_crc,data[i]);
+            
+            printf("LZF: %d -> %d   %03.1f%% saved\n", size, comp_sz, size-comp_sz, 100- ((float)comp_sz) / size * 100);
+            size = comp_sz;
+            uint8_t * tmp = data;
+            data = readback;
+            readback = tmp;
+            
+           
+            if (!srec) 
+                set_addr = true;
+        }
+    }
+    
     ////////////////////////////////
     
     printf("Sending reboot command...\n");
@@ -538,6 +569,72 @@ int main (int argc, char ** argv) {
             printf("Verification FAILED with %d errors. Retrying.\n\n",errors);
         } else {
             printf("Upload echo verified.\n\n");
+            
+            if (use_compression) {
+                printf("Decompressing...");
+                fflush(stdout);
+                
+                // execute command
+                command(fd, CMD_INFLATE);
+                
+                uint32_t ok = readl();
+                
+                if (ok != INFL_GREET_MAGIC) {
+                    printf("\nSync error inflating data (bad greeting). Reset board and try again.\nGot %08X, expected %08X\n\n", ok, 0xD0E881CC);
+                    return 1;
+                }
+                
+                uint32_t dec_addr;
+                
+                if (srec) {
+                    dec_addr = (0x80000 - 4096 - orig_sz) & ~1 - 8096; // 8096: max range of backref
+                } else
+                    dec_addr = 0x2000;
+                    
+                putl(dec_addr);
+                uint32_t addr_rb = readl();
+                
+                if (addr_rb != dec_addr) {
+                    printf("Bad readback of address!\n");
+                    printf("Address: read 0x%06X, expected 0x%06X\n",addr_rb, dec_addr);
+                    return 1;
+                }
+
+                // this can take a while, so disable serial timeouts
+                // only relevant for older bootloader versions
+                can_timeout = false;
+                
+                // read the lower byte of what hopefully is 0xC0DE
+                uint16_t c0de = readw();
+                
+                can_timeout = true;
+
+                if (c0de != INFL_CODE_MAGIC) {
+                    printf("Sync error inflating data (bad c0de). Reset board and try again.\nGot %04X, expected %04X\n\n", c0de, SREC_CODE_MAGIC);
+                    return 1;
+                }
+                
+                uint32_t ret_code = readl();
+                uint16_t tail_magic = readw();
+                
+                if (tail_magic != INFL_TAIL_MAGIC) {
+                    printf("Sync error inflating data (bad tail). Reset board and try again.\nGot %04X, expected %04X\n\n", tail_magic, INFL_TAIL_MAGIC);
+                    return 1;
+                }    
+                
+                if (ret_code != orig_sz) {
+                    printf("Decompression error: mismatch in size. Expected %d, got %d\n", orig_sz, ret_code);
+                    return 1;
+                }
+                
+                uint32_t crc = readl();
+                
+                if (orig_crc != crc) {
+                    printf("Decompression error: mismatch in crc. Expected %08X, got %08X\n", orig_crc, crc);
+                    return 1;
+                } else
+                    printf(" OK. CRC verified: %08X\n", crc);
+            }
             
             if (srec) {
 

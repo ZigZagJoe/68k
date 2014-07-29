@@ -25,8 +25,10 @@ uint16_t handle_srec(uint8_t * start, uint32_t len, uint8_t fl) {
          :"%%d0"               // clobber list
     );        
     
-    // do sanity check run - parse srec, but don't perform writes
-    uint8_t ret = parseSREC(start,len,fl, 0 /* disarmed */);
+    uint8_t ret;
+    
+    // do sanity check run - parse srec only
+    ret = parseSREC(start,len,fl, 0 /* writes disarmed */);
     
     if (ret) // fail?
         return ret;
