@@ -30,11 +30,11 @@ lzf_decompress:
     movem.l %a2-%a3, -(%sp)
     
 | arguments
-    move.l 16(%fp), %a2         | a2 <out_ptr>
     move.l 8(%fp), %a1          | a1 <in_ptr>       
-    move.l %a1, %a3       
-    add.l 12(%fp), %a3          | a3 <in_end>
-    
+    move.l 16(%fp), %a2         | a2 <out_ptr>
+    move.l 12(%fp), %a3         | <ilen>
+    add.l %a1, %a3              | a3 <in_end> = in_ptr + ilen
+   
 loop_head:
     clr.w %d0
     move.b (%a1)+, %d0          | read ctrl byte
@@ -42,10 +42,10 @@ loop_head:
     cmp.b #31, %d0
     jbhi backref                | if any of b7-b5 is set, then backref
     
-    | copy (ctrl+1) literal bytes
-literal_cpy:
+| copy (%d0+1) literal bytes from in_ptr to out_ptr
+lit_cpy:
     move.b (%a1)+, (%a2)+       | *<out_ptr>++ = *<in_ptr>++
-    dbra %d0, literal_cpy
+    dbra %d0, lit_cpy
     
     jbra loop_chk
     
@@ -54,9 +54,7 @@ backref:
     lsr.b #5, %d1               | %d1 <len> = b7-b5 of <ctrl>
     
     cmp.b #7, %d1              
-    jbne not_long_fmt 
-    
-    | if upper 3 bytes are all 1, then read another byte of length
+    jbne not_long_fmt           | if upper 3 bits are 111; read another byte for len
     
     move.b (%a1)+, %d1          | %d1 <len> = *in_ptr++
     addq.w #7, %d1              | %d1 <len> += 7
@@ -70,11 +68,12 @@ not_long_fmt:
     
     sub.w %d0, %a0              | %a0 <ref_ptr> -= %d0 <backref_dist>
     
-    addq.w #1, %d1              | <len> += 1
-    
-backref_copy:
+    addq.w #1, %d1              | %d1 <len> += 1
+ 
+| copy (%d1+1) bytes from ref_ptr to out_ptr   
+ref_copy:
     move.b (%a0)+, (%a2)+       | *<out_ptr>++ = *<ref_ptr>++
-    dbra %d1, backref_copy
+    dbra %d1, ref_copy
     
 loop_chk:
     cmp.l %a1, %a3              | while (in_ptr != in_end)
