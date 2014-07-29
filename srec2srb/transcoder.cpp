@@ -4,7 +4,16 @@
 #include <string.h>
 
 #define UPLOADER
-#include "../C/loader-C/loader.h"
+//#include "../C/loader-C/loader.h"
+
+#define BAD_HEX_CHAR         1
+#define INVALID_WRITE        2
+#define FAILED_WRITE         4
+#define FORMAT_ERROR         8
+#define EARLY_EOF           16
+#define INVALID_CHAR        32
+#define CRC_ERROR           64
+#define PROG_FAILURE       128
 
 uint8_t *srec;
 uint32_t pos;
