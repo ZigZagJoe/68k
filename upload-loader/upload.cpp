@@ -615,6 +615,8 @@ int main (int argc, char ** argv) {
                 }
                 
                 uint32_t ret_code = readl();
+                uint32_t crc = readl();
+                
                 uint16_t tail_magic = readw();
                 
                 if (tail_magic != INFL_TAIL_MAGIC) {
@@ -627,13 +629,11 @@ int main (int argc, char ** argv) {
                     return 1;
                 }
                 
-                uint32_t crc = readl();
-                
                 if (orig_crc != crc) {
                     printf("Decompression error: mismatch in crc. Expected %08X, got %08X\n", orig_crc, crc);
                     return 1;
                 } else
-                    printf(" OK. CRC verified: %08X\n", crc);
+                    printf(" OK!\nCRC verified: 0x%08X\n", crc);         
             }
             
             if (srec) {

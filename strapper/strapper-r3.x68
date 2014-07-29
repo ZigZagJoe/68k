@@ -25,7 +25,7 @@ PCB  dc.l    $80008          ; initial program counter
     
     ; relocate into RAM
     movea.l #reloc, A0       ; source address
-    movea.l #$1000, A1         ; load relocation address into A1
+    movea.l #$1000, A1       ; load relocation address into A1
     move.w #255, D0          ; copy 256 words (512 bytes)
     
     move.b #$A1, (TIL311)    ; debugging message

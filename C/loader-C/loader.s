@@ -312,16 +312,16 @@ decompress:
     
     move.l %d6, %d0  
     bsr _putl                  | return code (should be num bytes)
-    
-    move.w #0x1F00, %d0        | trailing null
-    bsr _putw
-    
+
     move.l %a5, %a0            | read addr
     move.l %d6, %d1            | num of bytes
     
     bsr _compute_crc           | generate a crc of the decompressed data
     
     bsr _putl                  | send the crc out
+    
+    move.w #0x1F00, %d0        | trailing code
+    bsr _putw
     
     TILDBG FE
    

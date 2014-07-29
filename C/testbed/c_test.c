@@ -61,29 +61,52 @@ int main() {
     millis_start();
     sei();
     
-    uint32_t out_size = 30000;
     uint32_t start, end;
-    int ret_code;
+    int ret;
+    uint32_t crc;
     
     uint8_t * dest = 0x40000;
     
     start = millis();
     for (uint8_t i = 0; i < 8; i ++)
-        ret_code = lzf_decompress(out_bin, out_bin_len, dest, out_size);
+        ret = lzf_decompress(out_bin, out_bin_len, dest);
     end = millis();
     
     printf("Complete in %d ms\n", end-start);
     
-    printf("ret_code: %d\n", ret_code);
+    printf("ret_code: %d\n", ret);
     
-    if (ret_code) {
-        uint32_t crc = CRC_INITIAL;
-        for (int i = 0; i < ret_code; i++)
+    if (ret) {
+        crc = CRC_INITIAL;
+        for (int i = 0; i < ret; i++)
             crc = qcrc_update(crc, dest[i]);
       
         printf("QCRC: %08X\n",crc);  
     }
     
+    uint32_t compressed_sz = out_bin_len;
+    uint32_t size = ret;
+    
+    uint32_t load_addr = (0x80000 - 4096 - compressed_sz) & ~1;
+    uint32_t dec_addr = (0x80000 - 4096 - size) & ~1 - 8096; // 8096: max range of backref
+    
+    uint8_t * ld_ptr = load_addr;
+    uint8_t * dec_ptr = dec_addr;
+    
+    printf("\nLoad compressed to %08X in memory\n",load_addr);
+    memcpy(ld_ptr,out_bin,compressed_sz);
+
+    printf("Decompress to %08X in memory\n",dec_addr);
+    
+    ret = lzf_decompress(ld_ptr, compressed_sz, dec_ptr);
+    
+    printf("Return: %d\n", ret);
+
+    crc = CRC_INITIAL;
+    for (int i  = 0; i < ret; i++)
+        crc = qcrc_update(crc, dec_ptr[i]);
+      
+    printf("CRC: %08X\n",crc); 
     //memset(0x4000,0,0x30000);
    //   lzfx_compress(0,100,0,100);
 //    lzfx_decompress(0,100,0,100);
