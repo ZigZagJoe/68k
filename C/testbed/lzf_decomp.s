@@ -21,18 +21,19 @@
     111ooooo LLLLLLLL oooooooo  for backrefs of real length >= 9  (L > 7)  
 */
 
+# int lzf_decompress(const void* ibuf, unsigned int ilen,
+#                          void* obuf)
 lzf_decompress:
 
 | init %fp & save regs
     link.w %fp, #0
-    movem.l %d2/%a2-%a4, -(%sp)
+    movem.l %a2-%a3, -(%sp)
     
 | arguments
-    move.l 16(%fp), %d2
-    move.l 8(%fp), %a1          | a1 <in_ptr>
-    move.l %d2, %a3             | a3 <out_ptr>
-    move.l %a1, %a4       
-    add.l 12(%fp), %a4          | a4 <in_end>
+    move.l 16(%fp), %a2         | a2 <out_ptr>
+    move.l 8(%fp), %a1          | a1 <in_ptr>       
+    move.l %a1, %a3       
+    add.l 12(%fp), %a3          | a3 <in_end>
     
 loop_head:
     clr.w %d0
@@ -43,7 +44,7 @@ loop_head:
     
     | copy (ctrl+1) literal bytes
 literal_cpy:
-    move.b (%a1)+, (%a3)+       | *<out_ptr>++ = *<in_ptr>++
+    move.b (%a1)+, (%a2)+       | *<out_ptr>++ = *<in_ptr>++
     dbra %d0, literal_cpy
     
     jbra loop_chk
@@ -65,24 +66,24 @@ not_long_fmt:
     lsl.w #5, %d0               | %d0 = 000AAAAA 00000000
     move.b (%a1)+, %d0          | %d0 = 000AAAAA BBBBBBBB
     
-    lea (-1, %a3), %a2          | %a2 <ref_ptr>  = %a3 <out_ptr> - 1
+    lea (-1, %a2), %a0          | %a0 <ref_ptr>  = %a2 <out_ptr> - 1
     
-    sub.w %d0, %a2              | %a2 <ref_ptr> -= %d0 <backref_dist>
+    sub.w %d0, %a0              | %a0 <ref_ptr> -= %d0 <backref_dist>
     
     addq.w #1, %d1              | <len> += 1
     
 backref_copy:
-    move.b (%a2)+, (%a3)+       | *<out_ptr>++ = *<ref_ptr>++
+    move.b (%a0)+, (%a2)+       | *<out_ptr>++ = *<ref_ptr>++
     dbra %d1, backref_copy
     
 loop_chk:
-    cmp.l %a1, %a4              | while (in_ptr != in_end)
+    cmp.l %a1, %a3              | while (in_ptr != in_end)
     jbhi loop_head
 
-    move.l %a3, %d0
-    sub.l %d2, %d0              | return difference in output pointer 
+    move.l %a2, %d0
+    sub.l 16(%fp), %d0          | return difference in output pointer 
 
 | cleanup    
-    movm.l (%sp)+, %d2/%a2-%a4
+    movm.l (%sp)+, %a2-%a3
     unlk %fp
     rts
