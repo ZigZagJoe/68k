@@ -226,7 +226,7 @@ crc_l:
     move.b (%a0)+, %d2
     eor.b %d2, %d0
     rol.l #1, %d0
-    subq #1, %d1
+    subq.l #1, %d1
     bne.s crc_l
     
     move.w (%sp)+, %d2

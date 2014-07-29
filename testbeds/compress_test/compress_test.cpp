@@ -67,6 +67,13 @@ int main(int argc, char ** argv) {
     int compressed_sz = ret;
     
     printf("Compressed size: %d\n", ret);
+    
+    crc = 0xDEADBEEF;
+    for (int i  = 0; i < out_sz; i++)
+        crc = qcrc_update(crc, cmp_dat[i]);
+      
+    printf("Compressed CRC: %08X\n",crc); 
+    
    // printf("Size: %d\n",out_sz);
    
     FILE *outfile;

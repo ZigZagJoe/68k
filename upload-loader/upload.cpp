@@ -571,7 +571,7 @@ int main (int argc, char ** argv) {
             printf("Upload echo verified.\n\n");
             
             if (use_compression) {
-                printf("Decompressing...");
+                printf("Decompressing... ");
                 fflush(stdout);
                 
                 // execute command
@@ -595,13 +595,11 @@ int main (int argc, char ** argv) {
                 uint32_t addr_rb = readl();
                 
                 if (addr_rb != dec_addr) {
-                    printf("Bad readback of address!\n");
-                    printf("Address: read 0x%06X, expected 0x%06X\n",addr_rb, dec_addr);
+                    printf("ERROR: Bad readback of address, expected 0x%06X, got 0x%06X\n", dec_addr, addr_rb);
                     return 1;
                 }
 
                 // this can take a while, so disable serial timeouts
-                // only relevant for older bootloader versions
                 can_timeout = false;
                 
                 // read the lower byte of what hopefully is 0xC0DE
@@ -625,12 +623,12 @@ int main (int argc, char ** argv) {
                 }    
                 
                 if (ret_code != orig_sz) {
-                    printf("Decompression error: mismatch in size. Expected %d, got %d\n", orig_sz, ret_code);
+                    printf("ERROR: mismatch in size. Expected %d, got %d\n", orig_sz, ret_code);
                     return 1;
                 }
                 
                 if (orig_crc != crc) {
-                    printf("Decompression error: mismatch in crc. Expected %08X, got %08X\n", orig_crc, crc);
+                    printf("ERROR: mismatch in crc. Expected %08X, got %08X\n", orig_crc, crc);
                     return 1;
                 } else
                     printf(" OK!\nCRC verified: 0x%08X\n", crc);         

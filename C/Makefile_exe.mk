@@ -63,6 +63,7 @@ LIBPATHS = -L ../lib -L /Users/zigzagjoe/Documents/68008/deploy/lib/gcc/m68k-elf
 CFLAGS  += -O$(OPTIMIZE) -nostartfiles -nostdinc -nostdlib -m68000 -std=c99 -fno-builtin $(INCPATHS)
 LDFLAGS += -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) $(LIBPATHS) --oformat srec
 ASFLAGS += -march=68000 -mcpu=68000
+ULFLAGS += -c
 
 # List of source files
 
@@ -96,7 +97,7 @@ run:	$(BIN)
 ifeq ($(CODE_LOC),rom)
 	@echo ERROR: Can only upload a ROM project!
 else
-	upload-strapper $(PRJ).bin
+	upload-strapper $(ULFLAGS) $(PRJ).bin
 endif
 	
 upload: $(BIN)
