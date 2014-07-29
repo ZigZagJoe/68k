@@ -66,12 +66,12 @@ not_long_fmt:
     
     sub.w %d0, %a0              | %a0 <ref_ptr> -= %d0 <backref_dist>
     
-    addq.w #1, %d1              | %d1 <len> += 1
- 
 | copy (%d1+1) bytes from ref_ptr to out_ptr   
 ref_copy:
     move.b (%a0)+, (%a2)+       | *<out_ptr>++ = *<ref_ptr>++
     dbra %d1, ref_copy
+
+    move.b (%a0)+, (%a2)+       | copy one more byte
     
 loop_chk:
     cmp.l %a1, %a3              | while (in_ptr != in_end)
