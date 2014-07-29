@@ -302,7 +302,7 @@ decompress:
     
     bsr init_vars              | set address to target address          
     
-    bsr lzf_decompress
+    bsr lzf_inflate
     add.l #12, %sp             | dealloc args
     
     move.l %d0, %d6            | set byte count to decompressed byte count

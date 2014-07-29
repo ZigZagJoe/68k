@@ -1,6 +1,6 @@
 .text
 .align 2
-.global lzf_decompress
+.global lzf_inflate
 
 /* Compressed format
 
@@ -21,8 +21,8 @@
     111ooooo LLLLLLLL oooooooo  for backrefs of real length >= 9  (L > 7)        len = L + 2 + 7
 */
 
-# int lzf_decompress(const void* ibuf, unsigned int ilen, void* obuf)
-lzf_decompress:
+# int lzf_inflate(const void* ibuf, unsigned int ilen, void* obuf)
+lzf_inflate:
 
 | save regs
     movem.l %a2-%a3, -(%sp)
