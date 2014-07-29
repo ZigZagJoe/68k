@@ -24,15 +24,13 @@
 # int lzf_decompress(const void* ibuf, unsigned int ilen,
 #                          void* obuf)
 lzf_decompress:
-
-| init %fp & save regs
-    link.w %fp, #0
+| save regs
     movem.l %a2-%a3, -(%sp)
     
-| arguments
-    move.l 8(%fp), %a1          | a1 <in_ptr>       
-    move.l 16(%fp), %a2         | a2 <out_ptr>
-    move.l 12(%fp), %a3         | <ilen>
+| arguments    8 = size of saved registers
+    move.l ( 4+8,%sp), %a1      | a1 <in_ptr>       
+    move.l (12+8,%sp), %a2      | a2 <out_ptr>
+    move.l ( 8+8,%sp), %a3      | <ilen>
     add.l %a1, %a3              | a3 <in_end> = in_ptr + ilen
    
 loop_head:
@@ -80,9 +78,8 @@ loop_chk:
     jbhi loop_head
 
     move.l %a2, %d0
-    sub.l 16(%fp), %d0          | return difference in output pointer 
+    sub.l ( 12+8,%sp), %d0      | return difference in output pointer 
 
 | cleanup    
     movm.l (%sp)+, %a2-%a3
-    unlk %fp
     rts
