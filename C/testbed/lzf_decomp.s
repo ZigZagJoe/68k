@@ -52,7 +52,7 @@ backref:
     lsr.b #5, %d1               | %d1 <len> = b7-b5 of <ctrl>
     
     cmp.b #7, %d1              
-    jbne not_long_fmt           | if upper 3 bits are 111; read another byte for len
+    jbne not_long_fmt           | if len = 7, read another byte for len
     
     move.b (%a1)+, %d1          | %d1 <len> = *in_ptr++
     addq.w #7, %d1              | %d1 <len> += 7
