@@ -33,6 +33,9 @@
 
 #include "lzfx.h"
 
+#include <stdint.h>
+#include <stdio.h>
+
 #define LZFX_HSIZE (1 << (LZFX_HLOG))
 
 /* We need this for memset */
@@ -107,12 +110,14 @@ int lzfx_decompress(const void* ibuf, unsigned int ilen,
             ctrl++;
 
             if(fx_expect_false(op + ctrl > out_end)){
+                 //printf("Out of space at %d in input, %d in output, requesting %d\n", ip-((uint8_t*)ibuf), ((uint64_t)op) - ((uint64_t)obuf), ctrl);
                 return LZFX_ESIZE; // out of space
             }
             
             if(fx_expect_false(ip + ctrl > in_end)) 
                 return LZFX_ECORRUPT; // missing input bytes
 
+            //printf("Literal of %d bytes\n", ctrl);
             do
                 *op++ = *ip++;
             while(--ctrl);
@@ -138,6 +143,7 @@ int lzfx_decompress(const void* ibuf, unsigned int ilen,
             len += 2;    /* len is now #octets */
 
             if(fx_expect_false(op + len > out_end)){
+                 //printf("Out of space at %d in input, %d in output, requesting %d\n", ip-((uint8_t*)ibuf), ((uint64_t)op) - ((uint64_t)obuf), len);
                 return LZFX_ESIZE; // out of space
             }
             
@@ -149,6 +155,7 @@ int lzfx_decompress(const void* ibuf, unsigned int ilen,
             if(fx_expect_false(ref < (u8*)obuf)) 
                 return LZFX_ECORRUPT;
 
+            //printf("Backref of %d bytes, to %d\n", len, ref-((u8*)obuf));
             do
                 *op++ = *ref++;
             while (--len);

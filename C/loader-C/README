@@ -9,6 +9,9 @@ with the "strapper" simple bootloader.
 
 Bytes read while GPIO0 of the MFP is low are interpreted as a command byte.
 
+Otherwise, the byte is written into memory at the current write address,
+byteCount is incremented, and the qcrc value is updated.
+
 ** Commands **
 
 BOOT 
@@ -30,13 +33,20 @@ SREC
     
 SET ADDR
     sets the address pointer to a uint32_t read in over serial and clears qcrc
-    sets the boot address to the same value 
+    sets the boot address to the same value, and clears byte count
     
 DUMP       
     reads (length, uint32) bytes from current address and sends them over serial
     confirms length and address before beginning dump
     once the specified number of bytes have been read, the qcrc of the read bytes is sent
     can be aborted by sending RESET command a few times
+    
+INFLATE
+    reads dest address from serial, then decompresses byteCount (global var) bytes from 
+    last address set with SET ADDR, to destination address. 
+    boot & write address are set to the destination address, qcrc and flags are cleared 
+    byteCount is set to number of bytes inflated
+    returns number of bytes inflated and qcrc of bytes
     
 Additionally, there are 3 commands which simply set flags for the SREC command: 
 

@@ -313,6 +313,8 @@ decompress:
     move.l %d6, %d0  
     bsr _putl                  | return code (should be num bytes)
 
+    TILDBG CA
+    
     move.l %a5, %a0            | read addr
     move.l %d6, %d1            | num of bytes
     

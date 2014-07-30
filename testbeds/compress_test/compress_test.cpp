@@ -110,7 +110,7 @@ int main(int argc, char ** argv) {
     memset(memory, 0xFE, 512*1024);
     
     uint32_t load_addr = (0x80000 - 4096 - compressed_sz) & ~1;
-    uint32_t dec_addr = (0x80000 - 4096 - size) & ~1 - 8096; // 8096: max range of backref
+    uint32_t dec_addr =  (0x80000 - 4096 - size - 8096) & ~1; // 8096: max range of backref
     
     uint8_t * ld_ptr = memory+load_addr;
     uint8_t * dec_ptr = memory+dec_addr;

@@ -587,7 +587,7 @@ int main (int argc, char ** argv) {
                 uint32_t dec_addr;
                 
                 if (srec) {
-                    dec_addr = (0x80000 - 4096 - orig_sz) & ~1 - 8096; // 8096: max range of backref
+                    dec_addr = (0x80000 - 4096 - orig_sz - 8096) & ~1; // 4096: stack. 8096: padding, no special value
                 } else
                     dec_addr = 0x2000;
                     
