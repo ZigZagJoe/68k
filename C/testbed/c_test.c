@@ -77,7 +77,7 @@ int main() {
     
     uint8_t * dest = 0x40000;
     
-    printf("CRC_INITIAL: %08X\n",CRC_INITIAL); 
+    printf("CRC_INITIAL: %08X\n\nlzf test\n",CRC_INITIAL); 
     
     start = millis();
     for (uint8_t i = 0; i < 8; i ++)
@@ -107,6 +107,16 @@ int main() {
         printf("C QCRC: %08X\n",crc);  
     }
     
+    printf("\nlzf-crc test\n");
+    start = millis();
+    for (uint8_t i = 0; i < 8; i ++)
+        ret = lzf_inflate_crc(out_bin, out_bin_len, dest, &crc);
+    end = millis();
+    
+    printf("Complete in %d ms\n", end-start);
+    
+    printf("ret_code: %d\n", ret);
+    printf("CRC: %08X\n", crc);
     //mem_dump(dest, 64);
     ///////////////////////////////////////////
     

@@ -12,5 +12,5 @@
 // comment out the debug printf 
 // put ; so that if (x) dbgprintf(...) does not break
 
-void srec_progress();
 // update progress % on TIL311 displays (in decimal!)
+void srec_progress();
