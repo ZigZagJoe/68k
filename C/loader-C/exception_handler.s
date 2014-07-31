@@ -222,7 +222,7 @@ contp:
     cmp.b #9, %d7
     jeq return_eh
     
-    cmp.b #47, %d7
+    cmp.b #47, %d7 | trap 15
     jeq return_eh
     
 | end of handler:

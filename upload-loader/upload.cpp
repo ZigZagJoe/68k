@@ -635,7 +635,6 @@ int main (int argc, char ** argv) {
             }
             
             if (srec) {
-
                 // apply relevant flags
                     
                 if (flash_wr && !SET_FLAG("flash write", CMD_SET_FLWR, FLWR_MAGIC))

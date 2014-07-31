@@ -37,7 +37,7 @@ loop_head:
     clr.w %d0
     move.b (%a1)+, %d0          | read ctrl byte
     
-    cmp.b #31, %d0
+    cmpi.b #31, %d0
     jbhi backref                | if any of b7-b5 is set, then backref
     
 | copy (%d0+1) literal bytes from in_ptr to out_ptr

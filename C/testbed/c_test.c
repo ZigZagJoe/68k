@@ -9,7 +9,7 @@
 #include <lcd.h>
 #include <time.h>
 
-/*
+
 void mem_dump(uint8_t *addr, uint32_t cnt) {
     int c = 0;
     char ascii[17];
@@ -38,7 +38,7 @@ void mem_dump(uint8_t *addr, uint32_t cnt) {
     }
     
     if (c < 15) putc('\n');
-}*/
+}
 
 //#include "lzfx.h"
 /*
@@ -52,40 +52,104 @@ void memset(uint8_t *dest, uint8_t val, uint32_t count) {
 
 */
 
+#define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))
+
+uint32_t crc_update (uint32_t inp, uint8_t v) {
+	return ROL(inp ^ v, 1);
+}
+
+uint32_t compute_crc(uint8_t* addr, uint32_t count);
+
 #include "test_bin.h"
 //void lzfx_decompress(int a,int b, int c, int d) {}
 int main() {
    // TIL311 = 0x01;
 
     serial_start(SERIAL_SAFE);
-    millis_start();
+   // millis_start();
     sei();
     
     uint32_t start, end;
     int ret;
     uint32_t crc;
     
+    out_bin_len = 16;
+    
     uint8_t * dest = 0x40000;
+    
+    printf("CRC_INITIAL: %08X\n",CRC_INITIAL); 
     
     start = millis();
     for (uint8_t i = 0; i < 8; i ++)
-        ret = lzf_decompress(out_bin, out_bin_len, dest);
+        ret = lzf_inflate(out_bin, out_bin_len, dest);
     end = millis();
     
     printf("Complete in %d ms\n", end-start);
     
     printf("ret_code: %d\n", ret);
     
+    uint32_t size = ret;
+   
     if (ret) {
-        crc = CRC_INITIAL;
-        for (int i = 0; i < ret; i++)
+        /*crc = CRC_INITIAL;
+        for (int i = 0; i < size; i++) {
             crc = qcrc_update(crc, dest[i]);
+        }
       
-        printf("QCRC: %08X\n",crc);  
+        printf("ASM QCRC: %08X\n",crc);  
+        */
+        crc = CRC_INITIAL;
+        for (int i = 0; i < size; i++) {
+            crc = crc_update(crc, dest[i]);
+            printf("%d: %08X\n",i,crc);
+        }
+      
+        printf("C QCRC: %08X\n",crc);  
     }
     
+    mem_dump(dest, 64);
+    ///////////////////////////////////////////
+    
+    printf("\nASM CRC test of %d bytes:\n", size);
+    start = millis();
+    //for (uint8_t i = 0; i < 8; i ++)
+        crc = compute_crc(dest, size);
+    end = millis();
+    
+    printf("Complete in %d ms\n", end-start);
+    
+    
+    printf("CRC: %08X\n", crc);
+   
+    ///////////////////////////////////////////
+    printf("\nASM-C CRC test of %d bytes:\n", size);
+    start = millis();
+    for (uint8_t i = 0; i < 8; i ++) {
+        crc = CRC_INITIAL;
+        for (int i = 0; i < size; i++)
+            crc = qcrc_update(crc, dest[i]);
+    }
+    end = millis();
+    
+    printf("Complete in %d ms\n", end-start);
+    
+    printf("CRC: %08X\n", crc);
+    
+    ///////////////////////////////////////////
+    printf("\nC CRC test of %d bytes:\n", size);
+    start = millis();
+    for (uint8_t i = 0; i < 8; i ++) {
+        crc = CRC_INITIAL;
+        for (int i = 0; i < size; i++)
+            crc = crc_update(crc, dest[i]);
+    }
+    end = millis();
+    
+    printf("Complete in %d ms\n", end-start);
+    
+    printf("CRC: %08X\n", crc);
+    
     uint32_t compressed_sz = out_bin_len;
-    uint32_t size = ret;
     
     uint32_t load_addr = (0x80000 - 4096 - compressed_sz) & ~1;
     uint32_t dec_addr = (0x80000 - 4096 - size) & ~1 - 8096; // 8096: max range of backref
@@ -98,7 +162,7 @@ int main() {
 
     printf("Decompress to %08X in memory\n",dec_addr);
     
-    ret = lzf_decompress(ld_ptr, compressed_sz, dec_ptr);
+    ret = lzf_inflate(ld_ptr, compressed_sz, dec_ptr);
     
     printf("Return: %d\n", ret);
 
