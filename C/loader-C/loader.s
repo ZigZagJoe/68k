@@ -296,6 +296,7 @@ decompress:
     bsr getl                   | read target
     bsr _putl                  | echo target
     
+    pea (0)                    | where to write crc
     move.l %d0, -(%sp)         | target addr
     move.l %d6, -(%sp)         | byte count
     pea (%a5)                  | src addr
@@ -303,7 +304,7 @@ decompress:
     bsr init_vars              | set address to target address          
     
     bsr lzf_inflate
-    add.l #12, %sp             | dealloc args
+    add.l #16, %sp             | dealloc args
     
     move.l %d0, %d6            | set byte count to decompressed byte count
     
@@ -313,13 +314,7 @@ decompress:
     move.l %d6, %d0  
     bsr _putl                  | return code (should be num bytes)
 
-    TILDBG CA
-    
-    move.l %a5, %a0            | read addr
-    move.l %d6, %d1            | num of bytes
-    
-    bsr _compute_crc           | generate a crc of the decompressed data
-    
+    move.l %d1, %d0
     bsr _putl                  | send the crc out
     
     move.w #0x1F00, %d0        | trailing code

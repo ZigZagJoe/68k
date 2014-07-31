@@ -29,9 +29,6 @@ void puthexlong(uint32_t l);
 void puthexword(uint32_t w);
 void puthexbyte(uint32_t b);
 
-// computes qcrc of count bytes, starting from addr
-uint32_t compute_crc(uint8_t *addr, uint32_t count);
-
 // check for reset command. return 1 if reset received, otherwise 0.
 // WARNING: consumes serial characters!
 uint8_t check_reset_cmd();

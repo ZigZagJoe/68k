@@ -61,7 +61,11 @@ uint8_t getn() {
 }
 
 uint8_t getb() {
-    uint8_t b = (getn() << 4) | getn();
+    uint8_t b;
+    
+    b = getn(); // ensure this happens first
+    b = (hi << 4) | getn();
+    
     fputc(b, out);
     checksum += b;
     return b;

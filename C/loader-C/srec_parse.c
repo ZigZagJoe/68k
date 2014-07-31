@@ -55,8 +55,10 @@ uint8_t read_byte() {
     
     if (wr_flags & BINARY_SREC) {   // binary mode; just read a character
         b = readch();
-    } else
-        b = (read_nibble() << 4) | read_nibble(); // read two hex chars to assemble a byte
+    } else {
+        b = read_nibble();            // read high nibble
+        b = (b << 4) | read_nibble(); // read low nibble and assemble byte
+    }
         
     checksum += b;
     return b;

@@ -21,18 +21,20 @@
     111ooooo LLLLLLLL oooooooo  for backrefs of real length >= 9  (L > 7)        len = L + 2 + 7
 */
 
-# int lzf_inflate(const void* ibuf, unsigned int ilen, void* obuf)
+# int lzf_inflate(const void* ibuf, unsigned int ilen, void* obuf, uint32_t* crc_ret)
 lzf_inflate:
 
 | save regs
-    movem.l %a2-%a3, -(%sp)
+    movem.l %d2/%a2-%a3, -(%sp)
     
-| arguments    8 = size of saved registers
-    move.l ( 4+8,%sp), %a1      | a1 <in_ptr>       
-    move.l (12+8,%sp), %a2      | a2 <out_ptr>
-    move.l ( 8+8,%sp), %a3      | <ilen>
+| arguments    12 = size of saved registers
+    move.l ( 4+12,%sp), %a1     | a1 <in_ptr>       
+    move.l (12+12,%sp), %a2     | a2 <out_ptr>
+    move.l ( 8+12,%sp), %a3     | <ilen>
     add.l %a1, %a3              | a3 <in_end> = in_ptr + ilen
    
+    move.l #0xDEADC0DE, %d2
+    
 loop_head:
     clr.w %d0
     move.b (%a1)+, %d0          | read ctrl byte
@@ -42,7 +44,10 @@ loop_head:
     
 | copy (%d0+1) literal bytes from in_ptr to out_ptr
 lit_cpy:
-    move.b (%a1)+, (%a2)+       | *<out_ptr>++ = *<in_ptr>++
+    move.b (%a1)+, %d1
+    eor.b %d1, %d2
+    rol.l #1, %d2
+    move.b %d1, (%a2)+          | *<out_ptr>++ = *<in_ptr>++
     dbra %d0, lit_cpy
     
     jbra loop_chk
@@ -66,20 +71,32 @@ not_long_fmt:
     
     sub.w %d0, %a0              | %a0 <ref_ptr> -= %d0 <backref_dist>
     
+    addq.l #1, %d1
+    
 | copy (<len> + 1) bytes from ref_ptr to out_ptr   
 ref_copy:
-    move.b (%a0)+, (%a2)+       | *<out_ptr>++ = *<ref_ptr>++
+    move.b (%a0)+, %d0
+    eor.b %d0, %d2
+    rol.l #1, %d2
+    move.b %d0, (%a2)+          | *<out_ptr>++ = *<in_ptr>++
     dbra %d1, ref_copy
 
-    move.b (%a0)+, (%a2)+       | copy one more byte
-    
 loop_chk:
     cmp.l %a1, %a3              | while (in_ptr != in_end)
     jbhi loop_head
 
     move.l %a2, %d0
-    sub.l (12+8,%sp), %d0       | return difference in output pointer 
+    sub.l (12+12,%sp), %d0      | return difference in output pointer 
 
+    move.l (16+12, %sp), %a0    | return %d2 (CRC) in last argument
+    cmpa.l #0, %a0
+    jeq _lz_end
+    
+    move.l %d2, (%a0)
+    
+_lz_end:    
 | cleanup    
-    movm.l (%sp)+, %a2-%a3
+    move.l %d2, %d1
+    movm.l (%sp)+, %d2/%a2-%a3
     rts
+

@@ -604,17 +604,15 @@ int main (int argc, char ** argv) {
                 
                 // read the lower byte of what hopefully is 0xC0DE
                 uint16_t c0de = readw();
-               
+                can_timeout = true;
+
                 if (c0de != INFL_CODE_MAGIC) {
                     printf("Sync error inflating data (bad c0de). Reset board and try again.\nGot %04X, expected %04X\n\n", c0de, SREC_CODE_MAGIC);
                     return 1;
                 }
                 
                 uint32_t ret_code = readl();
-                uint32_t crc = readl(); // crc takes a while to generate
-                
-                can_timeout = true;
-
+                uint32_t crc = readl();
                 uint16_t tail_magic = readw();
                 
                 if (tail_magic != INFL_TAIL_MAGIC) {
@@ -1029,7 +1027,6 @@ void serprintf(int fd, const char *fmt, ... ){
         exit (1);
     }
 }
-
 
 uint32_t crc_update (uint32_t inp, uint8_t v) {
 	return ROL(inp ^ v, 1);
