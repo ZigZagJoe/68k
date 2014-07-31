@@ -66,14 +66,14 @@ int main() {
    // TIL311 = 0x01;
 
     serial_start(SERIAL_SAFE);
-   // millis_start();
+    millis_start();
     sei();
     
     uint32_t start, end;
     int ret;
     uint32_t crc;
     
-    out_bin_len = 16;
+   // out_bin_len = 16;
     
     uint8_t * dest = 0x40000;
     
@@ -91,28 +91,28 @@ int main() {
     uint32_t size = ret;
    
     if (ret) {
-        /*crc = CRC_INITIAL;
+        crc = CRC_INITIAL;
         for (int i = 0; i < size; i++) {
             crc = qcrc_update(crc, dest[i]);
         }
       
         printf("ASM QCRC: %08X\n",crc);  
-        */
+        
         crc = CRC_INITIAL;
         for (int i = 0; i < size; i++) {
             crc = crc_update(crc, dest[i]);
-            printf("%d: %08X\n",i,crc);
+            //printf("%d: %08X\n",i,crc);
         }
       
         printf("C QCRC: %08X\n",crc);  
     }
     
-    mem_dump(dest, 64);
+    //mem_dump(dest, 64);
     ///////////////////////////////////////////
     
     printf("\nASM CRC test of %d bytes:\n", size);
     start = millis();
-    //for (uint8_t i = 0; i < 8; i ++)
+    for (uint8_t i = 0; i < 8; i ++)
         crc = compute_crc(dest, size);
     end = millis();
     

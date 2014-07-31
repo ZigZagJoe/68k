@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define CRC_INITIAL 0xDEADBEEF
+#define CRC_INITIAL 0xDEADC0DE
 
 extern uint32_t qcrc_update (uint32_t inp, uint8_t v);
 extern void *memcpy(void *dst, const void *src, size_t len);
