@@ -206,17 +206,32 @@ _sup_qcpy:
 
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| uint32_t strlen(uint8_t *src)
+| uint16_t strlen(uint8_t *src)
 strlen:
+    move.l 4(%sp), %a1   | dst
+	move.w #-1, %d0
+	
+_cnt:
+	tst.b (%a1)+
+	dbeq %d0, _cnt
+	
+	addq.w #1, %d0
+	neg.w %d0
+
+    rts
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| uint32_t strlen_large(uint8_t *src)
+strlen_large:
 	move.l 4(%sp), %a1   | dst
 	clr.l %d0
 	
-_cnt:
+_cnt_l:
 	tst.b (%a1)+
 	beq _memcr
 	
 	add.l #1, %d0
-	bra _cnt
+	bra _cnt_l
 	
 _memcr:
 	rts
