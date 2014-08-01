@@ -66,11 +66,11 @@ SET BINARY SREC
 
 ** Code structure / Boot sequence **
 
-[reloc.s]
+[lzf_reloc.s]
 Show character on TIL311
 Disable interrupts (may die here if user code jumped to loader...)
 Reset MFP
-Copy bootloader region into RAM at 0x1000
+Decompress payload into RAM at 0x1000
 Jump to bootloader code in RAM
 
 [loader.s]
