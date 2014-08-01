@@ -296,7 +296,7 @@ decompress:
     bsr getl                   | read target
     bsr _putl                  | echo target
     
-    pea (0)                    | where to write crc
+    pea (0)                    | crc dest ptr (0: do not write)
     move.l %d0, -(%sp)         | target addr
     move.l %d6, -(%sp)         | byte count
     pea (%a5)                  | src addr
