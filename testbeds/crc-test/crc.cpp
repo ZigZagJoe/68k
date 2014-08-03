@@ -7,11 +7,11 @@
 
 #define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))
 
-uint8_t failures[20];
+uint32_t failures[20];
 
 
 uint32_t crc_update (uint32_t inp, uint8_t v) {
-	return ROL(inp ^ v, 1);
+	return ROL(inp ^ v, 1) ^ v;
 }
 
 /*
@@ -54,8 +54,7 @@ uint8_t check_diff(uint32_t crc) {
 #define END_TEST() {d = check_diff(crc); diff_s += d; diff_t += 32; /*//printf("0x%X\t%2d/32\n",crc, d);*/ fail_ind++; }
 
 void crc_test() {
-
-    
+   
     uint32_t crc;
     uint8_t a, b;
    	uint8_t test_arr[data_len];
@@ -63,8 +62,15 @@ void crc_test() {
    	uint32_t diff_s = 0, diff_t = 0;
     uint16_t r,r1,r2;
     TEST("base CRC\t");
+    uint32_t crc_last = ~crc;
+    
     for (int i = 0; i < data_len; i++) {
     	crc = crc_update(crc, test_arr[i]);
+    	
+    	if (crc == crc_last)
+    	    printf("collision! %08x, byte %x\n", crc, test_arr[i]);
+    	    
+    	crc_last = crc;
     }
     
  	//printf("\t0x%X\n", crc);
@@ -304,11 +310,15 @@ void crc_test() {
 }
 
 int main (int argc, char ** argv) {
+
+   // data_len = 50;
+    
     // vars n shit bitches
  	for (int i = 0; i < 20; i++) 
    		failures[i] = 0;
    	
-   	srand(time(0));
+   	srand(2131231223);
+   //	srand(time(0));
    	
    	for (int i =0; i < 10000; i++)
    		crc_test();

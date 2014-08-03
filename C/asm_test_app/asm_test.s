@@ -53,6 +53,22 @@ ret_hex:
 
 main:
 
+  
+    move.b #0xDE, %d0
+    trap #15
+    move.b %d0, -(%sp)
+    trap #15
+    move.w (%sp)+, %d1
+    trap #15
+   
+    jsr return_to_loader
+
+
+   
+    move.b #8, %d1
+    move.l #0x1003123, %d0
+    jsr print_hex
+    
     movem.l %d1-%d7/%a2-%a6, -(%sp)
     
 cpy_l:
@@ -73,17 +89,7 @@ cpy_l:
     move.l #0x88888888, %d7
     
     
-    trap #14
   
-    move.b #8, %d1
-    move.l #0x1003123, %d0
-    jsr print_hex
-    
-  
-  
-    jsr return_to_loader
-
-
 ||||||||||||
 
 return_to_loader:

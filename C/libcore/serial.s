@@ -15,7 +15,7 @@
 .global putc_sync
 .global serial_available
 
-.extern _soft_reset
+.extern soft_reset
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | fast serial ISR: read a byte from UART, save in rx_buffer
