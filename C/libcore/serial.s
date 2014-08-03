@@ -26,8 +26,7 @@
 | solution: dont let that happen, or use the 'safe' routine.
 
 _charRecISR_fast:
-   move.w %D0, -(%SP)
-   move.l %A0, -(%SP)
+   movem.l %d0/%a0, -(%SP)
    
    move.l #rx_buffer, %A0
    clr.w %D0
@@ -37,8 +36,7 @@ _charRecISR_fast:
    
    addi.b #1, (%A0)               | head+1
 
-   move.l (%SP)+,%A0
-   move.w (%SP)+,%D0
+   movem.l (%SP)+,%d0/%a0
 
    rte                            | return from interrupt
 
@@ -49,10 +47,7 @@ _charRecISR_fast:
 | 15% cpu at 8mhz and 28800 baud on 68008
 
 _charRecISR_safe:
-   move.w %D2, -(%SP)
-   move.w %D1, -(%SP)
-   move.w %D0, -(%SP)
-   move.l %A0, -(%SP)
+   movem.l %d0-%d2/%a0, -(%SP)
    
    | check char first, so we can reset even if program is not
    | fetching serial characters and buffer has become full
@@ -84,18 +79,14 @@ _not_reset:
 
 drop_byte:
 
-   move.l (%SP)+,%A0
-   move.w (%SP)+,%D0
-   move.w (%SP)+,%D1
-   move.w (%SP)+,%D2
+   movem.l (%SP)+, %d0-%d2/%a0
    
    rte                          | return from interrupt
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | transmit a char from the tx buffer (ISR)
 _charXmtISR:
-   move.w %D0, -(%SP)
-   move.l %A0, -(%SP)
+   movem.l %d0/%a0, -(%SP)
    
    move.l #tx_buffer, %A0
    clr.w %D0
@@ -107,13 +98,12 @@ _charXmtISR:
    move.b %d0, (1, %A0)
        
    cmp.b (%a0), %d0
-   bne _end				         | no char, exit now
+   jne _end				         | no char, exit now
    
    andi.b #~4, (IMRA)            | mask next interrupt as there is no data to send
    
 _end:
-   move.l (%SP)+,%A0
-   move.w (%SP)+,%D0
+   movem.l (%SP)+, %d0/%a0
    rte
    
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -125,11 +115,11 @@ _dowait:
 	move.w (%a0), %d0     		 | atomic read of head and tail
 	move.b %d0, %d1				 | d1 = tail
 	lsr.w #8, %d0                | d0 = head
-	sub.b #1, %d1
+	subi.b #1, %d1
 	cmp.b %d0, %d1
-	bne _rdy                     | if head == tail-1, buffer is full, spin while waiting for tx
+	jne _rdy                     | if head == tail-1, buffer is full, spin while waiting for tx
 	/* yield */					 | note that this is algebraically equivilent to head+1 == tail
-	bra _dowait                  | but it is more efficient because we can use %d0 (head) later
+	jra _dowait                  | but it is more efficient because we can use %d0 (head) later
 	
 _rdy:
 	move.b 7(%sp), (2, %a0, %d0.w)| write char to buffer[head]
@@ -143,7 +133,7 @@ _rdy:
 | synchronous putc
 putc_sync:
 	btst #7, (TSR)               | test buffer empty (bit 7)
-    beq putc_sync                | Z=1 (bit = 0) ? branch
+    jeq putc_sync                | Z=1 (bit = 0) ? branch
 	move.b (7,%sp), (UDR)		 | write char to buffer
 	rts	
 	
@@ -161,8 +151,8 @@ serial_available:
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | block until char available then return char
 getc:
-	jsr serial_available
-	cmp.b #0, %d0
+	bsr serial_available
+	tst.b %d0
 	beq getc
 	
 	clr.w %d0

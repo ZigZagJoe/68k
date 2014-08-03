@@ -77,7 +77,7 @@ int main() {
     
     uint8_t * dest = 0x40000;
     
-    printf("CRC_INITIAL: %08X\n\nlzf test\n",CRC_INITIAL); 
+    //printf("CRC_INITIAL: %08X\n\nlzf test\n",CRC_INITIAL); 
     
     start = millis();
     for (uint8_t i = 0; i < 8; i ++)
@@ -98,15 +98,16 @@ int main() {
       
         printf("ASM QCRC: %08X\n",crc);  
         
-        crc = CRC_INITIAL;
+       /* crc = CRC_INITIAL;
         for (int i = 0; i < size; i++) {
             crc = crc_update(crc, dest[i]);
             //printf("%d: %08X\n",i,crc);
         }
       
-        printf("C QCRC: %08X\n",crc);  
+        printf("C QCRC: %08X\n",crc);  */
     }
     
+    /*
     printf("\nlzf-crc test\n");
     start = millis();
     for (uint8_t i = 0; i < 8; i ++)

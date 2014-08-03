@@ -210,17 +210,17 @@ _kern_millis_count:
     addi.l #1, (millis_counter)
     
     tst.b (_skip_next_tick)
-    jne _sknt_taken                      | if user task did yield, skip this swap
+    jne _sknt_taken                     | if user task did yield, skip this swap
 
 | swap out the current task 
 _swap_task:
-    tas.b (_swap_in_progress)            | set swap_in_progress
-    jne _ret_swap                        | if it was already set; exit.
+    tas.b (_swap_in_progress)           | set swap_in_progress
+    jne _ret_swap                       | if it was already set; exit.
 
-    bset.b #1, (GPDR)                    | turn on the LED
+    bset.b #1, (GPDR)                   | turn on the LED
     
     | save context into active task struct
-    move.l %a0, -(%sp)                   | save %a0
+    move.l %a0, -(%sp)                  | save %a0
     move.l (_active_task), %a0     
    
     movem.l %d0-%d7/%a0-%a6, 26(%a0)    | %d0-%d7, %a0-%a6  60 bytes   NOTE: %a0 is invalid
@@ -243,7 +243,7 @@ _check_runnable:
     move.l (millis_counter), %d0        
     cmp.l 8(%a0), %d0                   
     
-    jls _run_next_task                | not time for this process yet, next!
+    jls _run_next_task                  | not time for this process yet, next!
     
     move.b #1, 3(%a0)                   | it is time: mark it as runnable
                                         | and fall through
@@ -509,26 +509,27 @@ putc_sync:
     move.b %D0, (UDR)                 | write char to buffer
     rts
     
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| put hex byte in %d0 
 puthexbyte:
-    move.l %A0, -(%SP)
-    move.w %D0, -(%SP)
+    movem.l %A0/%D0, -(%SP)        | save regs
     
-    movea.l #_hexchars, %A0
+    lsr.b #4, %D0                  | shift top 4 bits over
+    bsr.s _puthdigit
     
-    lsr #4, %D0                       | shift top 4 bits over
-    and.w #0xF, %D0
-    move.b (%A0, %D0.W), %D0          | look up char
-    jsr putc_sync
+    move.w (2, %SP), %D0           | restore D0 from stack    
+    bsr.s _puthdigit
     
-    move.w (%SP), %D0            
-    and.w #0xF, %D0                   | take bottom 4 bits
-    move.b (%A0, %D0.W), %D0          | look up char
-    jsr putc_sync
-    
-    move.w (%SP)+, %D0                | restore byte
-    move.l (%SP)+, %A0                | restore address
-    
+    movem.l (%SP)+, %A0/%D0        | restore regs
     rts
+    
+| put single hex digit from %D0 (trashes D0, A0)
+_puthdigit:
+    lea (%pc,_hexchars), %A0
+    and.w #0xF, %D0
+    move.b (%A0, %D0.W), %D0       | look up char
+    jbsr putc_sync
+    rts  
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | strings    
