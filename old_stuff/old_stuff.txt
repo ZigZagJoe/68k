@@ -20,6 +20,44 @@ printf("%d\n",ECHO);
 	}
 	
 
+print_hex:
+    tst.l %d0              | check for zero
+    beq rz
+    
+    lea (%pc,_hexchars), %a0
+    
+    bsr puthex             | begin recursive print
+    
+dec_r:
+    rts
+    
+rz: 
+    move.b #'0', %d0
+    bsr putc
+    bra dec_r
+
+puthex:
+    subi.b #1, %d1
+    jmi ret_hex
+    
+    move.b %d0, %d2
+    and.w #0xF, %d2
+    
+    move.b (%a0, %d2.W), -(%sp)
+    
+    lsr.l #4, %d0
+    jeq begin_ret    | if result is 0
+    
+    bsr puthex
+     
+begin_ret: 
+    move.b (%sp)+, %d0
+    bsr putc
+   
+ret_hex: 
+    rts
+
+
 
 
 /*

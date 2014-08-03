@@ -14,6 +14,7 @@
 .global putc
 .global putc_sync
 .global serial_available
+.global tx_busy
 
 .extern soft_reset
 
@@ -98,7 +99,7 @@ _charXmtISR:
    move.b %d0, (1, %A0)
        
    cmp.b (%a0), %d0
-   jne _end				         | no char, exit now
+   jne _end				         | still chars available
    
    andi.b #~4, (IMRA)            | mask next interrupt as there is no data to send
    
@@ -132,9 +133,11 @@ _rdy:
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | synchronous putc
 putc_sync:
-	btst #7, (TSR)               | test buffer empty (bit 7)
-    jeq putc_sync                | Z=1 (bit = 0) ? branch
-	move.b (7,%sp), (UDR)		 | write char to buffer
+	| see if transmitter is idle (uppermost bit = 1)
+    tst.b (TSR)                  | set N according to uppermost bit
+    jpl putc_sync                | if N is not set, branch.
+    
+    move.b (7,%sp), (UDR)		 | write char to data register
 	rts	
 	
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -147,7 +150,18 @@ serial_available:
 	cmp.b %d0, %d1
 	sne.b %d0
 	rts
-	
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| does the tx buffer have a char ready?	
+tx_busy:
+	clr.l %d0
+	move.w (tx_buffer), %d0		 | atomic read of head and tail
+	move.b %d0, %d1				 | d1 = tail
+	lsr.w #8, %d0                | d0 = head
+	cmp.b %d0, %d1
+	sne.b %d0
+	rts
+		
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | block until char available then return char
 getc:

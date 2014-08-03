@@ -43,6 +43,8 @@ void serial_start(uint8_t fast);
 void serial_stop();
 
 extern bool serial_available();
+extern bool tx_busy();
+
 extern uint8_t getc();
 extern void putc(char ch);
 extern void putc_sync(char ch);

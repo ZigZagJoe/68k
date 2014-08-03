@@ -50,8 +50,7 @@ int main() {
     
     printf("Time: %d\n", end-start);
      
-    DELAY_MS(250);
-    __asm ("move.w #0xB007, 0x400\njmp 0x80008\n");
+    return_to_loader();
     //srand();
     
     
