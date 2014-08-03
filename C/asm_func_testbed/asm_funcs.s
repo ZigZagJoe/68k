@@ -3,13 +3,8 @@
 
 .extern putc
 
-
 .global _strlen
 .global _nulltest
-
-| void *memcpy(void *dst, const void *src, size_t len) (return *dst)
-.extern memcpy
-.extern millis_counter
 
 #uint16_t _strlen(char* str);
    
@@ -31,7 +26,10 @@ _nulltest:
 	clr.l %d0
 	
     rts
-
+    
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||
+|||||||||||||||||||||||||||||||||||||||||||||||||||||
 | put hex long from D0
 puthexlong:
 	move.l %D0, -(%SP)

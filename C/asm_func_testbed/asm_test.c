@@ -7,9 +7,7 @@
 // IO devices for my specific machine
 #include <io.h>
 #include <interrupts.h>
-#include <lcd.h>
 #include <time.h>
-
 
 uint16_t _strlen(char* str);
 
@@ -19,6 +17,7 @@ int main() {
 	serial_start(SERIAL_SAFE);
     millis_start();
     sei();
+    
     char * test_str = "hello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lol";
     
     uint32_t start, end;
@@ -51,13 +50,4 @@ int main() {
     printf("Time: %d\n", end-start);
      
     return_to_loader();
-    //srand();
-    
-    
-  /*  uint32_t t = do_test1();
-    printf("Cpy 1: %d\n", t * 10);
-    
-    
-    t = do_test2();
-    printf("Cpy 2: %d\n", t * 10);*/
 }
