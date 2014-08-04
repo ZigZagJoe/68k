@@ -202,12 +202,13 @@ task_manager:
 | skip this swap tick
 _sknt_taken:
     clr.b (_skip_next_tick)
+_in_swap:
     rte    
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | add a count to the millis counter and do a swap    
 _kern_millis_count:
-    addi.l #1, (millis_counter)
+    addq.l #1, (millis_counter)
     
     tst.b (_skip_next_tick)
     jne _sknt_taken                     | if user task did yield, skip this swap
@@ -215,7 +216,7 @@ _kern_millis_count:
 | swap out the current task 
 _swap_task:
     tas.b (_swap_in_progress)           | set swap_in_progress
-    jne _ret_swap                       | if it was already set; exit.
+    jne _in_swap                        | if it was already set; exit.
 
     bset.b #1, (GPDR)                   | turn on the LED
     
@@ -235,14 +236,13 @@ _swap_task:
 | find the next runnable task and run it 
 _run_next_task:
     move.l 4(%a0), %a0                  | node = node->next
-
-_check_runnable:
-    cmp.b #2, 3(%a0)                    | is it in sleep?
-    jne _run_task
-        
-    move.l (millis_counter), %d0        
-    cmp.l 8(%a0), %d0                   
+    move.l (millis_counter), %d7        
     
+_check_runnable:
+    tst.b 3(%a0)                        | is it in sleep?
+    jpl _run_task                       | positive = uppermost bit not set = not sleep
+        
+    cmp.l 8(%a0), %d7                   
     jls _run_next_task                  | not time for this process yet, next!
     
     move.b #1, 3(%a0)                   | it is time: mark it as runnable
@@ -318,7 +318,7 @@ _sleep_for:
     add.l (millis_counter), %d1         | time when this thread needs to be run again
     move.l (_active_task), %a0
     move.l %d1, 8(%a0)
-    move.b #2, 3(%a0)                   | mark as sleeping
+    move.b #0x80, 3(%a0)                | mark as sleeping (uppermost bit)
  
  _sleep_short:   
     sei 

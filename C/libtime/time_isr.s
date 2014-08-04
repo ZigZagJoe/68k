@@ -4,7 +4,7 @@
 .global millis_counter
 
 millis_count:
-	addi.l #1, (millis_counter)
+	addq.l #1, (millis_counter)
 	rte
 	
 .bss
