@@ -11,6 +11,7 @@
 #include <time.h>
 #include <kernel.h>
 #include <beep.h>
+#include <semaphore.h>
 
 void putc_lcd(void*p, char ch) {
 	lcd_data(ch);
@@ -142,8 +143,32 @@ void test_task(int arg1, int arg2, int arg3) {
 	printf("Test task: %x %x %x\n", arg1, arg2, arg3);
 }
 
+uint32_t var = 0;
+sem_t semaphore_1;
+
+void task_sem_test1() {
+    while(true) {
+        sem_acquire(&semaphore_1);
+        var++;
+        sleep_for(1000);
+        sem_release(&semaphore_1);
+        yield();
+    }
+}
+
+void task_sem_test2() {
+    while(true) {
+        sem_acquire(&semaphore_1);
+        printf("%d\n",var);
+        sem_release(&semaphore_1);
+        yield();
+    }
+}
+
 int main() {
  	TIL311 = 0x98;
+ 	
+ 	sem_init(&semaphore_1);
 
 	lcd_init();
 	serial_start(SERIAL_SAFE);
@@ -154,8 +179,11 @@ int main() {
 	create_task(&task_time,0);
     create_task(&task_echo,0);
     create_task(&task_quiet,0);
-  	create_task(&task_random,0);
+  	//create_task(&task_random,0);
   	create_task(&task_song,0);
+  	
+  	create_task(&task_sem_test1,0);
+    create_task(&task_sem_test2,0);
   	
   /*	for (int i = 0; i < 16; i++)
   		create_task(&breeder_task,0);*/
