@@ -236,13 +236,11 @@ _swap_task:
 | find the next runnable task and run it 
 _run_next_task:
     move.l 4(%a0), %a0                  | node = node->next
-    move.l (millis_counter), %d7        
-    
-_check_runnable:
+
     tst.b 3(%a0)                        | is it in sleep?
     jpl _run_task                       | positive = uppermost bit not set = not sleep
         
-    cmp.l 8(%a0), %d7                   
+    cmp.l 8(%a0), (millis_counter)                   
     jls _run_next_task                  | not time for this process yet, next!
     
     move.b #1, 3(%a0)                   | it is time: mark it as runnable
@@ -323,7 +321,7 @@ _sleep_for:
  _sleep_short:   
     sei 
     jra _user_swap
-    
+
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
 | create a new task
 | %a0: new task entry point

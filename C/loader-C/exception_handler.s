@@ -20,6 +20,10 @@
     and.w #0xF8FF, %SR     
 .endm
 
+.macro cli
+    ori.w #0x700, %SR
+.endm
+
 .macro put_char ch
     moveq #\ch, %d0
     bsr _putb
