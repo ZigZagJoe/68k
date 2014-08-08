@@ -5,14 +5,10 @@
 volatile extern uint32_t millis_counter;
 extern void millis_count(void);
 
-//ISR(millis_count) {	
-//	millis_counter ++;
-//}
-
 #define INTR_TIMR_D (1 << 4)
 
 volatile uint32_t millis() {
-	return millis_counter * 1;
+    return millis_counter * 1;
 }
 
 void millis_start() {
@@ -20,6 +16,9 @@ void millis_start() {
 	
 	VR = MFP_INT;
 	TCDCR &= 0xF0; // disable timer D
+	
+	//TDDR = 129;	 // ~142.86 hz
+	//TCDCR |= 0x7;  // set prescaler of 200
 	
 	//TDDR = 184;	 // ~100 hz
 	//TCDCR |= 0x7;  // set prescaler of 200

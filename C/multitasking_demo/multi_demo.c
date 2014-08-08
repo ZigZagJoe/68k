@@ -13,28 +13,11 @@
 #include <beep.h>
 #include <semaphore.h>
 
-void putc_lcd(void*p, char ch) {
-	lcd_data(ch);
-}
-
-void lcd_printf(char *fmt, ...)
-{
-    va_list va;
-    va_start(va,fmt);
-    tfp_format(0,&putc_lcd,fmt,va);
-    va_end(va);
-}
-
 void play_rtttl(char *p);
 
-char * hexchar = "0123456789ABCDEF";
-
-void putHexChar(uint8_t ch) {
-	putc(hexchar[ch >> 4]);
-	putc(hexchar[ch & 0xF]);
-}
-
 int main();
+
+sem_t lcd_sem;
 
 /*char * songs[];
 #define songcount 24*/
@@ -89,8 +72,10 @@ void task_time() {
 	printf("TIME TASK (ID %d) started.\n",CURRENT_TASK_ID);
 	yield();
 	while(true) {
+	    sem_acquire(&lcd_sem);
 		lcd_cursor(0,0);
         lcd_printf("Runtime: %d.%d    ",millis()/1000, (millis()%1000)/100);
+        sem_release(&lcd_sem);
  		sleep_for(100);
     }
 }
@@ -121,11 +106,14 @@ void task_random() {
 	yield();
 
 	while(true) {
-		lcd_cursor(0,1);
 		if (((rand() % 128) == 27)) 
 			create_task(&task_a_random,0);
-			
+		
+		sem_acquire(&lcd_sem);	
+		lcd_cursor(0,1);
 		lcd_printf("%x%x",rand(),rand());
+		sem_release(&lcd_sem);
+		
 		sleep_for(200);
 	}
 }
@@ -147,7 +135,8 @@ uint32_t var = 0;
 sem_t semaphore_1;
 
 void task_sem_test1() {
-    while(true) {
+    printf("COUNT TASK (ID %d) started.\n",CURRENT_TASK_ID);
+	while(true) {
         sem_acquire(&semaphore_1);
         var++;
         sleep_for(1000);
@@ -157,7 +146,8 @@ void task_sem_test1() {
 }
 
 void task_sem_test2() {
-    while(true) {
+    printf("PRINTF TASK (ID %d) started.\n",CURRENT_TASK_ID);
+	while(true) {
         sem_acquire(&semaphore_1);
         printf("%d\n",var);
         sem_release(&semaphore_1);
@@ -168,27 +158,34 @@ void task_sem_test2() {
 int main() {
  	TIL311 = 0x98;
  	
- 	sem_init(&semaphore_1);
+ 	srand();
+ 	
+ 	sem_init(&lcd_sem);
+    sem_init(&semaphore_1);
 
+	
 	lcd_init();
 	serial_start(SERIAL_SAFE);
 	
 	puts("Hello! Starting tasks.\n");
-
+    
+    enter_critical();
+    
 	create_task(&test_task, 3, 0x8BADC0DE, 0xDEADBEEF, 0x12345678);	
 	create_task(&task_time,0);
     create_task(&task_echo,0);
     create_task(&task_quiet,0);
-  	//create_task(&task_random,0);
+  	create_task(&task_random,0);
   	create_task(&task_song,0);
-  	
-  	create_task(&task_sem_test1,0);
+	create_task(&task_sem_test1,0);
     create_task(&task_sem_test2,0);
-  	
+    
   /*	for (int i = 0; i < 16; i++)
   		create_task(&breeder_task,0);*/
-  	   
+  	leave_critical();
+  	yield();  
+  	
   	puts("Tasks started, main() returning.\n");	
-	
-  	return 0;
+  	
+	return 0;
 }

@@ -107,7 +107,7 @@ _kernel_start:
     clr.l (_active_task)
     clr.w (_next_thread_id)
     
-    /* initialize task structs */
+    /* initialize struct statuses to 0 (inactive) */
     move.l #0x460, %a0
     move.w #30, %d0
 
@@ -190,7 +190,7 @@ task_manager:
     cmp.b #TASK_EXIT, %d0
     jeq _exit_task
     cmp.b #TASK_CRIT_ENTER, %d0
-    jeq enter_critical
+    jeq enter_critical_full
     cmp.b #TASK_CRIT_LEAVE, %d0
     jeq leave_critical
     cmp.b #TASK_ENTER, %d0
@@ -342,7 +342,7 @@ _check_free:
     cmp.l #0x1000, %a2                  | no room available; fail.
     bge _cr_failed
     
-    cmp.b #0, (3, %a2)
+    tst.b (3, %a2)
     jeq _got_free
     
     sub.l #USER_STACK_SIZE, %a3
@@ -361,9 +361,8 @@ _copy_args:
     
 _no_args:
     move.w (_next_thread_id), (%a2)     | set the thread ID
-    move.l %a0, 58(%a2)                 | load starting address into %a0 in struct
-    move.l #_task_entry, 90(%a2)        | set PC to task begin struct
-    
+    move.l %a0, 90(%a2)                 | load starting address into %PC in struct
+    move.l #exit_task, -(%a3)           | exit_task as return address on stack (if task returns)
     move.l %a3, 86(%a2)                 | set stack pointer
     move.w #0, 94(%a2)                  | set flags (none - currently)
     move.b #1, (3, %a2)                 | mark as runnable
@@ -398,14 +397,6 @@ _cr_finished:
 _cr_failed:
     clr.l %d0
     jra _cr_finished
-    
-|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| this is the user mode where a task is started
-| it ensures a task that returns always exits.
-_task_entry:
-    jsr (%a0)
-    move.b #TASK_EXIT, %d0
-    trap #0                            | exit_task
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | C function interface

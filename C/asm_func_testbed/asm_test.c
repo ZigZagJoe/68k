@@ -30,7 +30,7 @@ int main() {
     end = millis();
         
     printf("Str len: %d\n",ret);
-     printf("Time: %d\n", end-start);
+    printf("Time: %d\n", end-start);
 
     start = millis();
     for (int i = 0; i < 100; i++)

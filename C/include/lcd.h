@@ -42,5 +42,6 @@ void lcd_puts(char * str);
 void lcd_init();
 void lcd_cursor(uint8_t col, uint8_t row);
 void lcd_autoscroll(uint8_t on);
+void lcd_printf(char * format, ...);
 
 #endif

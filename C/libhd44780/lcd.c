@@ -1,6 +1,17 @@
 #include <lcd.h>
 #include <io.h>
+#include <printf.h>
 
+void putc_lcd(void*p, char ch) {
+	lcd_data(ch);
+}
+
+void lcd_printf(char *fmt, ...) {
+    va_list va;
+    va_start(va,fmt);
+    tfp_format(0,&putc_lcd,fmt,va);
+    va_end(va);
+}
 
 //lcd is connected to QB output of the 74LS164, giving a delay of about 1.75uS
 //lcd E is the inverted version of its CS output from 74138
