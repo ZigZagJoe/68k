@@ -91,12 +91,13 @@ int main() {
     uint32_t size = ret;
    
     if (ret) {
-        crc = CRC_INITIAL;
+        /*crc = CRC_INITIAL;
         for (int i = 0; i < size; i++) {
             crc = qcrc_update(crc, dest[i]);
-        }
+        }*/
+        crc = compute_crc(dest, size);
       
-        printf("ASM QCRC: %08X\n",crc);  
+        printf("ASM QCRC: %08X\nExpect: 1C31D49B\n",crc);  
         
        /* crc = CRC_INITIAL;
         for (int i = 0; i < size; i++) {

@@ -171,34 +171,15 @@ lzf_compress (const void *const in_data, unsigned int in_len,
           op [- lit - 1] = lit - 1; /* stop run */
           op -= !lit; /* undo run if length is zero */
 
+#define abs(x) ((x < 0) ? (-(x)) : (x))
+
           for (;;)
             {
-              if (expect_true (maxlen > 16))
-                {
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-                  len++; if (ref [len] != ip [len]) break;
-                }
-
-              do
+              
+              do {
                 len++;
-              while (len < maxlen && ref[len] == ip[len]);
+                if (abs(((short)ref[len]) - ((short)ip[len])) > 0) break;
+              } while (len < maxlen);
 
               break;
             }

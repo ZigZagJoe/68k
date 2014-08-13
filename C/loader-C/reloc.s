@@ -45,9 +45,8 @@ _boot:
     | reset UART and any other devices attached to /RESET
     reset
     
-    lea (__begin, %pc), %a0    | load address of start of loader, relative to %PC
-                                       
-    movea.w #reloc_addr, %a1   | load word relocation target address into %a1
+    lea (__begin, %pc), %a0    | load address of start of loader, relative to %PC                             
+    lea (reloc_addr),   %a1    | load relocation target address into %a1
     move.w #__size, %d0        | copy bootloader size (in longs) into %d0
 
     TILDBG 1C                  | debugging message

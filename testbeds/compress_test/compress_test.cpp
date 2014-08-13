@@ -86,6 +86,11 @@ int main(int argc, char ** argv) {
     out_sz = size;
     ret = lzfx_decompress(cmp_dat, compressed_sz, dec_dat, &out_sz);
     
+    if (outfile = fopen("out_d.bin","wb")) {
+        fwrite (dec_dat, out_sz, 1, outfile);
+        fclose(outfile);
+    }
+    
     printf("Return code: %d\n", ret);
     printf("Size: %d\n",out_sz);
     

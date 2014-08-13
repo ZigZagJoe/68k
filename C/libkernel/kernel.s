@@ -62,6 +62,9 @@
 
 .set USER_STACK_SIZE, 4096
 
+.set TICK_INTERVAL, 7
+.set TICK_TIMER_VAL, 129
+
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | macros
 
@@ -127,8 +130,8 @@ zero_structs:
     
     move.b #0xC2, (TIL311)
     
-    | enable 100hz interrupt
-    move.b #184, (TDDR)
+    | enable periodic interrupt
+    move.b #TICK_TIMER_VAL, (TDDR)
     move.b #0x80, (VR)
     ori.b #0x7, (TCDCR)
     ori.b #0x10, (IERB)
@@ -190,7 +193,7 @@ task_manager:
     cmp.b #TASK_EXIT, %d0
     jeq _exit_task
     cmp.b #TASK_CRIT_ENTER, %d0
-    jeq enter_critical_full
+    jeq enter_critical
     cmp.b #TASK_CRIT_LEAVE, %d0
     jeq leave_critical
     cmp.b #TASK_ENTER, %d0
@@ -267,7 +270,7 @@ _ret_swap:
 
 | ensure the next task will not get less than its fair share of time due 
 | to the previous task yielding. instead, cause the next automatic interrupt 
-| to be skipped, so the swapped task then gets 10ms + yielding task time left
+| to be skipped, so the swapped task then gets TICK_INTERVAL ms + yielding task time left
 _user_swap:
     move.b #1, (_skip_next_tick)
     jra _swap_task
@@ -306,10 +309,10 @@ _found:
 | causes a task to sleep at minimum the interval specified
 | warning: %d1, %a0 are thrashed in accordance with gcc abi
 _sleep_for:
-    cmp.l #10, %d1
+    cmp.l #TICK_INTERVAL, %d1
     ble _sleep_short
     
-    divu.w #10, %d1                     | determine number of millis ticks
+    divu.w #TICK_INTERVAL, %d1          | determine number of millis ticks
     andi.l #0x0000FFFF, %d1             | remove remainder in upper word
     
     cli                                 | disable interrupts so an invalid state is not written

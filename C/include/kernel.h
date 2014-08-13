@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <interrupts.h>
 
+#define TICK_INTERVAL 7
+
 typedef uint16_t task_id_t;
 typedef uint32_t task_t;
 

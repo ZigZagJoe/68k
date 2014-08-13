@@ -9,18 +9,6 @@
 #include <kernel.h>
 #include <md5.h>
 
-void putc_lcd(void*p, char ch) {
-	lcd_data(ch);
-}
-
-void lcd_printf(char *fmt, ...)
-{
-    va_list va;
-    va_start(va,fmt);
-    tfp_format(0,&putc_lcd,fmt,va);
-    va_end(va);
-}
-
 char * hexchar = "0123456789ABCDEF";
 
 void putHexChar(uint8_t ch) {
@@ -33,10 +21,11 @@ void task_time() {
 	yield();
 	while(true) {
 		uint32_t t = millis();
-		TIL311 = t / 100;
+		uint32_t a = t/1000;
+		uint16_t b = (t%1000)/100;
+		TIL311 = (((uint8_t) a) << 4) | (b&0xF);
 		lcd_cursor(0,0);
-        lcd_printf("Runtime: %d.%d    ",t/1000, (t%1000)/100);
- 		sleep_for(100);
+        lcd_printf("Runtime: %d.%d    ",a, b);
     }
 }
 
@@ -105,14 +94,8 @@ int main() {
 	lcd_init();
 	serial_start(SERIAL_SAFE);
 	
-	puts("Hello! Starting tasks.\n");
-
-	create_task(&task_time,0);
-  	
-  	enter_critical();
 	lcd_cursor(0,1);
 	lcd_printf("Initializing....");
-	leave_critical();
 	
   	puts("Initializing memory...\n");
   	
@@ -125,8 +108,11 @@ int main() {
 		ha = hash(ha + i);
 	}
 	
-	enter_critical();
-	
+	puts("Starting tasks.\n");
+
+  	enter_critical();   // prevent the tasks from being run until they are all created
+	create_task(&task_time,0);
+  	
 	for (int i = 0; i < 29; i++)
 		create_task(&task_md5,0);
 	

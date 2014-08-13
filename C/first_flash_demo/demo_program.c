@@ -14,17 +14,6 @@
 extern char * songs[];
 void play_rtttl(char *p);
 
-void putc_lcd(void*p, char ch) {
-	lcd_data(ch);
-}
-
-void lcd_printf(char *fmt, ...)
-{
-    va_list va;
-    va_start(va,fmt);
-    tfp_format(0,&putc_lcd,fmt,va);
-    va_end(va);
-}
 
 int main() {
     TIL311 = 0x01;

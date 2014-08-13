@@ -38,7 +38,7 @@ _boot:
      
 | set up decompress vars
     lea (payload, %pc), %a1     | a1 <in_ptr>    address of payload, relative to %PC - 
-    move.w #reloc_addr, %a2     | a2 <out_ptr>
+    lea (reloc_addr),   %a2     | a2 <out_ptr>
     move.l (%a1)+, %a3          | <ilen>         read long from payload
     add.l %a1, %a3              | a3 <in_end>    <in_ptr> + <ilen>
    
