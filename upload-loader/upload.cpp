@@ -18,7 +18,7 @@
 #define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))
 #define msleep(x) usleep((x) * 1000)
 
-#include "lzfx.h"
+#include "lzf.h"
 
 // default port
 char port_def[] ="/dev/cu.usbserial-M68KV1BB";
@@ -81,6 +81,7 @@ void usage() {
         "-x             boot from entry point specified in s-record\n"
         "-b             s-record is in binary format from srec2srb\n"
         "-c             use compression to improve speeds\n"
+        "-a addr        write file to addr and exit\n"
         "-q             enable qcrc validation (implicit in -s)\n"
         "-p port        specify serial port (full path to device)\n"
         "-d addr[:len]  dump specified region of memory, in hex or dec.\n"
@@ -140,6 +141,8 @@ int main (int argc, char ** argv) {
     bool set_addr = false;
     bool bin_srec = false;
     
+    bool data_load = false;
+    
     bool use_compression = false;
     
     bool srec = false;
@@ -174,6 +177,24 @@ int main (int argc, char ** argv) {
                     case 'b': bin_srec = true; break;
                     case 'q': use_qcrc = true; break;
                     case 'c': use_compression = true; break;
+                    case 'a': data_load = true;
+                                use_qcrc = true;
+                                set_addr = true;
+                                no_terminal = true;
+                                
+                               if (ac + 1 == argc) {
+                                    printf("Missing argument to -a\n");
+                                    return 1;
+                                } 
+                                
+                                addr = -1;    
+                                addr = parse_num(argv[++ac]);
+                                if (addr == -1) {
+                                    printf("Bad addr to -a");
+                                    return 1;
+                                }
+                                
+                                break;
                     case 'd': 
                                 do_dump = true; 
                                 if (ac + 1 == argc) {
@@ -418,10 +439,9 @@ int main (int argc, char ** argv) {
     uint32_t orig_crc;
     
     if (use_compression) {
-        uint32_t comp_sz = size;
-        int ret = lzfx_compress(data, size, readback, &comp_sz);
-        if (ret < 0) {
-            printf("Incompressible data: disabling compression. %d\n", ret); 
+        int32_t comp_sz = lzf_compress(data, size, readback, size);
+        if (comp_sz == 0) {
+            printf("Incompressible data: disabling compression.\n"); 
             use_compression = 0;
         } else {
             orig_crc = 0xDEADC0DE;
@@ -457,6 +477,9 @@ int main (int argc, char ** argv) {
         if (set_addr) {
             // aligned load address with just enough room to load entire file without clobbering stack
             uint32_t load_addr = (0x80000 - 4096 - size) & ~1; 
+            
+            if (data_load && !use_compression)
+                load_addr = addr;
             
             if (!set_address(load_addr))
                 return 1;
@@ -588,8 +611,9 @@ int main (int argc, char ** argv) {
                 
                 if (srec) {
                     dec_addr = (0x80000 - 4096 - orig_sz - 8096) & ~1; // 4096: stack. 8096: padding, no special value
-                } else
-                    dec_addr = 0x2000;
+                } else {
+                    dec_addr = data_load ? addr : 0x2000;
+                }
                     
                 putl(dec_addr);
                 uint32_t addr_rb = readl();
@@ -720,7 +744,7 @@ int main (int argc, char ** argv) {
                 }
                 
                 break;
-            } else {
+            } else if (!data_load) {
                 printf("Booting program.\n\n");
                 command(fd, CMD_BOOT);
                 break;
