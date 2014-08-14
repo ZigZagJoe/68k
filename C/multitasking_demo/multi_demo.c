@@ -128,7 +128,7 @@ void breeder_task() {
 }
 
 void test_task(int arg1, int arg2, int arg3) {
-	printf("Test task: %x %x %x\n", arg1, arg2, arg3);
+	printf("Argument test task: %x %x %x\n", arg1, arg2, arg3);
 }
 
 uint32_t var = 0;
@@ -182,6 +182,7 @@ int main() {
     
   /*	for (int i = 0; i < 16; i++)
   		create_task(&breeder_task,0);*/
+  		
   	leave_critical();
   	yield();  
   	

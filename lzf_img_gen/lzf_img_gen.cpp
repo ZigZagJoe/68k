@@ -21,8 +21,8 @@ int main(int argc, char ** argv) {
     char * filename = "md5_mt_demo.s68.srb";
     char * outfile;
     
-    if (argc < 3 ) {
-        printf("Missing arguments. Usage: lzf_img_gen infile outfile\n\n");
+    if (argc < 2) {
+        printf("Missing arguments. Usage: lzf_img_gen infile [outfile]\n\n");
         return 1;
     }
     
@@ -30,9 +30,9 @@ int main(int argc, char ** argv) {
     outfile = argv[2];    
     
     FILE *in = fopen(filename,"rb");
-    FILE *out = fopen(outfile,"wb");
-    
-    if (!out) {
+    FILE *out = 0;
+
+    if (outfile && !(out = fopen(outfile,"wb"))) {
         printf("Failed to open %s\n",outfile);
         return 1;
     }
@@ -47,7 +47,8 @@ int main(int argc, char ** argv) {
     int size = ftell (in);
     rewind(in);
     
-    fprintf(stderr, "Input size: %d\n", size);
+    printf("File: %s\n",filename);
+    fprintf(stderr, "Size: %d\n", size);
     
     // allocate buffers
     uint8_t *in_dat = (uint8_t*)malloc(size);
@@ -64,6 +65,8 @@ int main(int argc, char ** argv) {
         return 1;
     }
     
+    fclose(in);
+   
     int ret = lzf_compress(in_dat, size, cmp_dat, size);
     
     if (!ret) {
@@ -73,13 +76,14 @@ int main(int argc, char ** argv) {
     
     printf("Compressed size: %d\n", ret);
 
-    int compressed_sz = bswap(ret);
-    fwrite(&compressed_sz, 4, 1, out);
-    fwrite(cmp_dat, ret, 1, out);
-   
-    fclose(in);
-    fclose(out);
+    if (out) {
+        int compressed_sz = bswap(ret);
+        fwrite(&compressed_sz, 4, 1, out);
+        fwrite(cmp_dat, ret, 1, out);
+        fclose(out);
+        printf("Written to %s\n",outfile);
+    } else printf("(not saving output...)\n");
     
-   
+
     return 0;
 }

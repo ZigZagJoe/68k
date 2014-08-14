@@ -278,7 +278,7 @@ _user_swap:
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | end the calling task & remove it from linked list
 _exit_task:
-    cli
+    move.b #1, (_swap_in_progress)      | disable scheduler runs
  
     move.b #1, (_skip_next_tick)        | so next task is not shafted
     sub.w #1, (task_count)
@@ -302,7 +302,6 @@ _next:
 _found:
     move.l 4(%a0), 4(%a2)
 
-    sei
     jra _run_next_task                    
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
@@ -315,7 +314,7 @@ _sleep_for:
     divu.w #TICK_INTERVAL, %d1          | determine number of millis ticks
     andi.l #0x0000FFFF, %d1             | remove remainder in upper word
     
-    cli                                 | disable interrupts so an invalid state is not written
+    move.b #1, (_swap_in_progress)      | disable scheduler runs so an invalid state is not written
     
     add.l (millis_counter), %d1         | time when this thread needs to be run again
     move.l (_active_task), %a0
@@ -323,7 +322,7 @@ _sleep_for:
     move.b #0x80, 3(%a0)                | mark as sleeping (uppermost bit)
  
  _sleep_short:   
-    sei 
+    clr.b (_swap_in_progress)           | allow scheduler to run again 
     jra _user_swap
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
@@ -336,7 +335,7 @@ _sleep_for:
 _create_task:
     movem.l %a1-%a3, -(%sp)
 
-    cli                                 | ensure list is not modified while we are working
+    move.b #1, (_swap_in_progress)      | disable scheduler runs to ensure list is not modified while we are working
     
     move.l #0x460, %a2                  | beginning of task state structs
     move.l #__stack_end, %a3            | stack base address
@@ -392,7 +391,7 @@ _nz:
     move.l %a2, (4, %a1)                | node->next = me
      
 _cr_finished:
-    sei
+    clr.b (_swap_in_progress)           | allow scheduler to run again
     
     movem.l (%sp)+, %a1-%a3
     rte
