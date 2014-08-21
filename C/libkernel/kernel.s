@@ -147,27 +147,14 @@ zero_structs:
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | no viable tasks left; nothing for system to do. halt system.
-    
-_the_end_times:
+_no_tasks:
     cli
     
     move.l #_system_halted, %a0
     jsr puts
-
-_exit_cmd_check:                        | spin until reset command is received
-    btst #7, (RSR)                      | test if buffer full (bit 7) is set.
-    jeq _exit_cmd_check                 
     
-    move.b (UDR), %D1
-    cmp.b #0xCF, %D1
-    jne _exit_cmd_check
+    jra _reset_cmd_wait
     
-    btst #0, (GPDR)                     | gpio data register - test input 0. Z=!bit
-    jne _exit_cmd_check                 | gpio is 1, not bootoclock
-     
-    move.l 0x80000, %sp                 | restore SP
-    jmp 0x80008                         | jump to bootloader 
-
 | user initiated exit
 _exit:
     cli
@@ -179,8 +166,8 @@ _exit:
     move.l #_system_exit_2, %a0
     jsr puts
         
-    jra _exit_cmd_check
-    
+    jra _reset_cmd_wait
+
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | trap used to manage tasks: exit current, force swap (yield), create new, etc.
 task_manager:
@@ -205,7 +192,9 @@ task_manager:
 | skip this swap tick
 _sknt_taken:
     clr.b (_skip_next_tick)
+    
 _in_swap:
+_in_super:
     rte    
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -218,8 +207,11 @@ _kern_millis_count:
 
 | swap out the current task 
 _swap_task:
-    tas.b (_swap_in_progress)           | set swap_in_progress
-    jne _in_swap                        | if it was already set; exit.
+    btst.b #5, (%sp)                    | test supervisor bit of flags on stack
+    jne _in_super                       | do not context switch supervisor code (interrupt)
+    
+    tas.b (_swap_in_progress)           | set swap_in_progress semaphore
+    jne _in_swap                        | if it was already set; exit scheduler
 
     bset.b #1, (GPDR)                   | turn on the LED
     
@@ -278,8 +270,6 @@ _user_swap:
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | end the calling task & remove it from linked list
 _exit_task:
-    move.b #1, (_swap_in_progress)      | disable scheduler runs
- 
     move.b #1, (_skip_next_tick)        | so next task is not shafted
     sub.w #1, (task_count)
     
@@ -288,7 +278,7 @@ _exit_task:
     clr.b 3(%a0)                        | mark task as exited        
            
     cmp.l 4(%a0), %a0                   | if next task is self, we are the last task
-    jeq _the_end_times                  | so take the special case and halt the system
+    jeq _no_tasks                       | so take the special case and halt the system
     
     move.l %a0, %a2                     | load start of linked list
                
@@ -314,15 +304,12 @@ _sleep_for:
     divu.w #TICK_INTERVAL, %d1          | determine number of millis ticks
     andi.l #0x0000FFFF, %d1             | remove remainder in upper word
     
-    move.b #1, (_swap_in_progress)      | disable scheduler runs so an invalid state is not written
-    
     add.l (millis_counter), %d1         | time when this thread needs to be run again
     move.l (_active_task), %a0
     move.l %d1, 8(%a0)
     move.b #0x80, 3(%a0)                | mark as sleeping (uppermost bit)
  
  _sleep_short:   
-    clr.b (_swap_in_progress)           | allow scheduler to run again 
     jra _user_swap
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    
@@ -335,8 +322,6 @@ _sleep_for:
 _create_task:
     movem.l %a1-%a3, -(%sp)
 
-    move.b #1, (_swap_in_progress)      | disable scheduler runs to ensure list is not modified while we are working
-    
     move.l #0x460, %a2                  | beginning of task state structs
     move.l #__stack_end, %a3            | stack base address
     
@@ -391,8 +376,7 @@ _nz:
     move.l %a2, (4, %a1)                | node->next = me
      
 _cr_finished:
-    clr.b (_swap_in_progress)           | allow scheduler to run again
-    
+
     movem.l (%sp)+, %a1-%a3
     rte
     
@@ -522,7 +506,22 @@ _puthdigit:
     move.b (%A0, %D0.W), %D0       | look up char
     jbsr putc_sync
     rts  
+ 
+| spin until reset command is received   
+_reset_cmd_wait:                       
+    btst #7, (RSR)                      | test if buffer full (bit 7) is set.
+    jeq _reset_cmd_wait                 
     
+    move.b (UDR), %D1
+    cmp.b #0xCF, %D1
+    jne _reset_cmd_wait
+    
+    btst #0, (GPDR)                     | gpio data register - test input 0. Z=!bit
+    jne _reset_cmd_wait                 | gpio is 1, not bootoclock
+     
+    move.l 0x80000, %sp                 | restore SP
+    jmp 0x80008                         | jump to bootloader 
+   
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | strings    
 
