@@ -94,6 +94,7 @@ int main() {
 	lcd_init();
 	serial_start(SERIAL_SAFE);
 	
+	lcd_printf("# MD5 SELFTEST #");
 	lcd_cursor(0,1);
 	lcd_printf("Initializing....");
 	
