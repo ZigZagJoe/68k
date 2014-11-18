@@ -24,45 +24,45 @@ wav_isr:
     | sei                    | allow interrupts
     
     tas.b (wav_semaphore)
-    jne wav_end
+    jne isr_end
     
     move.b #2, (0xC0001)     | LED ON
      
-    movem.l %d0/%a0-%a2, -(%sp)
+    movem.l %d0-%d7/%a0-%a6, -(%sp)
     
     move.l (wav_ptr), %a0
     cmp.l (wav_end), %a0     | perform bounds check
     jhi skip_load            | at/beyond specified end point: do not load data
+                             | for a circular buffer, reset to a start address
     
-    move.l #TIL311, %a1      | load address; saves time in loops
-    move.l #GPDR, %a2        | bounds check address
-    
-      
-    | stage one: load bytes until half full is asserted
-    moveq #127, %d0
+    move.l #TIL311, %a1      | load address; save time
+  
+    | load 256 bytes into FIFO
 
-bc_loop:
-    move.l (%a0)+, (%a1)
-    btst.b #2, (%a2)
-    dbeq %d0, bc_loop        | exit loop if GPDR bit 2 is 0
+    movem.l (%a0)+, %d0-%d7/%a2-%a6
+    movem.l %d0-%d7/%a2-%a6, (%a1)    | 52 
     
-    | stage two: load no more than 256 bytes - 3 bytes (worst case)
-    moveq #62, %d0
+	movem.l (%a0)+, %d0-%d7/%a2-%a6
+    movem.l %d0-%d7/%a2-%a6, (%a1)    | 52 
     
-rem_loop:
-    move.l (%a0)+, (%a1)
-    dbra %d0, rem_loop
+	movem.l (%a0)+, %d0-%d7/%a2-%a6
+    movem.l %d0-%d7/%a2-%a6, (%a1)    | 52 
     
+	movem.l (%a0)+, %d0-%d7/%a2-%a6
+    movem.l %d0-%d7/%a2-%a6, (%a1)    | 52
+    
+	movem.l (%a0)+, %d1-%d7/%a2-%a6
+    movem.l %d1-%d7/%a2-%a6, (%a1)    | 48 
+  
     move.l %a0, (wav_ptr)
     
-    
 skip_load:
-    movem.l (%sp)+, %d0/%a0-%a2
+    movem.l (%sp)+, %d0-%d7/%a0-%a6
     
     clr.b (wav_semaphore)
     move.b #0, (0xC0001)     | LED off
     
-wav_end:
+isr_end:
     rte
     
     
