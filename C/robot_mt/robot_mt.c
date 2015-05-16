@@ -38,9 +38,6 @@
 #define BCK_JOB 0x31BB
 
 /* prototypes */
-int main();
-void lcd_load_ch();
-void push_state(motor_state ms);
 
 typedef struct {
     uint8_t ML;
@@ -48,6 +45,10 @@ typedef struct {
     int32_t duration; // in ms
     uint32_t ID;     
 } motor_state;
+
+// functions
+void lcd_load_ch();
+void push_state(motor_state ms);
 
 /* global state */
 motor_state drive_stack[128];
