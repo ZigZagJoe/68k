@@ -6,7 +6,6 @@
 // IO devices for my specific machine
 #include <io.h>
 #include <interrupts.h>
-#include <flash.h>
 #include <lcd.h>
 #include <time.h>
 #include <kernel.h>
@@ -14,25 +13,34 @@
 
 #include <binary.h>
 
-int main();
-void lcd_load_ch();
 
-sem_t lcd_sem;
-sem_t ds_sem;
+#define LEFT_BUMPER_BIT 4
+#define RIGHT_BUMPER_BIT 3
 
-#define LEFT_BUMPER 4
-#define RIGHT_BUMPER 3
+#define LEFT_BUMPER bisset(GPDR, LEFT_BUMPER_BIT)
+#define RIGHT_BUMPER bisset(GPDR, RIGHT_BUMPER_BIT)
+
 #define LEFT_MOTOR TADR
 #define RIGHT_MOTOR TBDR
 
+// 1.5ms
 #define MOTOR_STOP 110
+// 1ms
 #define MOTOR_FWD 148
+// 2ms
 #define MOTOR_BCK 74
 
+// custom characters
 #define CH_UPARR 0
 #define CH_DNARR 1
 #define CH_STOP 2
 
+#define BCK_JOB 0x31BB
+
+/* prototypes */
+int main();
+void lcd_load_ch();
+void push_state(motor_state ms);
 
 typedef struct {
     uint8_t ML;
@@ -41,31 +49,31 @@ typedef struct {
     uint32_t ID;     
 } motor_state;
 
+/* global state */
 motor_state drive_stack[128];
 uint8_t drive_stack_head = 127;
 
 #define curr_state (drive_stack[drive_stack_head])
 
-void push_state(motor_state ms) {
-    drive_stack_head--;
-    drive_stack[drive_stack_head] = ms;
-}
+sem_t lcd_sem;
+sem_t ds_sem;
 
-#define BCK_JOB 0x31BB
 
-// monitor bumper sensors
+// monitors bumper sensors
 void task_check_bumper() {
     while(true) {
-        if (bisset(GPDR, LEFT_BUMPER) || bisset(GPDR, RIGHT_BUMPER)) {
+        if (LEFT_BUMPER || RIGHT_BUMPER) {
             sleep_for(10); // debounce
-            if (bisset(GPDR, LEFT_BUMPER) || bisset(GPDR, RIGHT_BUMPER)) {
-                
+            
+            if (LEFT_BUMPER || RIGHT_BUMPER) {
+            
+                // acquire the stack semaphore
                 sem_acquire(&ds_sem);
 
                 // if top of stack is reverse task, just refresh duration
-                if (drive_stack[drive_stack_head].ID == BCK_JOB) {
+                if (curr_state.ID == BCK_JOB) {
                     printf("Still touching something.\n");
-                    drive_stack[drive_stack_head].duration = 2000;
+                    curr_state.duration = 2000;
                 } else {
                     printf("Hit something!\n");
                     
@@ -74,7 +82,7 @@ void task_check_bumper() {
                     RIGHT_MOTOR = MOTOR_STOP;
                     
                     // put the turn on the stack
-                    if (bisset(GPDR, LEFT_BUMPER)) {
+                    if (LEFT_BUMPER) {
                         motor_state rot_right = { MOTOR_FWD, MOTOR_BCK, 600 + rand8(), 0x3144 };
                         push_state(rot_right);   
                     } else {
@@ -89,6 +97,7 @@ void task_check_bumper() {
                 }
               
                 sem_release(&ds_sem);
+                sleep_for(50);
             }
         }
         yield();
@@ -96,12 +105,13 @@ void task_check_bumper() {
 
 }
 
-// one job: set motor state to match top of state stack, and consume state when duration used up
+// sets motor state to top of state stack, and consumes state when duration expired
 void task_drive() {
     while(true) {
         sem_acquire(&ds_sem);
     
         motor_state *cs = &curr_state;
+        
         LEFT_MOTOR = cs->ML;
         RIGHT_MOTOR = cs->MR;
         TIL311 = cs->ID & 0xFF;
@@ -117,6 +127,7 @@ void task_drive() {
     }
 }
 
+// print the current hardware state to LCD, with a heartbeat
 void task_lcd_status() {
     uint8_t st = 0;
     
@@ -127,6 +138,7 @@ void task_lcd_status() {
         
         lcd_cursor(1,1);
             
+        // print motor statuses
         if (curr_state.MR == MOTOR_STOP) {
             lcd_data(CH_STOP);
         } else 
@@ -138,14 +150,15 @@ void task_lcd_status() {
             lcd_data(CH_STOP);
         } else 
             lcd_data(curr_state.ML > MOTOR_STOP ? CH_UPARR : CH_DNARR);
-            
-        lcd_data(' ');
-        lcd_data(' ');
-        lcd_data(bisset(GPDR, LEFT_BUMPER)?'L':' ');
-        lcd_data(' ');
-        lcd_data(bisset(GPDR, RIGHT_BUMPER)?'R':' ');
         
-        lcd_cursor (15,1);
+        // sensor status
+        lcd_cursor(6,1);
+        lcd_data(LEFT_BUMPER?'L':' ');
+        lcd_data(' ');
+        lcd_data(RIGHT_BUMPER?'R':' ');
+        
+        // print heartbeat
+        lcd_cursor(15,1);
         st++;
         lcd_data(chs[(st >> 2) & 1]);
            
@@ -154,6 +167,7 @@ void task_lcd_status() {
     }
 }
 
+// initialize the hardware and create tasks
 int main() {
  	TIL311 = 0xC5;
  	
@@ -166,13 +180,10 @@ int main() {
 
 	lcd_load_ch();
 
-    
 	lcd_printf("68008 ROBOT LOL");
 	lcd_cursor(0,1);
-    
-    enter_critical();
-     	
- 	TACR = 0x4;  // prescaler /50
+	
+ 	TACR = 0x4;  // prescaler of 50
     TBCR = 0x4;
     
     RIGHT_MOTOR = MOTOR_STOP;
@@ -181,7 +192,9 @@ int main() {
     motor_state go_forward = { MOTOR_FWD, MOTOR_FWD, -1 /* never die */, 0xFF };
     push_state(go_forward); // this should never die
     
-	create_task(&task_drive, 0);	
+    enter_critical(); // ensure all tasks are created simultaneously 
+     
+    create_task(&task_drive, 0);	
 	create_task(&task_check_bumper,0);
 	create_task(&task_lcd_status,0);
 
@@ -190,8 +203,15 @@ int main() {
 	return 0;
 }
 
+// put a motor state onto the stack
+void push_state(motor_state ms) {
+    drive_stack_head--;
+    drive_stack[drive_stack_head] = ms;
+}
+
+// load the custom characters into the LCD
 void lcd_load_ch() {
-    lcd_cgram(CH_UPARR); // uparr
+    lcd_cgram(CH_UPARR); // up arrow
     lcd_data(B00000000);
     lcd_data(B00000100);
     lcd_data(B00001110);
@@ -201,7 +221,7 @@ void lcd_load_ch() {
     lcd_data(B00000100);
     lcd_data(B00000100);
     
-    lcd_cgram(CH_DNARR); // downarr
+    lcd_cgram(CH_DNARR); // down arrow
     lcd_data(B00000000);
     lcd_data(B00000100);
     lcd_data(B00000100);
