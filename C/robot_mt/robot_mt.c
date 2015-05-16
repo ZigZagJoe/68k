@@ -12,7 +12,10 @@
 #include <kernel.h>
 #include <semaphore.h>
 
+#include <binary.h>
+
 int main();
+void lcd_load_ch();
 
 sem_t lcd_sem;
 sem_t ds_sem;
@@ -26,6 +29,11 @@ sem_t ds_sem;
 #define MOTOR_FWD 148
 #define MOTOR_BCK 74
 
+#define CH_UPARR 0
+#define CH_DNARR 1
+#define CH_STOP 2
+
+
 typedef struct {
     uint8_t ML;
     uint8_t MR;
@@ -35,6 +43,8 @@ typedef struct {
 
 motor_state drive_stack[128];
 uint8_t drive_stack_head = 127;
+
+#define curr_state (drive_stack[drive_stack_head])
 
 void push_state(motor_state ms) {
     drive_stack_head--;
@@ -91,7 +101,7 @@ void task_drive() {
     while(true) {
         sem_acquire(&ds_sem);
     
-        motor_state *cs = &drive_stack[drive_stack_head];
+        motor_state *cs = &curr_state;
         LEFT_MOTOR = cs->ML;
         RIGHT_MOTOR = cs->MR;
         TIL311 = cs->ID & 0xFF;
@@ -99,7 +109,7 @@ void task_drive() {
         if (cs->duration != -1) {
             cs->duration -= 20;
             if (cs->duration < 1)
-                drive_stack_head++;
+                drive_stack_head++; // pop state
         }
         
         sem_release(&ds_sem);
@@ -107,15 +117,55 @@ void task_drive() {
     }
 }
 
+void task_lcd_status() {
+    uint8_t st = 0;
+    
+    uint8_t chs[] = {0xA5,' '};
+    while(true) {
+        sem_acquire(&lcd_sem);
+        
+        lcd_cursor(1,1);
+            
+        if (curr_state.MR == MOTOR_STOP) {
+            lcd_data(CH_STOP);
+        } else 
+            lcd_data(curr_state.MR > MOTOR_STOP ? CH_UPARR : CH_DNARR);
+                        
+        lcd_data(' ');
+            
+        if (curr_state.ML == MOTOR_STOP) {
+            lcd_data(CH_STOP);
+        } else 
+            lcd_data(curr_state.ML > MOTOR_STOP ? CH_UPARR : CH_DNARR);
+            
+   
+        lcd_printf("  %c %c",bisset(GPDR, LEFT_BUMPER)?'L':' ',bisset(GPDR, RIGHT_BUMPER)?'R':' ');
+        
+        
+        lcd_cursor (15,1);
+        st++;
+        lcd_data(chs[(st >> 2) & 1]);
+           
+        sem_release(&lcd_sem);
+        sleep_for(100);
+    }
+}
+
 int main() {
- 	TIL311 = 0x98;
+ 	TIL311 = 0xC5;
  	srand();
  	
  	sem_init(&lcd_sem);
     sem_init(&ds_sem);
 
+   
 	lcd_init();
-	lcd_printf("Driving thing!");
+	
+	lcd_load_ch();
+
+    
+	lcd_printf("68008 ROBOT LOL");
+	lcd_cursor(0,1);
 	
 	serial_start(SERIAL_SAFE);
 	
@@ -132,8 +182,43 @@ int main() {
     
 	create_task(&task_drive, 0);	
 	create_task(&task_check_bumper,0);
+	create_task(&task_lcd_status,0);
 
   	leave_critical();
 
 	return 0;
+}
+
+void lcd_load_ch() {
+    lcd_cgram(CH_UPARR); // uparr
+    lcd_data(B00000000);
+    lcd_data(B00000100);
+    lcd_data(B00001110);
+    lcd_data(B00010101);
+    lcd_data(B00000100);
+    lcd_data(B00000100);
+    lcd_data(B00000100);
+    lcd_data(B00000100);
+    
+    lcd_cgram(CH_DNARR); // downarr
+    lcd_data(B00000000);
+    lcd_data(B00000100);
+    lcd_data(B00000100);
+    lcd_data(B00000100);
+    lcd_data(B00000100);
+    lcd_data(B00010101);
+    lcd_data(B00001110);
+    lcd_data(B00000100);
+    
+    lcd_cgram(CH_STOP); // stop
+    lcd_data(B00000000);
+    lcd_data(B00001110);
+    lcd_data(B00010001);
+    lcd_data(B00011011);
+    lcd_data(B00010101);
+    lcd_data(B00011011);
+    lcd_data(B00010001);
+    lcd_data(B00001110);
+        
+    lcd_cursor(0,0); // back to data entry mode
 }
