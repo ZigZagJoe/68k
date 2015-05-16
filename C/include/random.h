@@ -8,6 +8,7 @@
 
 void srand(void);
 uint32_t rand(void);
+uint8_t rand8(void);
 uint32_t get_random_seed();
 
 #endif

@@ -75,10 +75,10 @@ void task_check_bumper() {
                     
                     // put the turn on the stack
                     if (bisset(GPDR, LEFT_BUMPER)) {
-                        motor_state rot_right = { MOTOR_FWD, MOTOR_BCK, 800, 0x3144 };
+                        motor_state rot_right = { MOTOR_FWD, MOTOR_BCK, 600 + rand8(), 0x3144 };
                         push_state(rot_right);   
                     } else {
-                        motor_state rot_left = { MOTOR_BCK, MOTOR_FWD, 800, 0x3111 };
+                        motor_state rot_left = { MOTOR_BCK, MOTOR_FWD, 600 + rand8(), 0x3111 };
                         push_state(rot_left);
                     }
                     
@@ -121,6 +121,7 @@ void task_lcd_status() {
     uint8_t st = 0;
     
     uint8_t chs[] = {0xA5,' '};
+    
     while(true) {
         sem_acquire(&lcd_sem);
         
@@ -138,9 +139,11 @@ void task_lcd_status() {
         } else 
             lcd_data(curr_state.ML > MOTOR_STOP ? CH_UPARR : CH_DNARR);
             
-   
-        lcd_printf("  %c %c",bisset(GPDR, LEFT_BUMPER)?'L':' ',bisset(GPDR, RIGHT_BUMPER)?'R':' ');
-        
+        lcd_data(' ');
+        lcd_data(' ');
+        lcd_data(bisset(GPDR, LEFT_BUMPER)?'L':' ');
+        lcd_data(' ');
+        lcd_data(bisset(GPDR, RIGHT_BUMPER)?'R':' ');
         
         lcd_cursor (15,1);
         st++;
@@ -153,22 +156,20 @@ void task_lcd_status() {
 
 int main() {
  	TIL311 = 0xC5;
- 	srand();
  	
+ 	srand();
+ 	serial_start(SERIAL_SAFE);
+	lcd_init();
+	
  	sem_init(&lcd_sem);
     sem_init(&ds_sem);
 
-   
-	lcd_init();
-	
 	lcd_load_ch();
 
     
 	lcd_printf("68008 ROBOT LOL");
 	lcd_cursor(0,1);
-	
-	serial_start(SERIAL_SAFE);
-	
+    
     enter_critical();
      	
  	TACR = 0x4;  // prescaler /50

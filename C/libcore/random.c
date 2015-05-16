@@ -19,6 +19,11 @@ uint32_t rand(void) {
     return w = w ^ (w >> 19) * 3120909123 ^ t ^ (t >> 8);
 }
 
+uint8_t rand8(void) {
+    uint32_t r = rand();
+    return (r >> 24) ^ (r & 0xFF) ^ (r >> 16);
+}
+
 // PRNG seed with random data from sram
 void srand(void) {
     x = get_random_seed();
