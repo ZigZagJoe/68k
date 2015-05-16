@@ -1,4 +1,61 @@
-#define SD_DEV 	   IO_DEV3
+   // allow the ISR to blink LED
+	 move.b #2, (0xC0001)     | LED ON
+     move.b #0, (0xC0001)     | LED off
+    
+	DDR |= 1 << 1;
+   /* uint8_t c = 0;
+	
+	while (wav_ptr < wav_end) {
+        *wav_ptr++ = c;
+        c+= 2;
+	}
+    
+    wav_ptr = 0x4000;
+    */
+    //DDR |= 1 << 1;
+    
+    /*__asm volatile ("lb: move.b #2, (0xC0001)\n"
+    					 "move.b #0, (0xC0001)\n"
+    					 "bra lb\n");		*/
+   // for (int i = 0; i < 512; i++)
+    //    TIL311 = *wav_ptr++;	
+    
+    
+   // wav_isr();
+
+char * test_str = "hello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lolhello world what what in the butt lol";
+    
+    uint32_t start, end;
+    int ret;
+    
+    start = millis();
+    for (int i = 0; i < 100; i++)
+        ret = strlen(test_str);
+        
+    end = millis();
+        
+    printf("Str len: %d\n",ret);
+    printf("Time: %d\n", end-start);
+
+    start = millis();
+    for (int i = 0; i < 100; i++)
+        ret = _strlen(test_str);
+    end = millis();
+    
+    printf("Str len2: %d\n", ret);
+    printf("Time: %d\n", end-start);
+    
+    
+    printf("Null test\n");
+    start = millis();
+    for (int i = 0; i < 100; i++)
+        ret = _nulltest(test_str);
+    end = millis();
+    
+    printf("Time: %d\n", end-start);
+    
+    
+    #define SD_DEV 	   IO_DEV3
 #define SD_COMMAND MEM(SD_DEV+2)
 #define SD_DATA    MEM(SD_DEV)
 

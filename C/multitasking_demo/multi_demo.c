@@ -176,7 +176,7 @@ int main() {
     create_task(&task_echo,0);
     create_task(&task_quiet,0);
   	create_task(&task_random,0);
-  	create_task(&task_song,0);
+  	//create_task(&task_song,0);
 	create_task(&task_sem_test1,0);
     create_task(&task_sem_test2,0);
     

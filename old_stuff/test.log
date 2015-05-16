@@ -1,0 +1,4076 @@
+56000
+Open port /dev/cu.usbserial-M68KV1BB @ 56000... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56005
+Open port /dev/cu.usbserial-M68KV1BB @ 56005... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56010
+Open port /dev/cu.usbserial-M68KV1BB @ 56010... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 2E8FA217, expected 105B19BF
+Retrying.
+
+Mismatch at byte 2: expected 49, got 98
+Verification FAILED with 2019 errors. Retrying.
+
+
+56015
+Open port /dev/cu.usbserial-M68KV1BB @ 56015... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56020
+Open port /dev/cu.usbserial-M68KV1BB @ 56020... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56025
+Open port /dev/cu.usbserial-M68KV1BB @ 56025... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56030
+Open port /dev/cu.usbserial-M68KV1BB @ 56030... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56035
+Open port /dev/cu.usbserial-M68KV1BB @ 56035... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56040
+Open port /dev/cu.usbserial-M68KV1BB @ 56040... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56045
+Open port /dev/cu.usbserial-M68KV1BB @ 56045... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56050
+Open port /dev/cu.usbserial-M68KV1BB @ 56050... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56055
+Open port /dev/cu.usbserial-M68KV1BB @ 56055... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56060
+Open port /dev/cu.usbserial-M68KV1BB @ 56060... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56065
+Open port /dev/cu.usbserial-M68KV1BB @ 56065... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 12E38F11, expected 105B19BF
+Retrying.
+
+Mismatch at byte 2: expected 49, got 98
+Verification FAILED with 2022 errors. Retrying.
+
+
+56070
+Open port /dev/cu.usbserial-M68KV1BB @ 56070... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56075
+Open port /dev/cu.usbserial-M68KV1BB @ 56075... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56080
+Open port /dev/cu.usbserial-M68KV1BB @ 56080... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56085
+Open port /dev/cu.usbserial-M68KV1BB @ 56085... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56090
+Open port /dev/cu.usbserial-M68KV1BB @ 56090... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56095
+Open port /dev/cu.usbserial-M68KV1BB @ 56095... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56100
+Open port /dev/cu.usbserial-M68KV1BB @ 56100... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56105
+Open port /dev/cu.usbserial-M68KV1BB @ 56105... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56110
+Open port /dev/cu.usbserial-M68KV1BB @ 56110... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got c000, expected 4000)
+
+56115
+Open port /dev/cu.usbserial-M68KV1BB @ 56115... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56120
+Open port /dev/cu.usbserial-M68KV1BB @ 56120... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56125
+Open port /dev/cu.usbserial-M68KV1BB @ 56125... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56130
+Open port /dev/cu.usbserial-M68KV1BB @ 56130... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56135
+Open port /dev/cu.usbserial-M68KV1BB @ 56135... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56140
+Open port /dev/cu.usbserial-M68KV1BB @ 56140... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56145
+Open port /dev/cu.usbserial-M68KV1BB @ 56145... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 85AA2217, expected 105B19BF
+Retrying.
+
+Mismatch at byte 4: expected 48, got 112
+Verification FAILED with 1285 errors. Retrying.
+
+
+56150
+Open port /dev/cu.usbserial-M68KV1BB @ 56150... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56155
+Open port /dev/cu.usbserial-M68KV1BB @ 56155... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 315B70FC, expected 105B19BF
+Retrying.
+
+Mismatch at byte 6: expected 48, got 112
+Verification FAILED with 1269 errors. Retrying.
+
+
+56160
+Open port /dev/cu.usbserial-M68KV1BB @ 56160... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56165
+Open port /dev/cu.usbserial-M68KV1BB @ 56165... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56170
+Open port /dev/cu.usbserial-M68KV1BB @ 56170... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56175
+Open port /dev/cu.usbserial-M68KV1BB @ 56175... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56180
+Open port /dev/cu.usbserial-M68KV1BB @ 56180... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56185
+Open port /dev/cu.usbserial-M68KV1BB @ 56185... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56190
+Open port /dev/cu.usbserial-M68KV1BB @ 56190... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56195
+Open port /dev/cu.usbserial-M68KV1BB @ 56195... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got c000, expected 4000)
+
+56200
+Open port /dev/cu.usbserial-M68KV1BB @ 56200... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56205
+Open port /dev/cu.usbserial-M68KV1BB @ 56205... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56210
+Open port /dev/cu.usbserial-M68KV1BB @ 56210... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56215
+Open port /dev/cu.usbserial-M68KV1BB @ 56215... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got A2827522, expected 105B19BF
+Retrying.
+
+Mismatch at byte 10: expected 54, got 118
+Verification FAILED with 1259 errors. Retrying.
+
+
+56220
+Open port /dev/cu.usbserial-M68KV1BB @ 56220... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56225
+Open port /dev/cu.usbserial-M68KV1BB @ 56225... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56230
+Open port /dev/cu.usbserial-M68KV1BB @ 56230... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56235
+Open port /dev/cu.usbserial-M68KV1BB @ 56235... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 422EED87, expected 105B19BF
+Retrying.
+
+Mismatch at byte 0: expected 83, got 167
+Verification FAILED with 1276 errors. Retrying.
+
+
+56240
+Open port /dev/cu.usbserial-M68KV1BB @ 56240... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56245
+Open port /dev/cu.usbserial-M68KV1BB @ 56245... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56250
+Open port /dev/cu.usbserial-M68KV1BB @ 56250... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56255
+Open port /dev/cu.usbserial-M68KV1BB @ 56255... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56260
+Open port /dev/cu.usbserial-M68KV1BB @ 56260... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got DB41568B, expected 105B19BF
+Retrying.
+
+Mismatch at byte 6: expected 48, got 112
+Verification FAILED with 1270 errors. Retrying.
+
+
+56265
+Open port /dev/cu.usbserial-M68KV1BB @ 56265... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 66C6D073, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 98
+Verification FAILED with 1632 errors. Retrying.
+
+
+56270
+Open port /dev/cu.usbserial-M68KV1BB @ 56270... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 18E6258D, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 96
+Verification FAILED with 1623 errors. Retrying.
+
+
+56275
+Open port /dev/cu.usbserial-M68KV1BB @ 56275... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56280
+Open port /dev/cu.usbserial-M68KV1BB @ 56280... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56285
+Open port /dev/cu.usbserial-M68KV1BB @ 56285... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56290
+Open port /dev/cu.usbserial-M68KV1BB @ 56290... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56295
+Open port /dev/cu.usbserial-M68KV1BB @ 56295... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56300
+Open port /dev/cu.usbserial-M68KV1BB @ 56300... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56305
+Open port /dev/cu.usbserial-M68KV1BB @ 56305... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56310
+Open port /dev/cu.usbserial-M68KV1BB @ 56310... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56315
+Open port /dev/cu.usbserial-M68KV1BB @ 56315... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56320
+Open port /dev/cu.usbserial-M68KV1BB @ 56320... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56325
+Open port /dev/cu.usbserial-M68KV1BB @ 56325... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56330
+Open port /dev/cu.usbserial-M68KV1BB @ 56330... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56335
+Open port /dev/cu.usbserial-M68KV1BB @ 56335... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56340
+Open port /dev/cu.usbserial-M68KV1BB @ 56340... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56345
+Open port /dev/cu.usbserial-M68KV1BB @ 56345... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56350
+Open port /dev/cu.usbserial-M68KV1BB @ 56350... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56355
+Open port /dev/cu.usbserial-M68KV1BB @ 56355... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56360
+Open port /dev/cu.usbserial-M68KV1BB @ 56360... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56365
+Open port /dev/cu.usbserial-M68KV1BB @ 56365... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56370
+Open port /dev/cu.usbserial-M68KV1BB @ 56370... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56375
+Open port /dev/cu.usbserial-M68KV1BB @ 56375... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56380
+Open port /dev/cu.usbserial-M68KV1BB @ 56380... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56385
+Open port /dev/cu.usbserial-M68KV1BB @ 56385... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56390
+Open port /dev/cu.usbserial-M68KV1BB @ 56390... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56395
+Open port /dev/cu.usbserial-M68KV1BB @ 56395... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 91AB06BC, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 97
+Verification FAILED with 1633 errors. Retrying.
+
+
+56400
+Open port /dev/cu.usbserial-M68KV1BB @ 56400... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56405
+Open port /dev/cu.usbserial-M68KV1BB @ 56405... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56410
+Open port /dev/cu.usbserial-M68KV1BB @ 56410... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56415
+Open port /dev/cu.usbserial-M68KV1BB @ 56415... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56420
+Open port /dev/cu.usbserial-M68KV1BB @ 56420... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 4384B1E4, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 113
+Verification FAILED with 1450 errors. Retrying.
+
+
+56425
+Open port /dev/cu.usbserial-M68KV1BB @ 56425... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56430
+Open port /dev/cu.usbserial-M68KV1BB @ 56430... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got AA1FD2D6, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 96
+Verification FAILED with 1478 errors. Retrying.
+
+
+56435
+Open port /dev/cu.usbserial-M68KV1BB @ 56435... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56440
+Open port /dev/cu.usbserial-M68KV1BB @ 56440... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56445
+Open port /dev/cu.usbserial-M68KV1BB @ 56445... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56450
+Open port /dev/cu.usbserial-M68KV1BB @ 56450... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got FE883514, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 96
+Verification FAILED with 1481 errors. Retrying.
+
+
+56455
+Open port /dev/cu.usbserial-M68KV1BB @ 56455... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56460
+Open port /dev/cu.usbserial-M68KV1BB @ 56460... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56465
+Open port /dev/cu.usbserial-M68KV1BB @ 56465... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got FB7735AA, expected 105B19BF
+Retrying.
+
+Mismatch at byte 20: expected 54, got 118
+Verification FAILED with 1524 errors. Retrying.
+
+
+56470
+Open port /dev/cu.usbserial-M68KV1BB @ 56470... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got AB559008, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 96
+Verification FAILED with 1490 errors. Retrying.
+
+
+56475
+Open port /dev/cu.usbserial-M68KV1BB @ 56475... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56480
+Open port /dev/cu.usbserial-M68KV1BB @ 56480... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56485
+Open port /dev/cu.usbserial-M68KV1BB @ 56485... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56490
+Open port /dev/cu.usbserial-M68KV1BB @ 56490... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56495
+Open port /dev/cu.usbserial-M68KV1BB @ 56495... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 7904CC0C, expected 105B19BF
+Retrying.
+
+Mismatch at byte 0: expected 83, got 147
+Verification FAILED with 1460 errors. Retrying.
+
+
+56500
+Open port /dev/cu.usbserial-M68KV1BB @ 56500... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56505
+Open port /dev/cu.usbserial-M68KV1BB @ 56505... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56510
+Open port /dev/cu.usbserial-M68KV1BB @ 56510... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56515
+Open port /dev/cu.usbserial-M68KV1BB @ 56515... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56520
+Open port /dev/cu.usbserial-M68KV1BB @ 56520... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 2417B7A6, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 112
+Verification FAILED with 1365 errors. Retrying.
+
+
+56525
+Open port /dev/cu.usbserial-M68KV1BB @ 56525... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56530
+Open port /dev/cu.usbserial-M68KV1BB @ 56530... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56535
+Open port /dev/cu.usbserial-M68KV1BB @ 56535... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56540
+Open port /dev/cu.usbserial-M68KV1BB @ 56540... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56545
+Open port /dev/cu.usbserial-M68KV1BB @ 56545... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56550
+Open port /dev/cu.usbserial-M68KV1BB @ 56550... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 116F9086, expected 105B19BF
+Retrying.
+
+Mismatch at byte 8: expected 54, got 118
+Verification FAILED with 1260 errors. Retrying.
+
+
+56555
+Open port /dev/cu.usbserial-M68KV1BB @ 56555... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got D4042FEB, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 99
+Verification FAILED with 1268 errors. Retrying.
+
+
+56560
+Open port /dev/cu.usbserial-M68KV1BB @ 56560... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56565
+Open port /dev/cu.usbserial-M68KV1BB @ 56565... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 073894D1, expected 105B19BF
+Retrying.
+
+Mismatch at byte 5: expected 48, got 96
+Verification FAILED with 1272 errors. Retrying.
+
+
+56570
+Open port /dev/cu.usbserial-M68KV1BB @ 56570... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56575
+Open port /dev/cu.usbserial-M68KV1BB @ 56575... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got FC98087B, expected 105B19BF
+Retrying.
+
+Mismatch at byte 4: expected 48, got 112
+Verification FAILED with 1292 errors. Retrying.
+
+
+56580
+Open port /dev/cu.usbserial-M68KV1BB @ 56580... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+56585
+Open port /dev/cu.usbserial-M68KV1BB @ 56585... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got A9941A54, expected 105B19BF
+Retrying.
+
+Mismatch at byte 2: expected 49, got 97
+Verification FAILED with 1255 errors. Retrying.
+
+
+56590
+Open port /dev/cu.usbserial-M68KV1BB @ 56590... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56595
+Open port /dev/cu.usbserial-M68KV1BB @ 56595... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56600
+Open port /dev/cu.usbserial-M68KV1BB @ 56600... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56605
+Open port /dev/cu.usbserial-M68KV1BB @ 56605... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56610
+Open port /dev/cu.usbserial-M68KV1BB @ 56610... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56615
+Open port /dev/cu.usbserial-M68KV1BB @ 56615... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56620
+Open port /dev/cu.usbserial-M68KV1BB @ 56620... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56625
+Open port /dev/cu.usbserial-M68KV1BB @ 56625... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got D23C6BEC, expected 105B19BF
+Retrying.
+
+Mismatch at byte 7: expected 48, got 112
+Verification FAILED with 1296 errors. Retrying.
+
+
+56630
+Open port /dev/cu.usbserial-M68KV1BB @ 56630... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got A6BB15B8, expected 105B19BF
+Retrying.
+
+Mismatch at byte 6: expected 48, got 112
+Verification FAILED with 1294 errors. Retrying.
+
+
+56635
+Open port /dev/cu.usbserial-M68KV1BB @ 56635... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56640
+Open port /dev/cu.usbserial-M68KV1BB @ 56640... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 17781A07, expected 105B19BF
+Retrying.
+
+Mismatch at byte 9: expected 50, got 98
+Verification FAILED with 1296 errors. Retrying.
+
+
+56645
+Open port /dev/cu.usbserial-M68KV1BB @ 56645... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56650
+Open port /dev/cu.usbserial-M68KV1BB @ 56650... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56655
+Open port /dev/cu.usbserial-M68KV1BB @ 56655... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 60DD427E, expected 105B19BF
+Retrying.
+
+Mismatch at byte 10: expected 54, got 118
+Verification FAILED with 1285 errors. Retrying.
+
+
+56660
+Open port /dev/cu.usbserial-M68KV1BB @ 56660... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56665
+Open port /dev/cu.usbserial-M68KV1BB @ 56665... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56670
+Open port /dev/cu.usbserial-M68KV1BB @ 56670... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 65EB057A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 36: expected 66, got 65
+Verification FAILED with 44 errors. Retrying.
+
+
+56675
+Open port /dev/cu.usbserial-M68KV1BB @ 56675... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 4E03CD74, expected 105B19BF
+Retrying.
+
+Mismatch at byte 373: expected 10, got 11
+Verification FAILED with 48 errors. Retrying.
+
+
+56680
+Open port /dev/cu.usbserial-M68KV1BB @ 56680... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got EF1A7F5D, expected 105B19BF
+Retrying.
+
+Mismatch at byte 223: expected 10, got 13
+Verification FAILED with 547 errors. Retrying.
+
+
+56685
+Open port /dev/cu.usbserial-M68KV1BB @ 56685... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 1ADCEA3C, expected 105B19BF
+Retrying.
+
+Mismatch at byte 189: expected 50, got 114
+Verification FAILED with 42 errors. Retrying.
+
+
+56690
+Open port /dev/cu.usbserial-M68KV1BB @ 56690... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 065A414E, expected 105B19BF
+Retrying.
+
+Mismatch at byte 32: expected 51, got 57
+Verification FAILED with 53 errors. Retrying.
+
+
+56695
+Open port /dev/cu.usbserial-M68KV1BB @ 56695... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 48ECBB81, expected 105B19BF
+Retrying.
+
+Mismatch at byte 457: expected 67, got 65
+Verification FAILED with 206 errors. Retrying.
+
+
+56700
+Open port /dev/cu.usbserial-M68KV1BB @ 56700... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 8D5F4E38, expected 105B19BF
+Retrying.
+
+Mismatch at byte 183: expected 56, got 60
+Verification FAILED with 40 errors. Retrying.
+
+
+56705
+Open port /dev/cu.usbserial-M68KV1BB @ 56705... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got A67175E5, expected 105B19BF
+Retrying.
+
+Mismatch at byte 349: expected 51, got 57
+Verification FAILED with 51 errors. Retrying.
+
+
+56710
+Open port /dev/cu.usbserial-M68KV1BB @ 56710... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 1C115B68, expected 105B19BF
+Retrying.
+
+Mismatch at byte 464: expected 13, got 134
+Verification FAILED with 113 errors. Retrying.
+
+
+56715
+Open port /dev/cu.usbserial-M68KV1BB @ 56715... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 45A5D5EC, expected 105B19BF
+Retrying.
+
+Mismatch at byte 335: expected 65, got 96
+Verification FAILED with 351 errors. Retrying.
+
+
+56720
+Open port /dev/cu.usbserial-M68KV1BB @ 56720... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 52C831F4, expected 105B19BF
+Retrying.
+
+Mismatch at byte 177: expected 10, got 13
+Verification FAILED with 42 errors. Retrying.
+
+
+56725
+Open port /dev/cu.usbserial-M68KV1BB @ 56725... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got BF48D6DC, expected 105B19BF
+Retrying.
+
+Mismatch at byte 371: expected 66, got 65
+Verification FAILED with 42 errors. Retrying.
+
+
+56730
+Open port /dev/cu.usbserial-M68KV1BB @ 56730... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 4D92CC4C, expected 105B19BF
+Retrying.
+
+Mismatch at byte 182: expected 48, got 152
+Verification FAILED with 48 errors. Retrying.
+
+
+56735
+Open port /dev/cu.usbserial-M68KV1BB @ 56735... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 796F4C69, expected 105B19BF
+Retrying.
+
+Mismatch at byte 175: expected 70, got 71
+Verification FAILED with 46 errors. Retrying.
+
+
+56740
+Open port /dev/cu.usbserial-M68KV1BB @ 56740... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got F1DEA2FF, expected 105B19BF
+Retrying.
+
+Mismatch at byte 22: expected 54, got 51
+Verification FAILED with 200 errors. Retrying.
+
+
+56745
+Open port /dev/cu.usbserial-M68KV1BB @ 56745... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 7F6DB702, expected 105B19BF
+Retrying.
+
+Mismatch at byte 120: expected 52, got 154
+Verification FAILED with 55 errors. Retrying.
+
+
+56750
+Open port /dev/cu.usbserial-M68KV1BB @ 56750... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got DF1D6000, expected 105B19BF
+Retrying.
+
+Mismatch at byte 219: expected 57, got 156
+Verification FAILED with 543 errors. Retrying.
+
+
+56755
+Open port /dev/cu.usbserial-M68KV1BB @ 56755... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 0168E2F4, expected 105B19BF
+Retrying.
+
+Mismatch at byte 182: expected 48, got 56
+Verification FAILED with 37 errors. Retrying.
+
+
+56760
+Open port /dev/cu.usbserial-M68KV1BB @ 56760... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got DD7D26BE, expected 105B19BF
+Retrying.
+
+Mismatch at byte 346: expected 54, got 55
+Verification FAILED with 43 errors. Retrying.
+
+
+56765
+Open port /dev/cu.usbserial-M68KV1BB @ 56765... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 002CFA82, expected 105B19BF
+Retrying.
+
+Mismatch at byte 444: expected 49, got 48
+Verification FAILED with 126 errors. Retrying.
+
+
+56770
+Open port /dev/cu.usbserial-M68KV1BB @ 56770... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 6A7C1F72, expected 105B19BF
+Retrying.
+
+Mismatch at byte 16: expected 54, got 27
+Verification FAILED with 98 errors. Retrying.
+
+
+56775
+Open port /dev/cu.usbserial-M68KV1BB @ 56775... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 59455010, expected 105B19BF
+Retrying.
+
+Mismatch at byte 311: expected 53, got 117
+Verification FAILED with 72 errors. Retrying.
+
+
+56780
+Open port /dev/cu.usbserial-M68KV1BB @ 56780... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got B3FEE4BE, expected 105B19BF
+Retrying.
+
+Mismatch at byte 287: expected 52, got 58
+Verification FAILED with 391 errors. Retrying.
+
+
+56785
+Open port /dev/cu.usbserial-M68KV1BB @ 56785... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 29A60883, expected 105B19BF
+Retrying.
+
+Mismatch at byte 128: expected 66, got 130
+Verification FAILED with 53 errors. Retrying.
+
+
+56790
+Open port /dev/cu.usbserial-M68KV1BB @ 56790... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got ECFF0D7A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 214: expected 48, got 112
+Verification FAILED with 47 errors. Retrying.
+
+
+56795
+Open port /dev/cu.usbserial-M68KV1BB @ 56795... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 11FFF69D, expected 105B19BF
+Retrying.
+
+Mismatch at byte 55: expected 48, got 56
+Verification FAILED with 458 errors. Retrying.
+
+
+56800
+Open port /dev/cu.usbserial-M68KV1BB @ 56800... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56805
+Open port /dev/cu.usbserial-M68KV1BB @ 56805... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got D61F0E12, expected 105B19BF
+Retrying.
+
+Mismatch at byte 44: expected 48, got 112
+Verification FAILED with 177 errors. Retrying.
+
+
+56810
+Open port /dev/cu.usbserial-M68KV1BB @ 56810... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got A68BE714, expected 105B19BF
+Retrying.
+
+Mismatch at byte 31: expected 51, got 103
+Verification FAILED with 180 errors. Retrying.
+
+
+56815
+Open port /dev/cu.usbserial-M68KV1BB @ 56815... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 401BC12E, expected 105B19BF
+Retrying.
+
+Mismatch at byte 89: expected 52, got 104
+Verification FAILED with 187 errors. Retrying.
+
+
+56820
+Open port /dev/cu.usbserial-M68KV1BB @ 56820... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 7BEA7B9D, expected 105B19BF
+Retrying.
+
+Mismatch at byte 15: expected 52, got 116
+Verification FAILED with 198 errors. Retrying.
+
+
+56825
+Open port /dev/cu.usbserial-M68KV1BB @ 56825... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 9B9FD88A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 52: expected 70, got 142
+Verification FAILED with 193 errors. Retrying.
+
+
+56830
+Open port /dev/cu.usbserial-M68KV1BB @ 56830... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got BA848FE9, expected 105B19BF
+Retrying.
+
+Mismatch at byte 35: expected 56, got 120
+Verification FAILED with 192 errors. Retrying.
+
+
+56835
+Open port /dev/cu.usbserial-M68KV1BB @ 56835... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got F5ACE88A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 97: expected 48, got 112
+Verification FAILED with 180 errors. Retrying.
+
+
+56840
+Open port /dev/cu.usbserial-M68KV1BB @ 56840... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 4F0BE0B1, expected 105B19BF
+Retrying.
+
+Mismatch at byte 25: expected 53, got 105
+Verification FAILED with 167 errors. Retrying.
+
+
+56845
+Open port /dev/cu.usbserial-M68KV1BB @ 56845... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56850
+Open port /dev/cu.usbserial-M68KV1BB @ 56850... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56855
+Open port /dev/cu.usbserial-M68KV1BB @ 56855... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 5AC711CF, expected 105B19BF
+Retrying.
+
+Mismatch at byte 16: expected 54, got 118
+Verification FAILED with 196 errors. Retrying.
+
+
+56860
+Open port /dev/cu.usbserial-M68KV1BB @ 56860... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 8B4DEB68, expected 105B19BF
+Retrying.
+
+Mismatch at byte 68: expected 55, got 103
+Verification FAILED with 191 errors. Retrying.
+
+
+56865
+Open port /dev/cu.usbserial-M68KV1BB @ 56865... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 42524D6F, expected 105B19BF
+Retrying.
+
+Mismatch at byte 10: expected 54, got 110
+Verification FAILED with 182 errors. Retrying.
+
+
+56870
+Open port /dev/cu.usbserial-M68KV1BB @ 56870... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got AE793B95, expected 105B19BF
+Retrying.
+
+Mismatch at byte 35: expected 56, got 120
+Verification FAILED with 176 errors. Retrying.
+
+
+56875
+Open port /dev/cu.usbserial-M68KV1BB @ 56875... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 5996BE51, expected 105B19BF
+Retrying.
+
+Mismatch at byte 67: expected 48, got 96
+Verification FAILED with 187 errors. Retrying.
+
+
+56880
+Open port /dev/cu.usbserial-M68KV1BB @ 56880... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 016973BE, expected 105B19BF
+Retrying.
+
+Mismatch at byte 44: expected 48, got 112
+Verification FAILED with 189 errors. Retrying.
+
+
+56885
+Open port /dev/cu.usbserial-M68KV1BB @ 56885... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 6F349D2D, expected 105B19BF
+Retrying.
+
+Mismatch at byte 51: expected 51, got 99
+Verification FAILED with 195 errors. Retrying.
+
+
+56890
+Open port /dev/cu.usbserial-M68KV1BB @ 56890... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56895
+Open port /dev/cu.usbserial-M68KV1BB @ 56895... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got A2BB479B, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 96
+Verification FAILED with 183 errors. Retrying.
+
+
+56900
+Open port /dev/cu.usbserial-M68KV1BB @ 56900... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 44D71486, expected 105B19BF
+Retrying.
+
+Mismatch at byte 61: expected 67, got 135
+Verification FAILED with 184 errors. Retrying.
+
+
+56905
+Open port /dev/cu.usbserial-M68KV1BB @ 56905... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 19F938E8, expected 105B19BF
+Retrying.
+
+Mismatch at byte 29: expected 69, got 133
+Verification FAILED with 193 errors. Retrying.
+
+
+56910
+Open port /dev/cu.usbserial-M68KV1BB @ 56910... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 4B0F8C67, expected 105B19BF
+Retrying.
+
+Mismatch at byte 34: expected 51, got 103
+Verification FAILED with 187 errors. Retrying.
+
+
+56915
+Open port /dev/cu.usbserial-M68KV1BB @ 56915... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 9A534E89, expected 105B19BF
+Retrying.
+
+Mismatch at byte 45: expected 56, got 120
+Verification FAILED with 183 errors. Retrying.
+
+
+56920
+Open port /dev/cu.usbserial-M68KV1BB @ 56920... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 180877D2, expected 105B19BF
+Retrying.
+
+Mismatch at byte 59: expected 48, got 96
+Verification FAILED with 178 errors. Retrying.
+
+
+56925
+Open port /dev/cu.usbserial-M68KV1BB @ 56925... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 5ECD34F3, expected 105B19BF
+Retrying.
+
+Mismatch at byte 27: expected 50, got 114
+Verification FAILED with 168 errors. Retrying.
+
+
+56930
+Open port /dev/cu.usbserial-M68KV1BB @ 56930... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 3D86C729, expected 105B19BF
+Retrying.
+
+Mismatch at byte 82: expected 69, got 133
+Verification FAILED with 191 errors. Retrying.
+
+
+56935
+Open port /dev/cu.usbserial-M68KV1BB @ 56935... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got DEF0C310, expected 105B19BF
+Retrying.
+
+Mismatch at byte 28: expected 50, got 114
+Verification FAILED with 182 errors. Retrying.
+
+
+56940
+Open port /dev/cu.usbserial-M68KV1BB @ 56940... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 7FF95015, expected 105B19BF
+Retrying.
+
+Mismatch at byte 15: expected 52, got 104
+Verification FAILED with 552 errors. Retrying.
+
+
+56945
+Open port /dev/cu.usbserial-M68KV1BB @ 56945... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got c000, expected 4000)
+
+56950
+Open port /dev/cu.usbserial-M68KV1BB @ 56950... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 59FE8B55, expected 105B19BF
+Retrying.
+
+Mismatch at byte 6: expected 48, got 96
+Verification FAILED with 541 errors. Retrying.
+
+
+56955
+Open port /dev/cu.usbserial-M68KV1BB @ 56955... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56960
+Open port /dev/cu.usbserial-M68KV1BB @ 56960... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got D7C94232, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 96
+Verification FAILED with 555 errors. Retrying.
+
+
+56965
+Open port /dev/cu.usbserial-M68KV1BB @ 56965... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 19867EE7, expected 105B19BF
+Retrying.
+
+Mismatch at byte 21: expected 49, got 99
+Verification FAILED with 563 errors. Retrying.
+
+
+56970
+Open port /dev/cu.usbserial-M68KV1BB @ 56970... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 75E80B57, expected 105B19BF
+Retrying.
+
+Mismatch at byte 16: expected 54, got 110
+Verification FAILED with 557 errors. Retrying.
+
+
+56975
+Open port /dev/cu.usbserial-M68KV1BB @ 56975... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+56980
+Open port /dev/cu.usbserial-M68KV1BB @ 56980... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 07157855, expected 105B19BF
+Retrying.
+
+Mismatch at byte 10: expected 54, got 108
+Verification FAILED with 578 errors. Retrying.
+
+
+56985
+Open port /dev/cu.usbserial-M68KV1BB @ 56985... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got DDC7104C, expected 105B19BF
+Retrying.
+
+Mismatch at byte 4: expected 48, got 96
+Verification FAILED with 533 errors. Retrying.
+
+
+56990
+Open port /dev/cu.usbserial-M68KV1BB @ 56990... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 71F3703A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 0: expected 83, got 163
+Verification FAILED with 574 errors. Retrying.
+
+
+56995
+Open port /dev/cu.usbserial-M68KV1BB @ 56995... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got FABA1626, expected 105B19BF
+Retrying.
+
+Mismatch at byte 15: expected 52, got 116
+Verification FAILED with 529 errors. Retrying.
+
+
+57000
+Open port /dev/cu.usbserial-M68KV1BB @ 57000... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 30FC7D76, expected 105B19BF
+Retrying.
+
+Mismatch at byte 2: expected 49, got 97
+Verification FAILED with 543 errors. Retrying.
+
+
+57005
+Open port /dev/cu.usbserial-M68KV1BB @ 57005... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 6FAE7258, expected 105B19BF
+Retrying.
+
+Mismatch at byte 9: expected 50, got 98
+Verification FAILED with 557 errors. Retrying.
+
+
+57010
+Open port /dev/cu.usbserial-M68KV1BB @ 57010... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 65033AAF, expected 105B19BF
+Retrying.
+
+Mismatch at byte 10: expected 54, got 108
+Verification FAILED with 545 errors. Retrying.
+
+
+57015
+Open port /dev/cu.usbserial-M68KV1BB @ 57015... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got A6B2DB71, expected 105B19BF
+Retrying.
+
+Mismatch at byte 10: expected 54, got 118
+Verification FAILED with 560 errors. Retrying.
+
+
+57020
+Open port /dev/cu.usbserial-M68KV1BB @ 57020... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 0046AFA4, expected 105B19BF
+Retrying.
+
+Mismatch at byte 4: expected 48, got 96
+Verification FAILED with 565 errors. Retrying.
+
+
+57025
+Open port /dev/cu.usbserial-M68KV1BB @ 57025... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got B6974253, expected 105B19BF
+Retrying.
+
+Mismatch at byte 8: expected 54, got 102
+Verification FAILED with 549 errors. Retrying.
+
+
+57030
+Open port /dev/cu.usbserial-M68KV1BB @ 57030... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 73DD6B60, expected 105B19BF
+Retrying.
+
+Mismatch at byte 7: expected 48, got 112
+Verification FAILED with 534 errors. Retrying.
+
+
+57035
+Open port /dev/cu.usbserial-M68KV1BB @ 57035... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 5AD9527C, expected 105B19BF
+Retrying.
+
+Mismatch at byte 21: expected 49, got 97
+Verification FAILED with 563 errors. Retrying.
+
+
+57040
+Open port /dev/cu.usbserial-M68KV1BB @ 57040... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 0418059A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 14: expected 55, got 119
+Verification FAILED with 556 errors. Retrying.
+
+
+57045
+Open port /dev/cu.usbserial-M68KV1BB @ 57045... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57050
+Open port /dev/cu.usbserial-M68KV1BB @ 57050... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got ACD08215, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 99
+Verification FAILED with 565 errors. Retrying.
+
+
+57055
+Open port /dev/cu.usbserial-M68KV1BB @ 57055... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 9A369DE5, expected 105B19BF
+Retrying.
+
+Mismatch at byte 10: expected 54, got 118
+Verification FAILED with 552 errors. Retrying.
+
+
+57060
+Open port /dev/cu.usbserial-M68KV1BB @ 57060... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57065
+Open port /dev/cu.usbserial-M68KV1BB @ 57065... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57070
+Open port /dev/cu.usbserial-M68KV1BB @ 57070... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 548C7A0B, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 112
+Verification FAILED with 554 errors. Retrying.
+
+
+57075
+Open port /dev/cu.usbserial-M68KV1BB @ 57075... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got DAFE08BB, expected 105B19BF
+Retrying.
+
+Mismatch at byte 2: expected 49, got 113
+Verification FAILED with 559 errors. Retrying.
+
+
+57080
+Open port /dev/cu.usbserial-M68KV1BB @ 57080... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57085
+Open port /dev/cu.usbserial-M68KV1BB @ 57085... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 35468360, expected 105B19BF
+Retrying.
+
+Mismatch at byte 61: expected 67, got 131
+Verification FAILED with 563 errors. Retrying.
+
+
+57090
+Open port /dev/cu.usbserial-M68KV1BB @ 57090... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57095
+Open port /dev/cu.usbserial-M68KV1BB @ 57095... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got E3C4C2EC, expected 105B19BF
+Retrying.
+
+Mismatch at byte 51: expected 51, got 115
+Verification FAILED with 527 errors. Retrying.
+
+
+57100
+Open port /dev/cu.usbserial-M68KV1BB @ 57100... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57105
+Open port /dev/cu.usbserial-M68KV1BB @ 57105... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 8F6ED508, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 99
+Verification FAILED with 542 errors. Retrying.
+
+
+57110
+Open port /dev/cu.usbserial-M68KV1BB @ 57110... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got D99CBCF3, expected 105B19BF
+Retrying.
+
+Mismatch at byte 10: expected 54, got 108
+Verification FAILED with 559 errors. Retrying.
+
+
+57115
+Open port /dev/cu.usbserial-M68KV1BB @ 57115... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 47B97A4D, expected 105B19BF
+Retrying.
+
+Mismatch at byte 2: expected 49, got 113
+Verification FAILED with 560 errors. Retrying.
+
+
+57120
+Open port /dev/cu.usbserial-M68KV1BB @ 57120... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 3D58381E, expected 105B19BF
+Retrying.
+
+Mismatch at byte 27: expected 50, got 114
+Verification FAILED with 536 errors. Retrying.
+
+
+57125
+Open port /dev/cu.usbserial-M68KV1BB @ 57125... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got C7A8B517, expected 105B19BF
+Retrying.
+
+Mismatch at byte 0: expected 83, got 179
+Verification FAILED with 547 errors. Retrying.
+
+
+57130
+Open port /dev/cu.usbserial-M68KV1BB @ 57130... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got c000, expected 4000)
+
+57135
+Open port /dev/cu.usbserial-M68KV1BB @ 57135... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57140
+Open port /dev/cu.usbserial-M68KV1BB @ 57140... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got c000, expected 4000)
+
+57145
+Open port /dev/cu.usbserial-M68KV1BB @ 57145... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 2D6BB513, expected 105B19BF
+Retrying.
+
+Mismatch at byte 5: expected 48, got 112
+Verification FAILED with 561 errors. Retrying.
+
+
+57150
+Open port /dev/cu.usbserial-M68KV1BB @ 57150... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57155
+Open port /dev/cu.usbserial-M68KV1BB @ 57155... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got BA995852, expected 105B19BF
+Retrying.
+
+Mismatch at byte 7: expected 48, got 96
+Verification FAILED with 520 errors. Retrying.
+
+
+57160
+Open port /dev/cu.usbserial-M68KV1BB @ 57160... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got DA16F07E, expected 105B19BF
+Retrying.
+
+Mismatch at byte 5: expected 48, got 96
+Verification FAILED with 540 errors. Retrying.
+
+
+57165
+Open port /dev/cu.usbserial-M68KV1BB @ 57165... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got F00F9D57, expected 105B19BF
+Retrying.
+
+Mismatch at byte 12: expected 54, got 102
+Verification FAILED with 575 errors. Retrying.
+
+
+57170
+Open port /dev/cu.usbserial-M68KV1BB @ 57170... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57175
+Open port /dev/cu.usbserial-M68KV1BB @ 57175... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 3438C4A7, expected 105B19BF
+Retrying.
+
+Mismatch at byte 9: expected 50, got 100
+Verification FAILED with 550 errors. Retrying.
+
+
+57180
+Open port /dev/cu.usbserial-M68KV1BB @ 57180... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 07D05ED9, expected 105B19BF
+Retrying.
+
+Mismatch at byte 16: expected 54, got 102
+Verification FAILED with 561 errors. Retrying.
+
+
+57185
+Open port /dev/cu.usbserial-M68KV1BB @ 57185... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got C8A827EE, expected 105B19BF
+Retrying.
+
+Mismatch at byte 13: expected 70, got 134
+Verification FAILED with 566 errors. Retrying.
+
+
+57190
+Open port /dev/cu.usbserial-M68KV1BB @ 57190... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+57195
+Open port /dev/cu.usbserial-M68KV1BB @ 57195... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57200
+Open port /dev/cu.usbserial-M68KV1BB @ 57200... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 8113C86A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 113
+Verification FAILED with 558 errors. Retrying.
+
+
+57205
+Open port /dev/cu.usbserial-M68KV1BB @ 57205... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8000, expected 4000)
+
+57210
+Open port /dev/cu.usbserial-M68KV1BB @ 57210... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got B89DC57E, expected 105B19BF
+Retrying.
+
+Mismatch at byte 16: expected 54, got 150
+Verification FAILED with 10057 errors. Retrying.
+
+
+57215
+Open port /dev/cu.usbserial-M68KV1BB @ 57215... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 93E79B49, expected 105B19BF
+Retrying.
+
+Mismatch at byte 44: expected 48, got 176
+Verification FAILED with 10002 errors. Retrying.
+
+
+57220
+Open port /dev/cu.usbserial-M68KV1BB @ 57220... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got A47AA3D5, expected 105B19BF
+Retrying.
+
+Mismatch at byte 9: expected 50, got 178
+Verification FAILED with 10057 errors. Retrying.
+
+
+57225
+Open port /dev/cu.usbserial-M68KV1BB @ 57225... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 4080, expected 4000)
+
+57230
+Open port /dev/cu.usbserial-M68KV1BB @ 57230... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 7D90FBDA, expected 105B19BF
+Retrying.
+
+Mismatch at byte 79: expected 48, got 152
+Verification FAILED with 9972 errors. Retrying.
+
+
+57235
+Open port /dev/cu.usbserial-M68KV1BB @ 57235... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 5F33D09D, expected 105B19BF
+Retrying.
+
+Mismatch at byte 15: expected 52, got 154
+Verification FAILED with 9999 errors. Retrying.
+
+
+57240
+Open port /dev/cu.usbserial-M68KV1BB @ 57240... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got DB0B95ED, expected 105B19BF
+Retrying.
+
+Mismatch at byte 34: expected 51, got 153
+Verification FAILED with 10043 errors. Retrying.
+
+
+57245
+Open port /dev/cu.usbserial-M68KV1BB @ 57245... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 5DDADCB7, expected 105B19BF
+Retrying.
+
+Mismatch at byte 42: expected 49, got 152
+Verification FAILED with 10053 errors. Retrying.
+
+
+57250
+Open port /dev/cu.usbserial-M68KV1BB @ 57250... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 7AEC17F2, expected 105B19BF
+Retrying.
+
+Mismatch at byte 19: expected 70, got 166
+Verification FAILED with 10017 errors. Retrying.
+
+
+57255
+Open port /dev/cu.usbserial-M68KV1BB @ 57255... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 4555BB4B, expected 105B19BF
+Retrying.
+
+Mismatch at byte 34: expected 51, got 153
+Verification FAILED with 10033 errors. Retrying.
+
+
+57260
+Open port /dev/cu.usbserial-M68KV1BB @ 57260... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got F85EE089, expected 105B19BF
+Retrying.
+
+Mismatch at byte 11: expected 70, got 166
+Verification FAILED with 10028 errors. Retrying.
+
+
+57265
+Open port /dev/cu.usbserial-M68KV1BB @ 57265... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got A01F2530, expected 105B19BF
+Retrying.
+
+Mismatch at byte 26: expected 55, got 155
+Verification FAILED with 10046 errors. Retrying.
+
+
+57270
+Open port /dev/cu.usbserial-M68KV1BB @ 57270... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 4080, expected 4000)
+
+57275
+Open port /dev/cu.usbserial-M68KV1BB @ 57275... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 285A0CF5, expected 105B19BF
+Retrying.
+
+Mismatch at byte 76: expected 70, got 166
+Verification FAILED with 9950 errors. Retrying.
+
+
+57280
+Open port /dev/cu.usbserial-M68KV1BB @ 57280... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57285
+Open port /dev/cu.usbserial-M68KV1BB @ 57285... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57290
+Open port /dev/cu.usbserial-M68KV1BB @ 57290... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 88364F80, expected 105B19BF
+Retrying.
+
+Mismatch at byte 30: expected 55, got 159
+Verification FAILED with 10029 errors. Retrying.
+
+
+57295
+Open port /dev/cu.usbserial-M68KV1BB @ 57295... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 1FFDEC79, expected 105B19BF
+Retrying.
+
+Mismatch at byte 17: expected 67, got 163
+Verification FAILED with 10022 errors. Retrying.
+
+
+57300
+Open port /dev/cu.usbserial-M68KV1BB @ 57300... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got B4E47CE1, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 152
+Verification FAILED with 10067 errors. Retrying.
+
+
+57305
+Open port /dev/cu.usbserial-M68KV1BB @ 57305... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57310
+Open port /dev/cu.usbserial-M68KV1BB @ 57310... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got BEBD18FE, expected 105B19BF
+Retrying.
+
+Mismatch at byte 5: expected 48, got 152
+Verification FAILED with 10033 errors. Retrying.
+
+
+57315
+Open port /dev/cu.usbserial-M68KV1BB @ 57315... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 4572FA19, expected 105B19BF
+Retrying.
+
+Mismatch at byte 40: expected 83, got 169
+Verification FAILED with 10037 errors. Retrying.
+
+
+57320
+Open port /dev/cu.usbserial-M68KV1BB @ 57320... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57325
+Open port /dev/cu.usbserial-M68KV1BB @ 57325... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got CE6E66D9, expected 105B19BF
+Retrying.
+
+Mismatch at byte 73: expected 48, got 152
+Verification FAILED with 10002 errors. Retrying.
+
+
+57330
+Open port /dev/cu.usbserial-M68KV1BB @ 57330... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 59B84DC5, expected 105B19BF
+Retrying.
+
+Mismatch at byte 53: expected 67, got 161
+Verification FAILED with 10021 errors. Retrying.
+
+
+57335
+Open port /dev/cu.usbserial-M68KV1BB @ 57335... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 4D0FC9F6, expected 105B19BF
+Retrying.
+
+Mismatch at byte 47: expected 48, got 152
+Verification FAILED with 10055 errors. Retrying.
+
+
+57340
+Open port /dev/cu.usbserial-M68KV1BB @ 57340... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 5DCA842D, expected 105B19BF
+Retrying.
+
+Mismatch at byte 58: expected 48, got 112
+Verification FAILED with 182 errors. Retrying.
+
+
+57345
+Open port /dev/cu.usbserial-M68KV1BB @ 57345... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got CBA38B02, expected 105B19BF
+Retrying.
+
+Mismatch at byte 45: expected 56, got 112
+Verification FAILED with 196 errors. Retrying.
+
+
+57350
+Open port /dev/cu.usbserial-M68KV1BB @ 57350... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got A827C736, expected 105B19BF
+Retrying.
+
+Mismatch at byte 101: expected 48, got 96
+Verification FAILED with 181 errors. Retrying.
+
+
+57355
+Open port /dev/cu.usbserial-M68KV1BB @ 57355... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 90A5CB84, expected 105B19BF
+Retrying.
+
+Mismatch at byte 25: expected 53, got 101
+Verification FAILED with 173 errors. Retrying.
+
+
+57360
+Open port /dev/cu.usbserial-M68KV1BB @ 57360... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 3BC89D82, expected 105B19BF
+Retrying.
+
+Mismatch at byte 17: expected 67, got 131
+Verification FAILED with 196 errors. Retrying.
+
+
+57365
+Open port /dev/cu.usbserial-M68KV1BB @ 57365... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 661D5184, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 112
+Verification FAILED with 186 errors. Retrying.
+
+
+57370
+Open port /dev/cu.usbserial-M68KV1BB @ 57370... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 17C43177, expected 105B19BF
+Retrying.
+
+Mismatch at byte 100: expected 56, got 112
+Verification FAILED with 204 errors. Retrying.
+
+
+57375
+Open port /dev/cu.usbserial-M68KV1BB @ 57375... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 8B0F4FE6, expected 105B19BF
+Retrying.
+
+Mismatch at byte 159: expected 51, got 103
+Verification FAILED with 172 errors. Retrying.
+
+
+57380
+Open port /dev/cu.usbserial-M68KV1BB @ 57380... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got FE0E3E78, expected 105B19BF
+Retrying.
+
+Mismatch at byte 76: expected 70, got 134
+Verification FAILED with 197 errors. Retrying.
+
+
+57385
+Open port /dev/cu.usbserial-M68KV1BB @ 57385... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57390
+Open port /dev/cu.usbserial-M68KV1BB @ 57390... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 521AC552, expected 105B19BF
+Retrying.
+
+Mismatch at byte 43: expected 52, got 100
+Verification FAILED with 188 errors. Retrying.
+
+
+57395
+Open port /dev/cu.usbserial-M68KV1BB @ 57395... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 8DD523DE, expected 105B19BF
+Retrying.
+
+Mismatch at byte 20: expected 54, got 118
+Verification FAILED with 195 errors. Retrying.
+
+
+57400
+Open port /dev/cu.usbserial-M68KV1BB @ 57400... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 1EA9B9E8, expected 105B19BF
+Retrying.
+
+Mismatch at byte 5: expected 48, got 112
+Verification FAILED with 188 errors. Retrying.
+
+
+57405
+Open port /dev/cu.usbserial-M68KV1BB @ 57405... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 8CD18F29, expected 105B19BF
+Retrying.
+
+Mismatch at byte 49: expected 48, got 96
+Verification FAILED with 187 errors. Retrying.
+
+
+57410
+Open port /dev/cu.usbserial-M68KV1BB @ 57410... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got BEB667D1, expected 105B19BF
+Retrying.
+
+Mismatch at byte 32: expected 51, got 103
+Verification FAILED with 189 errors. Retrying.
+
+
+57415
+Open port /dev/cu.usbserial-M68KV1BB @ 57415... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 7E6D4E01, expected 105B19BF
+Retrying.
+
+Mismatch at byte 20: expected 54, got 118
+Verification FAILED with 203 errors. Retrying.
+
+
+57420
+Open port /dev/cu.usbserial-M68KV1BB @ 57420... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 4F9136C5, expected 105B19BF
+Retrying.
+
+Mismatch at byte 35: expected 56, got 120
+Verification FAILED with 172 errors. Retrying.
+
+
+57425
+Open port /dev/cu.usbserial-M68KV1BB @ 57425... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 9FECD158, expected 105B19BF
+Retrying.
+
+Mismatch at byte 17: expected 67, got 135
+Verification FAILED with 183 errors. Retrying.
+
+
+57430
+Open port /dev/cu.usbserial-M68KV1BB @ 57430... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 7BF74767, expected 105B19BF
+Retrying.
+
+Mismatch at byte 56: expected 66, got 130
+Verification FAILED with 198 errors. Retrying.
+
+
+57435
+Open port /dev/cu.usbserial-M68KV1BB @ 57435... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 61251F61, expected 105B19BF
+Retrying.
+
+Mismatch at byte 10: expected 54, got 102
+Verification FAILED with 196 errors. Retrying.
+
+
+57440
+Open port /dev/cu.usbserial-M68KV1BB @ 57440... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got ABDC6BD0, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 96
+Verification FAILED with 194 errors. Retrying.
+
+
+57445
+Open port /dev/cu.usbserial-M68KV1BB @ 57445... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 7A81CAB8, expected 105B19BF
+Retrying.
+
+Mismatch at byte 23: expected 52, got 100
+Verification FAILED with 198 errors. Retrying.
+
+
+57450
+Open port /dev/cu.usbserial-M68KV1BB @ 57450... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got DF123B70, expected 105B19BF
+Retrying.
+
+Mismatch at byte 16: expected 54, got 102
+Verification FAILED with 196 errors. Retrying.
+
+
+57455
+Open port /dev/cu.usbserial-M68KV1BB @ 57455... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got B6A6A237, expected 105B19BF
+Retrying.
+
+Mismatch at byte 10: expected 54, got 118
+Verification FAILED with 176 errors. Retrying.
+
+
+57460
+Open port /dev/cu.usbserial-M68KV1BB @ 57460... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 08FE982A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 113
+Verification FAILED with 186 errors. Retrying.
+
+
+57465
+Open port /dev/cu.usbserial-M68KV1BB @ 57465... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got E49A1B67, expected 105B19BF
+Retrying.
+
+Mismatch at byte 20: expected 54, got 110
+Verification FAILED with 171 errors. Retrying.
+
+
+57470
+Open port /dev/cu.usbserial-M68KV1BB @ 57470... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got CF10683E, expected 105B19BF
+Retrying.
+
+Mismatch at byte 167: expected 48, got 96
+Verification FAILED with 193 errors. Retrying.
+
+
+57475
+Open port /dev/cu.usbserial-M68KV1BB @ 57475... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got E723C462, expected 105B19BF
+Retrying.
+
+Mismatch at byte 24: expected 54, got 118
+Verification FAILED with 182 errors. Retrying.
+
+
+57480
+Open port /dev/cu.usbserial-M68KV1BB @ 57480... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57485
+Open port /dev/cu.usbserial-M68KV1BB @ 57485... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 6BA89EAA, expected 105B19BF
+Retrying.
+
+Mismatch at byte 88: expected 49, got 56
+Verification FAILED with 53 errors. Retrying.
+
+
+57490
+Open port /dev/cu.usbserial-M68KV1BB @ 57490... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 10EB543B, expected 105B19BF
+Retrying.
+
+Mismatch at byte 26: expected 55, got 59
+Verification FAILED with 49 errors. Retrying.
+
+
+57495
+Open port /dev/cu.usbserial-M68KV1BB @ 57495... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 9249FE2E, expected 105B19BF
+Retrying.
+
+Mismatch at byte 103: expected 48, got 112
+Verification FAILED with 471 errors. Retrying.
+
+
+57500
+Open port /dev/cu.usbserial-M68KV1BB @ 57500... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 3E81FB20, expected 105B19BF
+Retrying.
+
+Mismatch at byte 126: expected 69, got 197
+Verification FAILED with 51 errors. Retrying.
+
+
+57505
+Open port /dev/cu.usbserial-M68KV1BB @ 57505... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 48D273F8, expected 105B19BF
+Retrying.
+
+Mismatch at byte 293: expected 50, got 51
+Verification FAILED with 108 errors. Retrying.
+
+
+57510
+Open port /dev/cu.usbserial-M68KV1BB @ 57510... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 5D386E9D, expected 105B19BF
+Retrying.
+
+Mismatch at byte 57: expected 65, got 64
+Verification FAILED with 48 errors. Retrying.
+
+
+57515
+Open port /dev/cu.usbserial-M68KV1BB @ 57515... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got F34D3FC4, expected 105B19BF
+Retrying.
+
+Mismatch at byte 144: expected 70, got 71
+Verification FAILED with 373 errors. Retrying.
+
+
+57520
+Open port /dev/cu.usbserial-M68KV1BB @ 57520... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 59CC684F, expected 105B19BF
+Retrying.
+
+Mismatch at byte 183: expected 56, got 60
+Verification FAILED with 51 errors. Retrying.
+
+
+57525
+Open port /dev/cu.usbserial-M68KV1BB @ 57525... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got DC048931, expected 105B19BF
+Retrying.
+
+Mismatch at byte 92: expected 48, got 56
+Verification FAILED with 53 errors. Retrying.
+
+
+57530
+Open port /dev/cu.usbserial-M68KV1BB @ 57530... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 26A4876A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 55: expected 48, got 56
+Verification FAILED with 61 errors. Retrying.
+
+
+57535
+Open port /dev/cu.usbserial-M68KV1BB @ 57535... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 939B0B57, expected 105B19BF
+Retrying.
+
+Mismatch at byte 13: expected 70, got 71
+Verification FAILED with 520 errors. Retrying.
+
+
+57540
+Open port /dev/cu.usbserial-M68KV1BB @ 57540... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got E770A2F8, expected 105B19BF
+Retrying.
+
+Mismatch at byte 28: expected 50, got 51
+Verification FAILED with 50 errors. Retrying.
+
+
+57545
+Open port /dev/cu.usbserial-M68KV1BB @ 57545... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 005D3CCA, expected 105B19BF
+Retrying.
+
+Mismatch at byte 297: expected 56, got 60
+Verification FAILED with 42 errors. Retrying.
+
+
+57550
+Open port /dev/cu.usbserial-M68KV1BB @ 57550... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 156A0DB0, expected 105B19BF
+Retrying.
+
+Mismatch at byte 188: expected 50, got 25
+Verification FAILED with 50 errors. Retrying.
+
+
+57555
+Open port /dev/cu.usbserial-M68KV1BB @ 57555... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 3A2F5642, expected 105B19BF
+Retrying.
+
+Mismatch at byte 74: expected 49, got 48
+Verification FAILED with 42 errors. Retrying.
+
+
+57560
+Open port /dev/cu.usbserial-M68KV1BB @ 57560... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 23E9893F, expected 105B19BF
+Retrying.
+
+Mismatch at byte 48: expected 48, got 112
+Verification FAILED with 55 errors. Retrying.
+
+
+57565
+Open port /dev/cu.usbserial-M68KV1BB @ 57565... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 454D232D, expected 105B19BF
+Retrying.
+
+Mismatch at byte 19: expected 70, got 163
+Verification FAILED with 66 errors. Retrying.
+
+
+57570
+Open port /dev/cu.usbserial-M68KV1BB @ 57570... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got F0B28213, expected 105B19BF
+Retrying.
+
+Mismatch at byte 188: expected 50, got 114
+Verification FAILED with 47 errors. Retrying.
+
+
+57575
+Open port /dev/cu.usbserial-M68KV1BB @ 57575... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 8CF4E59C, expected 105B19BF
+Retrying.
+
+Mismatch at byte 38: expected 13, got 14
+Verification FAILED with 526 errors. Retrying.
+
+
+57580
+Open port /dev/cu.usbserial-M68KV1BB @ 57580... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got F3AB8B95, expected 105B19BF
+Retrying.
+
+Mismatch at byte 549: expected 56, got 156
+Verification FAILED with 43 errors. Retrying.
+
+
+57585
+Open port /dev/cu.usbserial-M68KV1BB @ 57585... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 2E57B707, expected 105B19BF
+Retrying.
+
+Mismatch at byte 117: expected 69, got 66
+Verification FAILED with 56 errors. Retrying.
+
+
+57590
+Open port /dev/cu.usbserial-M68KV1BB @ 57590... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 73095E51, expected 105B19BF
+Retrying.
+
+Mismatch at byte 140: expected 50, got 114
+Verification FAILED with 300 errors. Retrying.
+
+
+57595
+Open port /dev/cu.usbserial-M68KV1BB @ 57595... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 0839E934, expected 105B19BF
+Retrying.
+
+Mismatch at byte 114: expected 48, got 152
+Verification FAILED with 154 errors. Retrying.
+
+
+57600
+Open port /dev/cu.usbserial-M68KV1BB @ 57600... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 2A927EAA, expected 105B19BF
+Retrying.
+
+Mismatch at byte 51: expected 51, got 147
+Verification FAILED with 10029 errors. Retrying.
+
+
+57605
+Open port /dev/cu.usbserial-M68KV1BB @ 57605... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got F4EF1094, expected 105B19BF
+Retrying.
+
+Mismatch at byte 64: expected 48, got 96
+Verification FAILED with 53 errors. Retrying.
+
+
+57610
+Open port /dev/cu.usbserial-M68KV1BB @ 57610... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got FC275513, expected 105B19BF
+Retrying.
+
+Mismatch at byte 98: expected 48, got 152
+Verification FAILED with 70 errors. Retrying.
+
+
+57615
+Open port /dev/cu.usbserial-M68KV1BB @ 57615... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got CA074F9A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 38: expected 13, got 135
+Verification FAILED with 10015 errors. Retrying.
+
+
+57620
+Open port /dev/cu.usbserial-M68KV1BB @ 57620... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got ACA9E8C2, expected 105B19BF
+Retrying.
+
+Mismatch at byte 56: expected 66, got 160
+Verification FAILED with 10049 errors. Retrying.
+
+
+57625
+Open port /dev/cu.usbserial-M68KV1BB @ 57625... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got B76AE52A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 153
+Verification FAILED with 9987 errors. Retrying.
+
+
+57630
+Open port /dev/cu.usbserial-M68KV1BB @ 57630... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 855DC9D6, expected 105B19BF
+Retrying.
+
+Mismatch at byte 12: expected 54, got 155
+Verification FAILED with 10062 errors. Retrying.
+
+
+57635
+Open port /dev/cu.usbserial-M68KV1BB @ 57635... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got AB81A96A, expected 105B19BF
+Retrying.
+
+Mismatch at byte 21: expected 49, got 152
+Verification FAILED with 10010 errors. Retrying.
+
+
+57640
+Open port /dev/cu.usbserial-M68KV1BB @ 57640... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57645
+Open port /dev/cu.usbserial-M68KV1BB @ 57645... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 122599B6, expected 105B19BF
+Retrying.
+
+Mismatch at byte 48: expected 48, got 176
+Verification FAILED with 10028 errors. Retrying.
+
+
+57650
+Open port /dev/cu.usbserial-M68KV1BB @ 57650... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 6FC6A80B, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 152
+Verification FAILED with 10012 errors. Retrying.
+
+
+57655
+Open port /dev/cu.usbserial-M68KV1BB @ 57655... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 87CDB3BA, expected 105B19BF
+Retrying.
+
+Mismatch at byte 40: expected 83, got 169
+Verification FAILED with 10047 errors. Retrying.
+
+
+57660
+Open port /dev/cu.usbserial-M68KV1BB @ 57660... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got AD3E15D5, expected 105B19BF
+Retrying.
+
+Mismatch at byte 26: expected 55, got 151
+Verification FAILED with 10024 errors. Retrying.
+
+
+57665
+Open port /dev/cu.usbserial-M68KV1BB @ 57665... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got F60F7DD1, expected 105B19BF
+Retrying.
+
+Mismatch at byte 30: expected 55, got 151
+Verification FAILED with 10034 errors. Retrying.
+
+
+57670
+Open port /dev/cu.usbserial-M68KV1BB @ 57670... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got EB88CD97, expected 105B19BF
+Retrying.
+
+Mismatch at byte 73: expected 48, got 152
+Verification FAILED with 10018 errors. Retrying.
+
+
+57675
+Open port /dev/cu.usbserial-M68KV1BB @ 57675... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got CF3DCF50, expected 105B19BF
+Retrying.
+
+Mismatch at byte 27: expected 50, got 146
+Verification FAILED with 10074 errors. Retrying.
+
+
+57680
+Open port /dev/cu.usbserial-M68KV1BB @ 57680... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 85F7994B, expected 105B19BF
+Retrying.
+
+Mismatch at byte 2: expected 49, got 152
+Verification FAILED with 10031 errors. Retrying.
+
+
+57685
+Open port /dev/cu.usbserial-M68KV1BB @ 57685... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 590E2549, expected 105B19BF
+Retrying.
+
+Mismatch at byte 40: expected 83, got 169
+Verification FAILED with 10006 errors. Retrying.
+
+
+57690
+Open port /dev/cu.usbserial-M68KV1BB @ 57690... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 63052A42, expected 105B19BF
+Retrying.
+
+Mismatch at byte 69: expected 67, got 161
+Verification FAILED with 10005 errors. Retrying.
+
+
+57695
+Open port /dev/cu.usbserial-M68KV1BB @ 57695... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 73378A04, expected 105B19BF
+Retrying.
+
+Mismatch at byte 69: expected 67, got 195
+Verification FAILED with 9996 errors. Retrying.
+
+
+57700
+Open port /dev/cu.usbserial-M68KV1BB @ 57700... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 68250D2E, expected 105B19BF
+Retrying.
+
+Mismatch at byte 79: expected 48, got 152
+Verification FAILED with 9999 errors. Retrying.
+
+
+57705
+Open port /dev/cu.usbserial-M68KV1BB @ 57705... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 12703F48, expected 105B19BF
+Retrying.
+
+Mismatch at byte 5: expected 48, got 152
+Verification FAILED with 10012 errors. Retrying.
+
+
+57710
+Open port /dev/cu.usbserial-M68KV1BB @ 57710... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got D281BC36, expected 105B19BF
+Retrying.
+
+Mismatch at byte 58: expected 48, got 176
+Verification FAILED with 10023 errors. Retrying.
+
+
+57715
+Open port /dev/cu.usbserial-M68KV1BB @ 57715... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got C09F12FF, expected 105B19BF
+Retrying.
+
+Mismatch at byte 16: expected 54, got 155
+Verification FAILED with 10036 errors. Retrying.
+
+
+57720
+Open port /dev/cu.usbserial-M68KV1BB @ 57720... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got CA08C156, expected 105B19BF
+Retrying.
+
+Mismatch at byte 4: expected 48, got 152
+Verification FAILED with 10110 errors. Retrying.
+
+
+57725
+Open port /dev/cu.usbserial-M68KV1BB @ 57725... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 350983A5, expected 105B19BF
+Retrying.
+
+Mismatch at byte 11: expected 70, got 166
+Verification FAILED with 10052 errors. Retrying.
+
+
+57730
+Open port /dev/cu.usbserial-M68KV1BB @ 57730... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 2DDD604B, expected 105B19BF
+Retrying.
+
+Mismatch at byte 10: expected 54, got 155
+Verification FAILED with 10001 errors. Retrying.
+
+
+57735
+Open port /dev/cu.usbserial-M68KV1BB @ 57735... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 69770DF6, expected 105B19BF
+Retrying.
+
+Mismatch at byte 26: expected 55, got 151
+Verification FAILED with 10046 errors. Retrying.
+
+
+57740
+Open port /dev/cu.usbserial-M68KV1BB @ 57740... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 7341A5A4, expected 105B19BF
+Retrying.
+
+Mismatch at byte 65: expected 48, got 152
+Verification FAILED with 10049 errors. Retrying.
+
+
+57745
+Open port /dev/cu.usbserial-M68KV1BB @ 57745... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got E1ED34FE, expected 105B19BF
+Retrying.
+
+Mismatch at byte 2: expected 49, got 153
+Verification FAILED with 10049 errors. Retrying.
+
+
+57750
+Open port /dev/cu.usbserial-M68KV1BB @ 57750... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got E644823E, expected 105B19BF
+Retrying.
+
+Mismatch at byte 75: expected 51, got 147
+Verification FAILED with 9965 errors. Retrying.
+
+
+57755
+Open port /dev/cu.usbserial-M68KV1BB @ 57755... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got FDA004F1, expected 105B19BF
+Retrying.
+
+Mismatch at byte 58: expected 48, got 176
+Verification FAILED with 10032 errors. Retrying.
+
+
+57760
+Open port /dev/cu.usbserial-M68KV1BB @ 57760... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 4080, expected 4000)
+
+57765
+Open port /dev/cu.usbserial-M68KV1BB @ 57765... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57770
+Open port /dev/cu.usbserial-M68KV1BB @ 57770... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 460466A8, expected 105B19BF
+Retrying.
+
+Mismatch at byte 2: expected 49, got 145
+Verification FAILED with 10401 errors. Retrying.
+
+
+57775
+Open port /dev/cu.usbserial-M68KV1BB @ 57775... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 4080, expected 4000)
+
+57780
+Open port /dev/cu.usbserial-M68KV1BB @ 57780... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got a080, expected 4000)
+
+57785
+Open port /dev/cu.usbserial-M68KV1BB @ 57785... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57790
+Open port /dev/cu.usbserial-M68KV1BB @ 57790... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57795
+Open port /dev/cu.usbserial-M68KV1BB @ 57795... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got CF1DB0E6, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 177
+Verification FAILED with 10420 errors. Retrying.
+
+
+57800
+Open port /dev/cu.usbserial-M68KV1BB @ 57800... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got c080, expected 4000)
+
+57805
+Open port /dev/cu.usbserial-M68KV1BB @ 57805... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 1E591E57, expected 105B19BF
+Retrying.
+
+Mismatch at byte 2: expected 49, got 153
+Verification FAILED with 10396 errors. Retrying.
+
+
+57810
+Open port /dev/cu.usbserial-M68KV1BB @ 57810... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 4080, expected 4000)
+
+57815
+Open port /dev/cu.usbserial-M68KV1BB @ 57815... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 9D063C80, expected 105B19BF
+Retrying.
+
+Mismatch at byte 0: expected 83, got 179
+Verification FAILED with 10402 errors. Retrying.
+
+
+57820
+Open port /dev/cu.usbserial-M68KV1BB @ 57820... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 87A36BC2, expected 105B19BF
+Retrying.
+
+Mismatch at byte 4: expected 48, got 152
+Verification FAILED with 10426 errors. Retrying.
+
+
+57825
+Open port /dev/cu.usbserial-M68KV1BB @ 57825... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got FA1F9F4C, expected 105B19BF
+Retrying.
+
+Mismatch at byte 0: expected 83, got 171
+Verification FAILED with 10439 errors. Retrying.
+
+
+57830
+Open port /dev/cu.usbserial-M68KV1BB @ 57830... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 8CF5B58E, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 76
+Verification FAILED with 10411 errors. Retrying.
+
+
+57835
+Open port /dev/cu.usbserial-M68KV1BB @ 57835... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57840
+Open port /dev/cu.usbserial-M68KV1BB @ 57840... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57845
+Open port /dev/cu.usbserial-M68KV1BB @ 57845... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57850
+Open port /dev/cu.usbserial-M68KV1BB @ 57850... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57855
+Open port /dev/cu.usbserial-M68KV1BB @ 57855... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got c080, expected 4000)
+
+57860
+Open port /dev/cu.usbserial-M68KV1BB @ 57860... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got 9F3DA395, expected 105B19BF
+Retrying.
+
+Mismatch at byte 1: expected 48, got 152
+Verification FAILED with 10351 errors. Retrying.
+
+
+57865
+Open port /dev/cu.usbserial-M68KV1BB @ 57865... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 80a080, expected 4000)
+
+57870
+Open port /dev/cu.usbserial-M68KV1BB @ 57870... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57875
+Open port /dev/cu.usbserial-M68KV1BB @ 57875... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 4080, expected 4000)
+
+57880
+Open port /dev/cu.usbserial-M68KV1BB @ 57880... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 4080, expected 4000)
+
+57885
+Open port /dev/cu.usbserial-M68KV1BB @ 57885... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57890
+Open port /dev/cu.usbserial-M68KV1BB @ 57890... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57895
+Open port /dev/cu.usbserial-M68KV1BB @ 57895... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got FDE9F495, expected 105B19BF
+Retrying.
+
+Mismatch at byte 5: expected 48, got 152
+Verification FAILED with 10383 errors. Retrying.
+
+
+57900
+Open port /dev/cu.usbserial-M68KV1BB @ 57900... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got a080, expected 4000)
+
+57905
+Open port /dev/cu.usbserial-M68KV1BB @ 57905... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 80a080, expected 4000)
+
+57910
+Open port /dev/cu.usbserial-M68KV1BB @ 57910... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57915
+Open port /dev/cu.usbserial-M68KV1BB @ 57915... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57920
+Open port /dev/cu.usbserial-M68KV1BB @ 57920... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 4080, expected 4000)
+
+57925
+Open port /dev/cu.usbserial-M68KV1BB @ 57925... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 80a080, expected 4000)
+
+57930
+Open port /dev/cu.usbserial-M68KV1BB @ 57930... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got AA509084, expected 105B19BF
+Retrying.
+
+Mismatch at byte 3: expected 49, got 177
+Verification FAILED with 10366 errors. Retrying.
+
+
+57935
+Open port /dev/cu.usbserial-M68KV1BB @ 57935... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got c080, expected 4000)
+
+57940
+Open port /dev/cu.usbserial-M68KV1BB @ 57940... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57945
+Open port /dev/cu.usbserial-M68KV1BB @ 57945... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 4080, expected 4000)
+
+57950
+Open port /dev/cu.usbserial-M68KV1BB @ 57950... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 4080, expected 4000)
+
+57955
+Open port /dev/cu.usbserial-M68KV1BB @ 57955... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+
+57960
+Open port /dev/cu.usbserial-M68KV1BB @ 57960... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got A8F86B7B, expected 105B19BF
+Retrying.
+
+Mismatch at byte 4: expected 48, got 176
+Verification FAILED with 10372 errors. Retrying.
+
+
+57965
+Open port /dev/cu.usbserial-M68KV1BB @ 57965... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got C0C98E50, expected 105B19BF
+Retrying.
+
+Mismatch at byte 2: expected 49, got 153
+Verification FAILED with 10383 errors. Retrying.
+
+
+57970
+Open port /dev/cu.usbserial-M68KV1BB @ 57970... OK
+Sending reboot command...
+Setting address to 0x4000... OK!
+Uploading...
+  0 %  4 %  9 % 14 % 19 % 23 % 28 % 33 % 38 % 43 % 47 % 52 % 57 % 62 % 67 % 71 % 76 % 81 % 86 % 90 % 95 %100 %
+
+CRC ERROR: Got EB8E0BF9, expected 105B19BF
+Retrying.
+
+Mismatch at byte 4: expected 48, got 152
+Verification FAILED with 10370 errors. Retrying.
+
+
+57975
+Open port /dev/cu.usbserial-M68KV1BB @ 57975... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57980
+Open port /dev/cu.usbserial-M68KV1BB @ 57980... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+57985
+Open port /dev/cu.usbserial-M68KV1BB @ 57985... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 4080, expected 4000)
+
+57990
+Open port /dev/cu.usbserial-M68KV1BB @ 57990... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got a080, expected 4000)
+
+57995
+Open port /dev/cu.usbserial-M68KV1BB @ 57995... OK
+Sending reboot command...
+Setting address to 0x4000... Address verification failed (got 8080a080, expected 4000)
+
+58000
+Open port /dev/cu.usbserial-M68KV1BB @ 58000... OK
+Sending reboot command...
+Setting address to 0x4000... Timeout occurred in sergetc(). Ensure bootloader supports command.
+

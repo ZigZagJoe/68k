@@ -98,7 +98,7 @@
 | entry point
 _kernel_start:
     cli
-    move.b #0xE1, (TIL311) | what up my glip glops!
+    move.b #0xE1, (TIL311)              | what up my glip glops!
     
     move.l #__stack_start, %a7
 
@@ -397,7 +397,7 @@ create_task:
     move.l 4(%sp), %a0                 | function pointer
     
     move.w %d1, %d0                    | number of longwords to copy
-    rol.w #2, %d0
+    lsl.w #2, %d0
     
     move.l %sp, %a1                    | copy address of sp into a1
     lea 12(%a1, %d0.W), %a1            | offset it properly
@@ -423,11 +423,13 @@ yield:
 exit_task:
     move.b #TASK_EXIT, %d0
     trap #0                            | will never return
-
+    illegal
+    
 exit:
     move.b #SYSTEM_EXIT, %d0
     move.b (7,%sp), %d1
     trap #0                            | will never return
+    illegal
     
 | enter a critical section (prevent swaps)
 enter_critical:
@@ -480,47 +482,47 @@ _str_done:
     rts
     
 putc_sync:
-    btst #7, (TSR)                    | test buffer empty (bit 7)
-    jeq putc                          | Z=1 (bit = 0) ? jranch
-    move.b %D0, (UDR)                 | write char to buffer
+    btst #7, (TSR)                     | test buffer empty (bit 7)
+    jeq putc                           | Z=1 (bit = 0) ? jranch
+    move.b %D0, (UDR)                  | write char to buffer
     rts
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | put hex byte in %d0 
 puthexbyte:
-    movem.l %A0/%D0, -(%SP)        | save regs
+    movem.l %A0/%D0, -(%SP)            | save regs
     
-    lsr.b #4, %D0                  | shift top 4 bits over
+    lsr.b #4, %D0                      | shift top 4 bits over
     bsr.s _puthdigit
     
-    move.w (2, %SP), %D0           | restore D0 from stack    
+    move.w (2, %SP), %D0               | restore D0 from stack    
     bsr.s _puthdigit
     
-    movem.l (%SP)+, %A0/%D0        | restore regs
+    movem.l (%SP)+, %A0/%D0            | restore regs
     rts
     
 | put single hex digit from %D0 (trashes D0, A0)
 _puthdigit:
     lea (%pc,_hexchars), %A0
     and.w #0xF, %D0
-    move.b (%A0, %D0.W), %D0       | look up char
+    move.b (%A0, %D0.W), %D0           | look up char
     jbsr putc_sync
     rts  
  
 | spin until reset command is received   
 _reset_cmd_wait:                       
-    btst #7, (RSR)                      | test if buffer full (bit 7) is set.
+    btst #7, (RSR)                     | test if buffer full (bit 7) is set.
     jeq _reset_cmd_wait                 
     
     move.b (UDR), %D1
     cmp.b #0xCF, %D1
     jne _reset_cmd_wait
     
-    btst #0, (GPDR)                     | gpio data register - test input 0. Z=!bit
-    jne _reset_cmd_wait                 | gpio is 1, not bootoclock
+    btst #0, (GPDR)                    | gpio data register - test input 0. Z=!bit
+    jne _reset_cmd_wait                | gpio is 1, not bootoclock
      
-    move.l 0x80000, %sp                 | restore SP
-    jmp 0x80008                         | jump to bootloader 
+    move.l 0x80000, %sp                | restore SP
+    jmp 0x80008                        | jump to bootloader 
    
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | strings    

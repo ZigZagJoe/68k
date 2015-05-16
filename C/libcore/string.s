@@ -239,6 +239,8 @@ _cnt:
 	tst.b (%a1)+
 	dbeq %d0, _cnt       | DBcc = branch if not cc
 	
+	| could detect if %d0 = to -1, increment %d0 upper, loop again? for large input
+	
 	addq.w #1, %d0
 	neg.w %d0
 

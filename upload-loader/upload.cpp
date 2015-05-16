@@ -177,6 +177,19 @@ int main (int argc, char ** argv) {
                     case 'b': bin_srec = true; break;
                     case 'q': use_qcrc = true; break;
                     case 'c': use_compression = true; break;
+                    case 'r': 
+                               if (ac + 1 == argc) {
+                                    printf("Missing argument to -r\n");
+                                    return 1;
+                                } 
+                                
+                                BAUD_RATE = -1;    
+                                BAUD_RATE = parse_num(argv[++ac]);
+                                if (addr == -1) {
+                                    printf("Bad rate to -r");
+                                    return 1;
+                                }
+                                break;
                     case 'a': data_load = true;
                                 use_qcrc = true;
                                 set_addr = true;
@@ -252,7 +265,7 @@ int main (int argc, char ** argv) {
         }
     }
     
-    printf("Open port %s ... ", port);
+    printf("Open port %s @ %d... ", port, BAUD_RATE);
     fd = open(port,O_RDWR);
     
     if (fd <= 0) {
@@ -272,7 +285,7 @@ int main (int argc, char ** argv) {
     
     // since the FTDI driver is shit, hard rate the data rate 
     // to the max possible by baud rate (in chunks of 512)
-    int BAUD_DELAY = (int)(1000.0F / (BAUD_RATE / 9) * 512);
+    int BAUD_DELAY = (int)(1000.0F / (BAUD_RATE / 10) * 512);
     
     ioctl(fd, IOSSIOSPEED, &speed);
     ioctl(fd, TIOCMBIC, &pin_rts); // deassert RTS
@@ -569,6 +582,7 @@ int main (int argc, char ** argv) {
             if (crc != expct_crc) {
                 printf("CRC ERROR: Got %08X, expected %08X\n",crc,expct_crc);
                 printf("Retrying.\n\n");
+                programmedOK = false;
                 continue;
             } else
                 printf("CRC verified: 0x%08X\n", crc);
@@ -750,6 +764,7 @@ int main (int argc, char ** argv) {
                 break;
             }
         }
+        break;
     }
     
     if (!no_terminal)
