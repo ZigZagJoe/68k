@@ -26,14 +26,15 @@ ifeq ($(CODE_LOC),rom)
     ULFLAGS += -f
 endif
 
+ifndef NO_CORELIB
+    LIBS += -lcore -lgcc
+endif
+
+
 ifdef USE_KERNEL
     LIBS+= -lkernel
     # Only required if using kernel
     LDFLAGS += --defsym "__start_func=_kernel_start"
-endif
-
-ifndef NO_CORELIB
-    LIBS += -lcore -lgcc
 endif
 
 ifndef NO_STARTUP
@@ -60,8 +61,9 @@ OBJCOPY = m68k-elf-objcopy
 INCPATHS = -I . -I ../include -I /Users/zigzagjoe/Documents/68008/deploy/lib/gcc/m68k-elf/4.2.4/include/
 LIBPATHS = -L ../lib -L /Users/zigzagjoe/Documents/68008/deploy/lib/gcc/m68k-elf/4.2.4/m68000
 
+#  -fdata-sections -ffunction-sections
 CFLAGS  += -O$(OPTIMIZE) -nostartfiles -nostdinc -nostdlib -m68000 -std=c99 -fno-builtin $(INCPATHS)
-LDFLAGS += -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) $(LIBPATHS) --oformat srec
+LDFLAGS +=  --gc-sections  --strip-discarded  --print-gc-sections -nostartfiles -nostdlib -A m68000 -T $(LINK_SCRIPT) $(LIBPATHS) --oformat srec
 ASFLAGS += -march=68000 -mcpu=68000
 ULFLAGS += -c
 
