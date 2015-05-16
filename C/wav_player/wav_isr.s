@@ -2,13 +2,21 @@
 .text
 
 .global wav_isr
+.global wav_start
 .global wav_ptr
 .global wav_end
 .global wav_semaphore
 
 .set IO_BASE,  0xC0000
-.set MFP,      IO_BASE
-.set TIL311,   IO_BASE + 0x8000
+.set IO_DEV0,   IO_BASE
+.set IO_DEV1,   IO_BASE + (0x8000 * 1)
+.set IO_DEV2,   IO_BASE + (0x8000 * 2)
+.set IO_DEV3,   IO_BASE + (0x8000 * 3)
+
+.set MFP,      IO_DEV0
+.set TIL311,   IO_DEV1
+.set LCD,      IO_DEV2
+.set DACFIFO,  IO_DEV3
 
 | MFP registers
 .set GPDR,     MFP+0x01 | GPIO data reg
@@ -25,17 +33,18 @@ wav_isr:
     
     tas.b (wav_semaphore)
     jne isr_end
-    
-    move.b #2, (0xC0001)     | LED ON
-     
+        
     movem.l %d0-%d7/%a0-%a6, -(%sp)
     
     move.l (wav_ptr), %a0
     cmp.l (wav_end), %a0     | perform bounds check
-    jhi skip_load            | at/beyond specified end point: do not load data
-                             | for a circular buffer, reset to a start address
+    jle no_reset_pos         | if higher, reset to start 
     
-    move.l #TIL311, %a1      | load address; save time
+    move.l (wav_start), %a0
+    
+no_reset_pos:
+ 
+    move.l #DACFIFO, %a1     | load address into reg; save time
   
     | load 256 bytes into FIFO
 
@@ -55,18 +64,17 @@ wav_isr:
     movem.l %d1-%d7/%a2-%a6, (%a1)    | 48 
   
     move.l %a0, (wav_ptr)
-    
-skip_load:
+
     movem.l (%sp)+, %d0-%d7/%a0-%a6
     
     clr.b (wav_semaphore)
-    move.b #0, (0xC0001)     | LED off
-    
+
 isr_end:
     rte
     
     
 .bss
+wav_start: .space 4
 wav_ptr: .space 4
 wav_end: .space 4
 wav_semaphore: .space 1
