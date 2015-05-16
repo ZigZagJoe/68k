@@ -33,8 +33,12 @@ void lcd_init() {
 }
 
 void lcd_cursor(uint8_t col, uint8_t row) {
-  int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
-  lcd_cmd(LCD_SETDDRAMADDR | (col + row_offsets[row]));
+    int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
+    lcd_cmd(LCD_SETDDRAMADDR | (col + row_offsets[row]));
+}
+
+void lcd_cgram(uint8_t addr) {
+    lcd_cmd(LCD_SETCGRAMADDR | (addr << 3));
 }
 
 void lcd_cmd(uint8_t c) {
