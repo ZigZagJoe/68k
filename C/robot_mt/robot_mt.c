@@ -16,19 +16,32 @@
 
 #define LEFT_BUMPER_BIT 4
 #define RIGHT_BUMPER_BIT 3
+#define DISTANCE_SENSOR_BIT 5
 
 #define LEFT_BUMPER bisset(GPDR, LEFT_BUMPER_BIT)
 #define RIGHT_BUMPER bisset(GPDR, RIGHT_BUMPER_BIT)
 
-#define LEFT_MOTOR TADR
-#define RIGHT_MOTOR TBDR
+#define LEFT_MOTOR TBDR
+#define RIGHT_MOTOR TCDR
+
+// low level speeds
 
 // 1.5ms
-#define MOTOR_STOP 110
+#define MOTOR_T_NEUTRAL 110
 // 1ms
-#define MOTOR_FWD 148
+#define MOTOR_T_FWD_FULL 148
 // 2ms
-#define MOTOR_BCK 74
+#define MOTOR_T_BCK_FULL 74
+
+const uint8_t speeds[] = {MOTOR_T_BCK_FULL, MOTOR_T_NEUTRAL, MOTOR_T_FWD_FULL};
+
+// number of directional speeds 
+#define MOTOR_SPEEDS 1
+
+// high level speeds
+#define MOTOR_STOP 0
+#define MOTOR_FWD 1
+#define MOTOR_BCK -1
 
 // custom characters
 #define CH_UPARR 0
@@ -40,15 +53,17 @@
 /* prototypes */
 
 typedef struct {
-    uint8_t ML;
-    uint8_t MR;
+    int8_t ML;
+    int8_t MR;
     int32_t duration; // in ms
     uint32_t ID;     
 } motor_state;
 
 // functions
+void stop_motors();
 void lcd_load_ch();
 void push_state(motor_state ms);
+void obstacle_reverseTurn(uint8_t rot);
 
 /* global state */
 motor_state drive_stack[128];
@@ -59,6 +74,12 @@ uint8_t drive_stack_head = 127;
 sem_t lcd_sem;
 sem_t ds_sem;
 
+volatile uint8_t dist_raw = 0;
+volatile int16_t last_dist = 0;
+
+ISR(measure_done) {
+    dist_raw = TADR;
+}
 
 // monitors bumper sensors
 void task_check_bumper() {
@@ -67,43 +88,45 @@ void task_check_bumper() {
             sleep_for(10); // debounce
             
             if (LEFT_BUMPER || RIGHT_BUMPER) {
-            
-                // acquire the stack semaphore
-                sem_acquire(&ds_sem);
-
-                // if top of stack is reverse task, just refresh duration
-                if (curr_state.ID == BCK_JOB) {
-                    printf("Still touching something.\n");
-                    curr_state.duration = 2000;
-                } else {
-                    printf("Hit something!\n");
-                    
-                    // stop *now*
-                    LEFT_MOTOR = MOTOR_STOP;
-                    RIGHT_MOTOR = MOTOR_STOP;
-                    
-                    // put the turn on the stack
-                    if (LEFT_BUMPER) {
-                        motor_state rot_right = { MOTOR_FWD, MOTOR_BCK, 600 + rand8(), 0x3144 };
-                        push_state(rot_right);   
-                    } else {
-                        motor_state rot_left = { MOTOR_BCK, MOTOR_FWD, 600 + rand8(), 0x3111 };
-                        push_state(rot_left);
-                    }
-                    
-                    // put reverse on the stack
-                    motor_state go_back = { MOTOR_BCK, MOTOR_BCK, 2000, BCK_JOB };
-                    push_state(go_back);
-                    
-                }
-              
-                sem_release(&ds_sem);
+                obstacle_reverseTurn(LEFT_BUMPER);
                 sleep_for(50);
             }
         }
         yield();
     }
 
+}
+
+void obstacle_reverseTurn(uint8_t rot) {
+     // acquire the stack semaphore
+    sem_acquire(&ds_sem);
+
+    // if top of stack is reverse task, just refresh duration
+    if (curr_state.ID == BCK_JOB) {
+        printf("Still touching something.\n");
+        curr_state.duration = 2000;
+    } else {
+        printf("Hit something!\n");
+        
+        // stop *now*
+        stop_motors();
+        
+        // put the turn on the stack
+        if (rot) {
+            motor_state rot_right = { MOTOR_FWD, MOTOR_BCK, 600 + rand8(), 0x3144 };
+            push_state(rot_right);   
+        } else {
+            motor_state rot_left = { MOTOR_BCK, MOTOR_FWD, 600 + rand8(), 0x3111 };
+            push_state(rot_left);
+        }
+        
+        // put reverse on the stack
+        motor_state go_back = { MOTOR_BCK, MOTOR_BCK, 2000, BCK_JOB };
+        push_state(go_back);
+        
+    }
+  
+    sem_release(&ds_sem);
 }
 
 // sets motor state to top of state stack, and consumes state when duration expired
@@ -113,8 +136,9 @@ void task_drive() {
     
         motor_state *cs = &curr_state;
         
-        LEFT_MOTOR = cs->ML;
-        RIGHT_MOTOR = cs->MR;
+        LEFT_MOTOR =  speeds[-(cs->ML) + MOTOR_SPEEDS]; // convert from signed int to unsigned index
+        RIGHT_MOTOR = speeds[ (cs->MR) + MOTOR_SPEEDS]; // convert from signed int to unsigned index
+
         TIL311 = cs->ID & 0xFF;
         
         if (cs->duration != -1) {
@@ -157,6 +181,8 @@ void task_lcd_status() {
         lcd_data(LEFT_BUMPER?'L':' ');
         lcd_data(' ');
         lcd_data(RIGHT_BUMPER?'R':' ');
+        lcd_data(' ');
+        lcd_printf("%03d",last_dist);
         
         // print heartbeat
         lcd_cursor(15,1);
@@ -167,6 +193,93 @@ void task_lcd_status() {
         sleep_for(100);
     }
 }
+
+
+
+void task_distance_sense() {
+    __vectors.user[MFP_INT + MFP_GPI4 - USER_ISR_START] = &measure_done;
+    
+    bset (DDR, DISTANCE_SENSOR_BIT);
+	bset (AER, 4);  // set positive edge triggered
+	bset (IERA, 5); // enable timera interrupt...
+    bclr (IMRA, 5); // but mask it
+    
+    bset (IERB, 6); // enable gpip4 interrupt...
+    bset (IMRB, 6); // unmask it
+         
+    bset (DDR, 6); // pan servo
+    
+    // 1ms = 169        90
+    // 252 = center
+    // 2ms = 169 * 2    -90
+    for (int i = 0; i < 10; i++) {
+        enter_critical();
+        bset(GPDR,6);
+        DELAY(252);
+        bclr(GPDR,6);
+        leave_critical();
+        sleep_for(14);
+    }
+    
+    uint16_t acc = 0;
+    uint8_t c = 0;
+    
+    int16_t distance;
+    
+	while(true) {
+          
+        enter_critical();
+        
+        TACR = 0;
+	    bclr(IPRA, 5);
+
+        dist_raw = 0;
+       
+        // tell the sensor to send a ranging ping
+        bset(GPDR, DISTANCE_SENSOR_BIT);
+        __asm volatile ("nop\nnop\n");
+        bclr(GPDR, DISTANCE_SENSOR_BIT);
+        
+        // set up Timer A to count while TAI is high
+        TADR = 0;
+	    TACR = 31;
+	    
+	    leave_critical();
+	    
+	    long start = millis();
+	    
+	    while (dist_raw == 0 && ((millis() - start) < 20)) 
+	        yield();
+        
+        TACR = 0;
+        
+        if (dist_raw == 0) {
+            distance = 255; // should never occur
+        } else {
+            distance = 255-dist_raw;
+            if (bisset(IPRA,5))  // timer overflow occurred
+                distance += 255;
+                
+            printf("%d\n",distance);
+        }
+        
+        last_dist = distance;
+        acc += distance;
+        
+        if (++c == 4) {
+            acc = acc >> 2;
+            
+            if (acc < 30)
+                obstacle_reverseTurn(true);
+                
+            c = 0;
+            acc = 0;
+        }
+        
+        sleep_for(50);
+    }
+}
+//(1s/(3686400/200)) * 30 / ((74us)/(1in))/2 in in
 
 // initialize the hardware and create tasks
 int main() {
@@ -184,12 +297,11 @@ int main() {
 	lcd_printf("68008 ROBOT LOL");
 	lcd_cursor(0,1);
 	
- 	TACR = 0x4;  // prescaler of 50
-    TBCR = 0x4;
+ 	TBCR = 0x4;  // prescaler of 50
+    TCDCR |= 0x4 << 4;
     
-    RIGHT_MOTOR = MOTOR_STOP;
-    LEFT_MOTOR = MOTOR_STOP;
-
+    stop_motors();
+   
     motor_state go_forward = { MOTOR_FWD, MOTOR_FWD, -1 /* never die */, 0xFF };
     push_state(go_forward); // this should never die
     
@@ -198,6 +310,7 @@ int main() {
     create_task(&task_drive, 0);	
 	create_task(&task_check_bumper,0);
 	create_task(&task_lcd_status,0);
+	create_task(&task_distance_sense,0);
 
   	leave_critical();
 
@@ -208,6 +321,11 @@ int main() {
 void push_state(motor_state ms) {
     drive_stack_head--;
     drive_stack[drive_stack_head] = ms;
+}
+
+void stop_motors() {
+    LEFT_MOTOR = MOTOR_T_NEUTRAL;
+    RIGHT_MOTOR = MOTOR_T_NEUTRAL;
 }
 
 // load the custom characters into the LCD
