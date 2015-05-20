@@ -47,6 +47,9 @@ volatile uint32_t millis();
 // yield until task exits
 void wait_for_exit(task_t task);
 
+// returns true if task is still active
+uint8_t task_active(task_t task); 
+
 // simple critical section support (disables interrupts)
 void enter_critical();
 void leave_critical();

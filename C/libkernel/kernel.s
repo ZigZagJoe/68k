@@ -7,6 +7,7 @@
 .global create_task
 .global yield
 .global exit_task
+.global task_active
 .global wait_for_exit
 .global enter_critical
 .global leave_critical
@@ -299,7 +300,7 @@ _found:
 | warning: %d1, %a0 are thrashed in accordance with gcc abi
 _sleep_for:
     cmp.l #TICK_INTERVAL, %d1
-    ble _sleep_short
+    blt _sleep_short
     
     divu.w #TICK_INTERVAL, %d1          | determine number of millis ticks
     andi.l #0x0000FFFF, %d1             | remove remainder in upper word
@@ -441,7 +442,25 @@ enter_critical:
 leave_critical:
     clr.b (_swap_in_progress)
     rts
+  
+| returns if task is active or not
+task_active:
+    clr.l %d0
+    move.w 4(%sp), %d0                 | pointer to task_struct
+    move.l %d0, %a0
+    move.w 6(%sp), %d1                 | thread id
     
+    clr.l %d0
+ 
+    cmp.w (%a0), %d1                   | check if task id has changed
+    jne _task_exited
+    tst.b 3(%a0)                       | check if task is still runnable
+    jeq _task_exited
+    
+    moveq #1, %d0
+_task_exited:
+    rts
+      
 | wait for the task to exit; takes a task_t returned from create_task
 wait_for_exit:
     clr.l %d0
