@@ -19,6 +19,40 @@ int main() {
     millis_start();
     sei();
     
+    
+    bset (DDR, 6);
+    
+    
+    // 1ms = 169        90
+    // 252 = center
+    // 2ms = 169 * 2    -90
+   /* while(1) {
+        bset(GPDR,6);
+        DELAY(252);
+        bclr(GPDR,6);
+        DELAY_MS(20);
+    }*/
+    
+    
+    
+   /* TCDCR |= 0x3 << 4;
+    // 220 = max travel one way
+
+    int8_t dir = 1;
+    uint8_t num = 110;
+    
+    while(true) {
+        num += dir;
+        TCDR = num;
+        
+        DELAY_MS(20);
+        
+        if (num >= 220) {
+            dir = -1;
+        } else if (num <= 110)
+            dir = 1;
+    }
+    */
     uint32_t start, end;
     
     lcd_init();
