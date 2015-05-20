@@ -24,6 +24,23 @@
 #define LEFT_MOTOR TBDR
 #define RIGHT_MOTOR TCDR
 
+// high level positions
+#define PAN_LEFT_45  0
+#define PAN_LEFT_22  1
+#define PAN_CENTER 2
+#define PAN_RIGHT_22 3
+#define PAN_RIGHT_45 4  
+
+// low level pulse lengths
+#define PAN_LEFT_90_V  440
+#define PAN_LEFT_45_V  338
+#define PAN_LEFT_22_V  294
+#define PAN_CENTER_V 235
+#define PAN_RIGHT_22_V  192    
+#define PAN_RIGHT_45_V 150
+#define PAN_RIGHT_90_V 91
+
+
 // low level speeds
 
 // 1.5ms
@@ -64,6 +81,7 @@ void stop_motors();
 void lcd_load_ch();
 void push_state(motor_state ms);
 void obstacle_reverseTurn(uint8_t rot);
+void sensor_move(uint32_t count, uint8_t duration);
 
 /* global state */
 motor_state drive_stack[128];
@@ -85,12 +103,8 @@ ISR(measure_done) {
 void task_check_bumper() {
     while(true) {
         if (LEFT_BUMPER || RIGHT_BUMPER) {
-            sleep_for(10); // debounce
-            
-            if (LEFT_BUMPER || RIGHT_BUMPER) {
-                obstacle_reverseTurn(LEFT_BUMPER);
-                sleep_for(50);
-            }
+            obstacle_reverseTurn(LEFT_BUMPER);
+            sleep_for(50);
         }
         yield();
     }
@@ -104,7 +118,7 @@ void obstacle_reverseTurn(uint8_t rot) {
     // if top of stack is reverse task, just refresh duration
     if (curr_state.ID == BCK_JOB) {
         printf("Still touching something.\n");
-        curr_state.duration = 2000;
+        curr_state.duration = 1200;
     } else {
         printf("Hit something!\n");
         
@@ -113,15 +127,15 @@ void obstacle_reverseTurn(uint8_t rot) {
         
         // put the turn on the stack
         if (rot) {
-            motor_state rot_right = { MOTOR_FWD, MOTOR_BCK, 600 + rand8(), 0x3144 };
+            motor_state rot_right = { MOTOR_FWD, MOTOR_BCK, 300 + rand8(), 0x3144 };
             push_state(rot_right);   
         } else {
-            motor_state rot_left = { MOTOR_BCK, MOTOR_FWD, 600 + rand8(), 0x3111 };
+            motor_state rot_left = { MOTOR_BCK, MOTOR_FWD, 300 + rand8(), 0x3111 };
             push_state(rot_left);
         }
         
         // put reverse on the stack
-        motor_state go_back = { MOTOR_BCK, MOTOR_BCK, 2000, BCK_JOB };
+        motor_state go_back = { MOTOR_BCK, MOTOR_BCK, 1200, BCK_JOB };
         push_state(go_back);
         
     }
@@ -194,6 +208,26 @@ void task_lcd_status() {
     }
 }
 
+void pan_sensor(uint8_t p) {
+    const uint32_t pos[] = {PAN_LEFT_45_V, PAN_LEFT_22_V, PAN_CENTER_V, PAN_RIGHT_22_V, PAN_RIGHT_45_V};
+    uint32_t count = pos[p];
+    
+    sensor_move(count, 5);  
+}
+
+void sensor_move(uint32_t count, uint8_t duration) {
+    for (uint8_t i = 0; i < duration; i++) {
+        enter_critical();
+        bset(GPDR,6);
+        __asm volatile("move.l %0,%%d0\n" \
+                                "1: subi.l #1, %%d0\n" \
+                                "bne 1b\n" \
+                                ::"d"(count):"d0");
+        bclr(GPDR, 6);
+        leave_critical();
+        sleep_for(10);
+    }
+}
 
 
 void task_distance_sense() {
@@ -209,25 +243,13 @@ void task_distance_sense() {
          
     bset (DDR, 6); // pan servo
     
-    // 1ms = 169        90
-    // 252 = center
-    // 2ms = 169 * 2    -90
-    for (int i = 0; i < 10; i++) {
-        enter_critical();
-        bset(GPDR,6);
-        DELAY(252);
-        bclr(GPDR,6);
-        leave_critical();
-        sleep_for(14);
-    }
-    
-    uint16_t acc = 0;
-    uint8_t c = 0;
-    
     int16_t distance;
     
-	while(true) {
-          
+    const uint8_t scan_pattern[] = {PAN_CENTER, PAN_LEFT_22, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_22};
+    
+    uint8_t scan_i = 0;
+    
+	while(true) {         
         enter_critical();
         
         TACR = 0;
@@ -254,31 +276,29 @@ void task_distance_sense() {
         TACR = 0;
         
         if (dist_raw == 0) {
-            distance = 255; // should never occur
+            distance = 255; // assume the worst
         } else {
             distance = 255-dist_raw;
             if (bisset(IPRA,5))  // timer overflow occurred
                 distance += 255;
-                
-            printf("%d\n",distance);
         }
         
-        last_dist = distance;
-        acc += distance;
-        
-        if (++c == 4) {
-            acc = acc >> 2;
+      //  printf("%d: %d\n",scan_i, distance);
             
-            if (acc < 30)
-                obstacle_reverseTurn(true);
-                
-            c = 0;
-            acc = 0;
+        last_dist = distance;
+       
+        if (distance < 40)
+            obstacle_reverseTurn(scan_i < PAN_CENTER ? true : false);
+
+        if (++scan_i == 8) {
+            scan_i = 0;
         }
         
-        sleep_for(50);
+        pan_sensor(scan_pattern[scan_i]);
+        yield();
     }
 }
+
 //(1s/(3686400/200)) * 30 / ((74us)/(1in))/2 in in
 
 // initialize the hardware and create tasks
