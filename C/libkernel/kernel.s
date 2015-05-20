@@ -447,6 +447,7 @@ leave_critical:
 task_active:
     clr.l %d0
     move.w 4(%sp), %d0                 | pointer to task_struct
+    jeq _task_exited                   | task ptr is null, return 0
     move.l %d0, %a0
     move.w 6(%sp), %d1                 | thread id
     
