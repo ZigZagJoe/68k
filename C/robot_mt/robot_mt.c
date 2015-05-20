@@ -25,40 +25,49 @@
 #define RIGHT_MOTOR TCDR
 
 // high level positions
-#define PAN_LEFT_45  0
-#define PAN_LEFT_22  1
-#define PAN_CENTER 2
-#define PAN_RIGHT_22 3
-#define PAN_RIGHT_45 4  
+#define PAN_LEFT_90  0
+#define PAN_LEFT_45  1
+#define PAN_LEFT_22  2
+#define PAN_CENTER   3
+#define PAN_RIGHT_22 4
+#define PAN_RIGHT_45 5  
+#define PAN_RIGHT_90 6
 
 // low level pulse lengths
 #define PAN_LEFT_90_V  440
 #define PAN_LEFT_45_V  338
 #define PAN_LEFT_22_V  294
-#define PAN_CENTER_V 235
-#define PAN_RIGHT_22_V  192    
+#define PAN_CENTER_V   235
+#define PAN_RIGHT_22_V 192    
 #define PAN_RIGHT_45_V 150
-#define PAN_RIGHT_90_V 91
+#define PAN_RIGHT_90_V  91
 
-
+const uint32_t pan_to_pulse[] = {PAN_LEFT_90_V,PAN_LEFT_45_V, PAN_LEFT_22_V, PAN_CENTER_V, PAN_RIGHT_22_V, PAN_RIGHT_45_V, PAN_RIGHT_90_V};
+    
 // low level speeds
 
 // 1.5ms
-#define MOTOR_T_NEUTRAL 110
+#define MOTOR_T_NEUTRAL 111
 // 1ms
-#define MOTOR_T_FWD_FULL 148
+#define MOTOR_T_FWD_FULL (MOTOR_T_NEUTRAL+38)
 // 2ms
-#define MOTOR_T_BCK_FULL 74
+#define MOTOR_T_BCK_FULL (MOTOR_T_NEUTRAL-38)
+// 1ms
+#define MOTOR_T_FWD_HALF (MOTOR_T_NEUTRAL+38*2/3)
+// 2ms
+#define MOTOR_T_BCK_HALF (MOTOR_T_NEUTRAL-38*2/3)
 
-const uint8_t speeds[] = {MOTOR_T_BCK_FULL, MOTOR_T_NEUTRAL, MOTOR_T_FWD_FULL};
+const uint8_t speeds[] = {MOTOR_T_BCK_FULL, MOTOR_T_BCK_HALF, MOTOR_T_NEUTRAL, MOTOR_T_FWD_HALF, MOTOR_T_FWD_FULL};
 
 // number of directional speeds 
-#define MOTOR_SPEEDS 1
+#define MOTOR_SPEEDS 2
 
 // high level speeds
 #define MOTOR_STOP 0
-#define MOTOR_FWD 1
-#define MOTOR_BCK -1
+#define MOTOR_FWD_FULL 2
+#define MOTOR_FWD_HALF 1
+#define MOTOR_BCK_FULL -2
+#define MOTOR_BCK_HALF -1
 
 // custom characters
 #define CH_UPARR 0
@@ -77,11 +86,18 @@ typedef struct {
 } motor_state;
 
 // functions
-void stop_motors();
+void estop_motors();
 void lcd_load_ch();
 void push_state(motor_state ms);
-void obstacle_reverseTurn(uint8_t rot);
+void do_avoidance(); // spawns avoidance task
 void sensor_move(uint32_t count, uint8_t duration);
+
+// tasks
+void task_handle_obstacle();
+void task_check_bumper();
+void task_drive();
+void task_lcd_status();
+void task_distance_sense();
 
 /* global state */
 motor_state drive_stack[128];
@@ -92,9 +108,11 @@ uint8_t drive_stack_head = 127;
 sem_t lcd_sem;
 sem_t ds_sem;
 
-volatile uint8_t dist_raw = 0;
-volatile int16_t last_dist = 0;
-
+volatile uint8_t  dist_raw = 0;            // return from timera IRQ
+volatile uint8_t  last_dist[7];            // current scan results
+volatile uint8_t  estop = false;           // motor emergency stop: halts drive stack processing
+volatile task_t   avoidance_task = NULL;
+ 
 ISR(measure_done) {
     dist_raw = TADR;
 }
@@ -103,66 +121,82 @@ ISR(measure_done) {
 void task_check_bumper() {
     while(true) {
         if (LEFT_BUMPER || RIGHT_BUMPER) {
-            obstacle_reverseTurn(LEFT_BUMPER);
-            sleep_for(50);
+           do_avoidance();
+           sleep_for(30);
+           
         }
         yield();
     }
-
 }
 
-void obstacle_reverseTurn(uint8_t rot) {
-     // acquire the stack semaphore
-    sem_acquire(&ds_sem);
+void do_avoidance() {
+    estop_motors();
+    
+    if (!avoidance_task || !task_active(avoidance_task)) {
+        avoidance_task = create_task(&task_handle_obstacle, 0);
+        return;
+    }
+}
+
+void task_handle_obstacle() {
 
     // if top of stack is reverse task, just refresh duration
     if (curr_state.ID == BCK_JOB) {
-        printf("Still touching something.\n");
         curr_state.duration = 1200;
     } else {
-        printf("Hit something!\n");
-        
+
         // stop *now*
-        stop_motors();
+        estop_motors();
         
+        sem_acquire(&ds_sem);
+    
         // put the turn on the stack
-        if (rot) {
-            motor_state rot_right = { MOTOR_FWD, MOTOR_BCK, 300 + rand8(), 0x3144 };
+        if (true) {
+            motor_state rot_right = { MOTOR_FWD_FULL, MOTOR_BCK_FULL, 300 + rand8(), 0x3144 };
             push_state(rot_right);   
         } else {
-            motor_state rot_left = { MOTOR_BCK, MOTOR_FWD, 300 + rand8(), 0x3111 };
+            motor_state rot_left = { MOTOR_BCK_FULL, MOTOR_FWD_FULL, 300 + rand8(), 0x3111 };
             push_state(rot_left);
         }
-        
+    
         // put reverse on the stack
-        motor_state go_back = { MOTOR_BCK, MOTOR_BCK, 1200, BCK_JOB };
+        motor_state go_back = { MOTOR_BCK_FULL, MOTOR_BCK_FULL, 1200, BCK_JOB };
         push_state(go_back);
         
+        sem_release(&ds_sem);
+    
     }
-  
-    sem_release(&ds_sem);
+
+    estop = false;
 }
 
 // sets motor state to top of state stack, and consumes state when duration expired
 void task_drive() {
     while(true) {
+    
+        while(estop) // emergency stop; don't drive motors
+            yield();
+        
         sem_acquire(&ds_sem);
     
         motor_state *cs = &curr_state;
         
-        LEFT_MOTOR =  speeds[-(cs->ML) + MOTOR_SPEEDS]; // convert from signed int to unsigned index
-        RIGHT_MOTOR = speeds[ (cs->MR) + MOTOR_SPEEDS]; // convert from signed int to unsigned index
+        if (cs->duration != 0) {
+            LEFT_MOTOR =  speeds[-(cs->ML) + MOTOR_SPEEDS]; // convert from signed int to unsigned index
+            RIGHT_MOTOR = speeds[ (cs->MR) + MOTOR_SPEEDS]; // convert from signed int to unsigned index
 
-        TIL311 = cs->ID & 0xFF;
+            TIL311 = cs->ID & 0xFF;
         
-        if (cs->duration != -1) {
-            cs->duration -= 20;
-            if (cs->duration < 1)
-                drive_stack_head++; // pop state
-        }
+            if (cs->duration != -1) {
+                cs->duration -= 15;
+                if (cs->duration < 1)
+                    drive_stack_head++; // pop state
+            }
+        } else 
+            drive_stack_head++; // ignore state as duration is 0
         
         sem_release(&ds_sem);
-        sleep_for(20);
+        sleep_for(15);
     }
 }
 
@@ -196,7 +230,7 @@ void task_lcd_status() {
         lcd_data(' ');
         lcd_data(RIGHT_BUMPER?'R':' ');
         lcd_data(' ');
-        lcd_printf("%03d",last_dist);
+        lcd_printf("%03d",last_dist[PAN_CENTER]);
         
         // print heartbeat
         lcd_cursor(15,1);
@@ -209,8 +243,7 @@ void task_lcd_status() {
 }
 
 void pan_sensor(uint8_t p) {
-    const uint32_t pos[] = {PAN_LEFT_45_V, PAN_LEFT_22_V, PAN_CENTER_V, PAN_RIGHT_22_V, PAN_RIGHT_45_V};
-    uint32_t count = pos[p];
+    uint32_t count = pan_to_pulse[p];
     
     sensor_move(count, 5);  
 }
@@ -285,10 +318,10 @@ void task_distance_sense() {
         
       //  printf("%d: %d\n",scan_i, distance);
             
-        last_dist = distance;
+        last_dist[scan_pattern[scan_i]] = distance;
        
         if (distance < 40)
-            obstacle_reverseTurn(scan_i < PAN_CENTER ? true : false);
+            do_avoidance();
 
         if (++scan_i == 8) {
             scan_i = 0;
@@ -320,9 +353,9 @@ int main() {
  	TBCR = 0x4;  // prescaler of 50
     TCDCR |= 0x4 << 4;
     
-    stop_motors();
+    estop_motors();
    
-    motor_state go_forward = { MOTOR_FWD, MOTOR_FWD, -1 /* never die */, 0xFF };
+    motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, -1 /* never die */, 0xFF };
     push_state(go_forward); // this should never die
     
     enter_critical(); // ensure all tasks are created simultaneously 
@@ -341,9 +374,11 @@ int main() {
 void push_state(motor_state ms) {
     drive_stack_head--;
     drive_stack[drive_stack_head] = ms;
+    estop = false;
 }
 
-void stop_motors() {
+void estop_motors() {
+    estop = true;
     LEFT_MOTOR = MOTOR_T_NEUTRAL;
     RIGHT_MOTOR = MOTOR_T_NEUTRAL;
 }
