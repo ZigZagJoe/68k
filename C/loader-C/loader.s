@@ -67,9 +67,9 @@ loader_start:
     TILDBG C0                  | debugging message
     
     | set up timer C as baud rate generator at 28800 (3.6864mhz crystal)
-    move.b #1, (TCDR)  
-    andi.b #0xF, (TCDCR)       | disable timer C
-    ori.b #0x16, (TCDCR)       | set timer C active with prescaler of /4
+    |move.b #1, (TCDR)  
+    |andi.b #0xF, (TCDCR)       | disable timer C
+    |ori.b #0x16, (TCDCR)       | set timer C active with prescaler of /4
       
     | initialize 68901 UART
     move.b #0b10001000, (UCR)  | /16, 8 bits, 1 stop bit, no parity

@@ -37,9 +37,9 @@ void serial_start(uint8_t fast) {
     IMRA |= INT_REC_FULL | INT_REC_ERR | INT_XMIT_ERR;
   
     // baud rate generation
-    TCDR = 1;        // baud 28800
+    /*TCDR = 1;        // baud 28800
     TCDCR &= 0xF; 	 // stop timer C
-    TCDCR |= 1 << 4; // start timer C with prescaler of 4  
+    TCDCR |= 1 << 4; // start timer C with prescaler of 4 */ 
     
     RXERR = 0;
 	TXERR = 0;
