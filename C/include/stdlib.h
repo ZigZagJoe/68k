@@ -45,6 +45,9 @@ extern void sleep_for(uint32_t time);
 #define bclr(X,BIT) (X &= ~bv(BIT))
 #define bisset(X,BIT) (X & bv(BIT))
 
+#define bset_a(X,BIT)  __asm volatile("bset.b %0, (%1)\n"::"i"(BIT),"a"(&X))
+#define bclr_a(X,BIT)  __asm volatile("bclr.b %0, (%1)\n"::"i"(BIT),"a"(&X))
+
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 #define abs(x) ((x)>0?(x):-(x))
