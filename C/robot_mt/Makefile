@@ -1,7 +1,7 @@
 # 68008 executable makefile stub
 
 # RAM or ROM
-CODE_LOC = RAM
+CODE_LOC = ROM
 
 USE_KERNEL = 1
 

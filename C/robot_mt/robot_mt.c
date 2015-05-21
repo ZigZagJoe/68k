@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <printf.h>
+#include <string.h>
 
 // IO devices for my specific machine
 #include <io.h>
@@ -12,6 +13,13 @@
 #include <semaphore.h>
 
 #include <binary.h>
+
+// custom lcd characters
+#define CH_UPARR 0
+#define CH_UPARR_H 1
+#define CH_DNARR 2
+#define CH_DNARR_H 3
+#define CH_STOP 4
 
 // physical pin definitons
 #define BUMPER_BIT 3
@@ -51,27 +59,30 @@ const uint32_t pan_to_pulse[] = {PAN_LEFT_90_V,PAN_LEFT_45_V, PAN_LEFT_22_V, PAN
 #define MOTOR_T_FWD_FULL (MOTOR_T_NEUTRAL+38)
 // 2ms
 #define MOTOR_T_BCK_FULL (MOTOR_T_NEUTRAL-38)
-#define MOTOR_T_FWD_HALF (MOTOR_T_NEUTRAL+38*2/3)
-#define MOTOR_T_BCK_HALF (MOTOR_T_NEUTRAL-38*2/3)
+#define MOTOR_T_FWD_23 (MOTOR_T_NEUTRAL+38*2/3)
+#define MOTOR_T_BCK_23 (MOTOR_T_NEUTRAL-38*2/3)
+#define MOTOR_T_FWD_13 (MOTOR_T_NEUTRAL+38*1/3)
+#define MOTOR_T_BCK_13 (MOTOR_T_NEUTRAL-38*1/3)
 
 // from motor speed value to timer value
-const uint8_t speed_to_timer[] = {MOTOR_T_BCK_FULL, MOTOR_T_BCK_HALF, MOTOR_T_NEUTRAL, MOTOR_T_FWD_HALF, MOTOR_T_FWD_FULL};
+const uint8_t speed_to_timer[] = {MOTOR_T_BCK_FULL, MOTOR_T_BCK_23, MOTOR_T_BCK_13, MOTOR_T_NEUTRAL, MOTOR_T_FWD_13, MOTOR_T_FWD_23, MOTOR_T_FWD_FULL};
 
+// speed to indicator char
+const uint8_t speed_to_ch[] = { CH_DNARR, CH_DNARR_H, CH_DNARR_H, CH_STOP, CH_UPARR_H,CH_UPARR_H, CH_UPARR };
+    
 // number of directional speeds 
-#define MOTOR_SPEEDS 2
+#define MOTOR_SPEEDS 3
 
 // high level speeds
 // negatives used so can negate for reversed drive motor
-#define MOTOR_STOP 0
-#define MOTOR_FWD_FULL 2
-#define MOTOR_FWD_HALF 1
-#define MOTOR_BCK_FULL -2
-#define MOTOR_BCK_HALF -1
 
-// custom lcd characters
-#define CH_UPARR 0
-#define CH_DNARR 1
-#define CH_STOP 2
+#define MOTOR_BCK_FULL -3
+#define MOTOR_BCK_23 -2
+#define MOTOR_BCK_13 -1
+#define MOTOR_STOP 0
+#define MOTOR_FWD_13 1
+#define MOTOR_FWD_23 2
+#define MOTOR_FWD_FULL 3
 
 /* prototypes */
 
@@ -79,7 +90,7 @@ typedef struct {
     int8_t ML;
     int8_t MR;
     int32_t duration; // in ms
-    uint32_t ID;     
+    uint16_t ID;     
 } motor_state;
 
 // functions
@@ -107,7 +118,7 @@ sem_t avoid_sem;
 
 volatile uint8_t  current_pan = 0;         // current position of pan servo
 volatile uint8_t  dist_raw = 0;            // return from timera IRQ
-volatile uint8_t  last_dist[7];            // current scan results
+volatile uint16_t last_dist[7];            // current scan results
 volatile uint8_t  estop = false;           // motor emergency stop: halts drive stack processing
 volatile task_t   avoidance_task = NULL;   // used to monitor state of avoidance processing
  
@@ -194,18 +205,9 @@ void task_lcd_status() {
             lcd_data(' ');
             lcd_data('X');
         } else {
-            // print motor statuses
-            if (curr_state.MR == MOTOR_STOP) {
-                lcd_data(CH_STOP);
-            } else 
-                lcd_data(curr_state.MR > MOTOR_STOP ? CH_UPARR : CH_DNARR);
-                        
+            lcd_data(speed_to_ch[curr_state.ML + MOTOR_SPEEDS]);
             lcd_data(' ');
-            
-            if (curr_state.ML == MOTOR_STOP) {
-                lcd_data(CH_STOP);
-            } else 
-                lcd_data(curr_state.ML > MOTOR_STOP ? CH_UPARR : CH_DNARR);
+            lcd_data(speed_to_ch[curr_state.MR + MOTOR_SPEEDS]);
         }
         
         // sensor status
@@ -258,11 +260,16 @@ void task_distance_sense() {
          
     bset (DDR, PAN_SERVO_BIT); // pan servo
     
-    int16_t distance;
+    uint16_t distance;
     
     const uint8_t scan_pattern[] = {PAN_CENTER, PAN_LEFT_22, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_22};
     
     uint8_t scan_i = 0;
+    
+    // home sensor
+    pan_sensor(scan_pattern[0]);
+    pan_sensor(scan_pattern[0]);
+    pan_sensor(scan_pattern[0]);
     
 	while(true) {         
         enter_critical();
@@ -302,9 +309,37 @@ void task_distance_sense() {
             
         last_dist[current_pan] = distance;
        
-        if (distance < 40) // 14 inches
-            do_avoidance(RANGE_WARNING);
-
+        if (!task_active(avoidance_task) && curr_state.ID != BCK_JOB) {
+            if (distance < 40) { // 14 inches
+                do_avoidance(RANGE_WARNING);
+            } else if (distance < 120) {
+                sem_acquire(&ds_sem);
+                
+                uint8_t correction = (distance > 80 && current_pan != PAN_RIGHT_45 && current_pan != PAN_LEFT_45) 
+                                        ? MOTOR_FWD_23 : MOTOR_FWD_13;
+                                        
+                uint32_t duration = 10000 / distance;
+                
+                if ((curr_state.ID & 0xFF00) != 0xCC00) { 
+                    if (current_pan <= PAN_CENTER) {  
+                        motor_state slight_right = { MOTOR_FWD_FULL, correction, duration, 0xCCF4 };
+                        push_state(slight_right);
+                    } else {
+                        motor_state slight_left = { correction, MOTOR_FWD_FULL, duration, 0xCCF1 };
+                        push_state(slight_left);
+                    }
+                } else {
+                    curr_state.duration = duration;
+                    if (curr_state.ID == 0xCCF4) {
+                        curr_state.MR = correction;
+                    } else 
+                        curr_state.ML = correction;
+                }
+            
+                sem_release(&ds_sem);
+            }
+        }
+        
         // handle more advanced scan patterns here
         if (++scan_i == 8) {
             scan_i = 0;
@@ -314,6 +349,16 @@ void task_distance_sense() {
     }
 }
 
+
+void task_print_dist() {
+    while(true) {
+        for (uint8_t i = 0; i < 7; i++) 
+            printf("%3d  ", last_dist[i]);
+        
+        putc('\n');
+        sleep_for(500);
+    }
+}
 //(1s/(3686400/200)) * 30 / ((74us)/(1in))/2 in in
 
 // initialize the hardware and create tasks
@@ -338,6 +383,9 @@ int main() {
  	TBCR = 0x4;  // prescaler of 50
     TCDCR |= 0x4 << 4; // prescaler of 50
     
+    memset(&drive_stack, 0, sizeof(drive_stack));
+    memset(&last_dist, 0, sizeof(last_dist));
+    
     estop_motors();
    
     motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, -1 /* never die */, 0xFF };
@@ -348,6 +396,7 @@ int main() {
     create_task(&task_drive, 0);	
 	create_task(&task_distance_sense,0);
     create_task(&task_lcd_status,0);
+   // create_task(&task_print_dist,0);
   
   	leave_critical();
 
@@ -397,10 +446,30 @@ void lcd_load_ch() {
     lcd_data(B00000100);
     lcd_data(B00000100);
     
+    lcd_cgram(CH_UPARR_H); // up arrow
+    lcd_data(B00000000);
+    lcd_data(B00000100);
+    lcd_data(B00001110);
+    lcd_data(B00010101);
+    lcd_data(B00000100);
+    lcd_data(B00000100);
+    lcd_data(B00000000);
+    lcd_data(B00000000);
+    
     lcd_cgram(CH_DNARR); // down arrow
     lcd_data(B00000000);
     lcd_data(B00000100);
     lcd_data(B00000100);
+    lcd_data(B00000100);
+    lcd_data(B00000100);
+    lcd_data(B00010101);
+    lcd_data(B00001110);
+    lcd_data(B00000100);
+    
+    lcd_cgram(CH_DNARR_H); // down arrow
+    lcd_data(B00000000);
+    lcd_data(B00000000);
+    lcd_data(B00000000);
     lcd_data(B00000100);
     lcd_data(B00000100);
     lcd_data(B00010101);
