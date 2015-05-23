@@ -159,7 +159,7 @@ _no_tasks:
 | user initiated exit
 _exit:
     cli
-    
+
     move.l #_system_exit, %a0
     jsr puts
     move.b %d1, %d0
@@ -502,11 +502,13 @@ _str_done:
     rts
     
 putc_sync:
-    btst #7, (TSR)                     | test buffer empty (bit 7)
-    jeq putc                           | Z=1 (bit = 0) ? jranch
-    move.b %D0, (UDR)                  | write char to buffer
-    rts
+	| see if transmitter is idle (uppermost bit = 1)
+    tst.b (TSR)                  | set N according to uppermost bit
+    jpl putc_sync                | if N is not set, branch.
     
+    move.b %d0, (UDR)		     | write char to data register
+	rts	
+	
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | put hex byte in %d0 
 puthexbyte:
