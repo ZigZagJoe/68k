@@ -884,8 +884,8 @@ int perform_dump(uint32_t addr, uint32_t len) {
             }
         } else usleep(10);
         
-        if ((millis() - lastByte) > 250) {
-            printf("Error: timeout in dump (no data for 250ms)\n");
+        if ((millis() - lastByte) > 1000) {
+            printf("Error: timeout in dump (no data for 1000ms)\n");
             return 1;
         }
     }
