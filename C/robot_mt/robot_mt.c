@@ -33,23 +33,36 @@
 
 // high level positions
 #define PAN_LEFT_90  0
-#define PAN_LEFT_45  1
-#define PAN_LEFT_22  2
-#define PAN_CENTER   3
-#define PAN_RIGHT_22 4
-#define PAN_RIGHT_45 5  
-#define PAN_RIGHT_90 6
+#define PAN_LEFT_77  1
+#define PAN_LEFT_45  2
+#define PAN_LEFT_22  3
+#define PAN_CENTER   4
+#define PAN_RIGHT_22 5
+#define PAN_RIGHT_45 6  
+#define PAN_RIGHT_77 7  
+#define PAN_RIGHT_90 8
 
 // low level pulse lengths
-#define PAN_LEFT_90_V  440
-#define PAN_LEFT_45_V  338
-#define PAN_LEFT_22_V  294
-#define PAN_CENTER_V   235
-#define PAN_RIGHT_22_V 192    
-#define PAN_RIGHT_45_V 150
-#define PAN_RIGHT_90_V  91
+#define PAN_LEFT_90_V  450
+#define PAN_CENTER_V   263
+#define PAN_RIGHT_90_V  85
 
-const uint32_t pan_to_pulse[] = {PAN_LEFT_90_V,PAN_LEFT_45_V, PAN_LEFT_22_V, PAN_CENTER_V, PAN_RIGHT_22_V, PAN_RIGHT_45_V, PAN_RIGHT_90_V};
+// calculated angles
+#define PAN_LEFT_45_V  ((PAN_LEFT_90_V + PAN_CENTER_V) / 2)
+#define PAN_RIGHT_45_V ((PAN_RIGHT_90_V + PAN_CENTER_V) / 2)
+#define PAN_LEFT_77_V  ((PAN_LEFT_90_V + PAN_LEFT_45_V) / 2)
+#define PAN_RIGHT_77_V ((PAN_RIGHT_90_V + PAN_RIGHT_45_V) / 2)
+#define PAN_LEFT_22_V  ((PAN_LEFT_45_V + PAN_CENTER_V) / 2)
+#define PAN_RIGHT_22_V ((PAN_RIGHT_45_V + PAN_CENTER_V) / 2) 
+
+const uint32_t pan_to_pulse[] = {PAN_LEFT_90_V, PAN_LEFT_77_V, PAN_LEFT_45_V, PAN_LEFT_22_V, PAN_CENTER_V, PAN_RIGHT_22_V, PAN_RIGHT_45_V, PAN_RIGHT_77_V, PAN_RIGHT_90_V};
+
+// scan patterns
+const uint8_t sp_90_swp[] = {8, PAN_CENTER, PAN_LEFT_22, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_22};
+const uint8_t sp_180_swp[] = {16, PAN_CENTER, PAN_LEFT_22, PAN_LEFT_45, PAN_LEFT_77, PAN_LEFT_90, PAN_LEFT_77, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_77,PAN_RIGHT_90,PAN_RIGHT_77,PAN_RIGHT_45, PAN_RIGHT_22};  
+const uint8_t sp_center_only[] = {1, PAN_CENTER};
+
+
     
 // low level speeds
 
@@ -90,15 +103,18 @@ typedef struct {
     int8_t ML;
     int8_t MR;
     int32_t duration; // in ms
-    uint16_t ID;     
+    uint16_t ID;
+    sem_t *notify;     
 } motor_state;
 
 // functions
 void estop_motors();
 void lcd_load_ch();
 void push_state(motor_state ms);
-void do_avoidance(uint8_t why); // spawns avoidance task
+void safe_push_state(motor_state ms); // uses the semaphore
+void do_avoidance(uint8_t why);       // spawns avoidance task if neccisary
 void sensor_move(uint32_t count, uint8_t duration);
+void halt_and_exit(char *why, uint8_t code);
 
 // tasks
 void task_handle_obstacle(uint8_t why);
@@ -115,10 +131,13 @@ uint8_t drive_stack_head = 31;
 sem_t lcd_sem;
 sem_t ds_sem;
 sem_t avoid_sem;
+sem_t sp_sem;
 
+volatile uint8_t *scan_pattern;
+volatile uint8_t  scan_i;
 volatile uint8_t  current_pan = 0;         // current position of pan servo
 volatile uint8_t  dist_raw = 0;            // return from timera IRQ
-volatile uint16_t last_dist[7];            // current scan results
+volatile uint16_t last_dist[9];            // current scan results
 volatile uint8_t  estop = false;           // motor emergency stop: halts drive stack processing
 volatile task_t   avoidance_task = NULL;   // used to monitor state of avoidance processing
  
@@ -127,34 +146,81 @@ ISR(measure_done) {
 }
 
 // motor task ids
-#define BCK_JOB 0x31BB
 #define BUMPER_HIT 1
 #define RANGE_WARNING 2
 
+void sem_wait(sem_t *sem) {
+    sem_acquire(sem);
+    sem_release(sem);
+}
+
+#define AVOID_MOTOR_STOP 0x0A55
+
 void task_handle_obstacle(uint8_t why) {
-    // if top of motor stack is reverse task, just refresh duration
-    if (curr_state.ID == BCK_JOB) {
-        curr_state.duration = 1200;
-    } else {
-        sem_acquire(&ds_sem);
+    // semaphore for synchronous motor actions
+    sem_t move_sem;
+    sem_init (&move_sem);
     
-        // put the turn on the stack
-        if (true) {
-            motor_state rot_right = { MOTOR_FWD_FULL, MOTOR_BCK_FULL, 300 + rand8(), 0x3144 };
-            push_state(rot_right);   
-        } else {
-            motor_state rot_left = { MOTOR_BCK_FULL, MOTOR_FWD_FULL, 300 + rand8(), 0x3111 };
-            push_state(rot_left);
-        }
+    motor_state stop = { MOTOR_STOP, MOTOR_STOP, -1, AVOID_MOTOR_STOP, 0 };
     
-        // put reverse on the stack
-        motor_state go_back = { MOTOR_BCK_FULL, MOTOR_BCK_FULL, 1200, BCK_JOB };
-        push_state(go_back);
-        
-        sem_release(&ds_sem);
-    }
+    // set base state to stopped
+    safe_push_state(stop);
     
     estop = false;
+    
+    // reverse for breathing room
+    motor_state go_back = { MOTOR_BCK_FULL, MOTOR_BCK_FULL, 300, 0x0ABB, &move_sem };
+    do {
+        safe_push_state(go_back);
+
+        // wait for completion
+        sem_wait(&move_sem);
+    } while (BUMPER_DEPRESSED);
+    
+    // turn around
+    motor_state do_180 = { MOTOR_BCK_FULL, MOTOR_FWD_FULL, 750, 0x0A44, &move_sem };
+    safe_push_state(do_180);
+    sem_wait(&move_sem);    
+    
+    // acquire semaphore for scan
+    sem_acquire(&sp_sem);
+    // set 180 scan pattern
+    scan_pattern = &sp_180_swp;
+    scan_i = 1;
+    // zero distance array
+    memset(last_dist, 0, sizeof(last_dist));
+    sem_release(&sp_sem);
+    
+    // wait for the scan to be completed
+    uint8_t can_exit = 0;
+    while(!can_exit) {
+        yield();
+        can_exit = 1;
+        for (int i = 0; i < 9; i++)
+            if (!last_dist[i]) {
+                can_exit = 0;
+                break;
+            }
+    }
+    
+    for (uint8_t i = 0; i < 9; i++) 
+            printf("%3d  ", last_dist[i]);
+        
+    sem_acquire(&ds_sem);
+    
+    if (curr_state.ID == AVOID_MOTOR_STOP) {
+        curr_state.duration = 0;
+    } else 
+        halt_and_exit("FATAL: TOP TASK IN task_handle_obstacle IS NOT STOP TASK!", 0xEA);
+     
+    sem_release(&ds_sem);
+    
+    // restore normal scan pattern
+    sem_acquire(&sp_sem);
+    scan_pattern = &sp_90_swp;
+    scan_i = 1;
+    sem_release(&sp_sem);
+    
 }
 
 // sets motor state to top of state stack, and consumes state when duration expired
@@ -178,8 +244,11 @@ void task_drive() {
         
             if (cs->duration != -1) {
                 cs->duration -= 15;
-                if (cs->duration < 1)
+                if (cs->duration < 1) { 
+                    if (cs->notify)
+                        *(cs->notify) = 0;
                     drive_stack_head++; // pop state
+                }
             }
         } else 
             drive_stack_head++; // ignore state as duration is 0
@@ -229,8 +298,9 @@ void task_lcd_status() {
 }
 
 void pan_sensor(uint8_t p) {
+    int8_t duration = max(5,(abs(current_pan - p)) * 5);
     current_pan = p;
-    sensor_move(pan_to_pulse[p], 5);  
+    sensor_move(pan_to_pulse[p], duration);  
 }
 
 void sensor_move(uint32_t count, uint8_t duration) {
@@ -247,6 +317,7 @@ void sensor_move(uint32_t count, uint8_t duration) {
     }
 }
 
+
 void task_distance_sense() {
     __vectors.user[MFP_INT + MFP_GPI4 - USER_ISR_START] = &measure_done;
     
@@ -261,15 +332,15 @@ void task_distance_sense() {
     bset (DDR, PAN_SERVO_BIT); // pan servo
     
     uint16_t distance;
-    
-    const uint8_t scan_pattern[] = {PAN_CENTER, PAN_LEFT_22, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_22};
-    
-    uint8_t scan_i = 0;
+
+    current_pan = 0;
+    scan_i = 1;
+    scan_pattern = &sp_90_swp;
     
     // home sensor
-    pan_sensor(scan_pattern[0]);
-    pan_sensor(scan_pattern[0]);
-    pan_sensor(scan_pattern[0]);
+    pan_sensor(scan_pattern[1]);
+    pan_sensor(scan_pattern[1]);
+    pan_sensor(scan_pattern[1]);
     
 	while(true) {         
         enter_critical();
@@ -309,10 +380,10 @@ void task_distance_sense() {
             
         last_dist[current_pan] = distance;
        
-        if (!task_active(avoidance_task) && curr_state.ID != BCK_JOB) {
-            if (distance < 40) { // 14 inches
+        if (!task_active(avoidance_task)) {
+            if (distance < 40) //{ // 14 inches
                 do_avoidance(RANGE_WARNING);
-            } else if (distance < 120) {
+           /* } else if (distance < 120) {
                 sem_acquire(&ds_sem);
                 
                 uint8_t correction = (distance > 80 && current_pan != PAN_RIGHT_45 && current_pan != PAN_LEFT_45) 
@@ -337,42 +408,49 @@ void task_distance_sense() {
                 }
             
                 sem_release(&ds_sem);
-            }
+            }*/
         }
         
         // handle more advanced scan patterns here
-        if (++scan_i == 8) {
-            scan_i = 0;
-        }
+        sem_acquire(&sp_sem);
+        scan_i++;
         
-        pan_sensor(scan_pattern[scan_i]); 
+        if ((scan_i-1) >= scan_pattern[0]) 
+            scan_i = 1;
+        
+        if (current_pan != scan_pattern[scan_i])
+            pan_sensor(scan_pattern[scan_i]); 
+            
+        sem_release(&sp_sem);
     }
 }
 
 
 void task_print_dist() {
     while(true) {
-        for (uint8_t i = 0; i < 7; i++) 
+        for (uint8_t i = 0; i < 9; i++) 
             printf("%3d  ", last_dist[i]);
         
         putc('\n');
         sleep_for(500);
     }
 }
+
 //(1s/(3686400/200)) * 30 / ((74us)/(1in))/2 in in
 
 // initialize the hardware and create tasks
 int main() {
  	TIL311 = 0xC5;
- 	
+
  	srand();
  	serial_start(SERIAL_SAFE);
 	lcd_init();
-	
+ 	
  	sem_init(&lcd_sem);
     sem_init(&ds_sem);
     sem_init(&avoid_sem);
-
+    sem_init(&sp_sem);
+    
 	lcd_load_ch();
 
 	lcd_printf("68008 ROBOT LOL");
@@ -388,14 +466,15 @@ int main() {
     
     estop_motors();
    
-    motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, -1 /* never die */, 0xFF };
+    motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, -1 /* never die */, 0xFF, 0 };
     push_state(go_forward); // this should never die
     
     enter_critical(); // ensure all tasks are created simultaneously 
-     
+    
     create_task(&task_drive, 0);	
 	create_task(&task_distance_sense,0);
     create_task(&task_lcd_status,0);
+    
    // create_task(&task_print_dist,0);
   
   	leave_critical();
@@ -405,9 +484,17 @@ int main() {
 
 // put a motor state onto the stack
 void push_state(motor_state ms) {
+    if (ms.notify)
+        *ms.notify = 1;
     drive_stack_head--;
     drive_stack[drive_stack_head] = ms;
     estop = false;
+}
+
+void safe_push_state(motor_state ms) {
+    sem_acquire(&ds_sem);
+    push_state(ms);
+    sem_release(&ds_sem);
 }
 
 void estop_motors() {
@@ -487,4 +574,13 @@ void lcd_load_ch() {
     lcd_data(B00000000);
         
     lcd_cursor(0,0); // back to data entry mode
+}
+
+
+void halt_and_exit(char *why, uint8_t code) {
+    enter_critical();
+    estop_motors();
+    puts(why);
+    while(tx_busy()); // wait for message to be printed
+    exit(code); // abort
 }
