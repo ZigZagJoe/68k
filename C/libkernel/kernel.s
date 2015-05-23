@@ -163,6 +163,7 @@ _exit:
     move.l #_system_exit, %a0
     jsr puts
     move.b %d1, %d0
+    move.b %d1, (TIL311)
     jsr puthexbyte
     move.l #_system_exit_2, %a0
     jsr puts
