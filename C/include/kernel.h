@@ -35,6 +35,10 @@ task_t create_task(void *task, uint16_t argc, ...);
 // voluntarily yield control to next task
 void yield(void);
 
+// voluntarily yield control to next task
+// special yield for supervisor task
+void supertask_yield(void);
+
 // sleep for at least time milliseconds and no more than time+(task_count-1)*time_slice
 void sleep_for(uint32_t time);
 
