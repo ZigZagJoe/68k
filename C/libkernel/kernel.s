@@ -6,6 +6,7 @@
 .global sleep_for
 .global create_task
 .global yield
+.global supertask_yield
 .global exit_task
 .global task_active
 .global wait_for_exit
@@ -53,6 +54,7 @@
 
 | TRAP #0 commands
 .set TASK_YIELD,      0x00
+.set TASK_SUPERYIELD, 0x10
 .set TASK_EXIT,       0x01
 .set TASK_SLEEP,      0x11
 .set TASK_ENTER,      0xBB
@@ -185,6 +187,8 @@ task_manager:
     jeq enter_critical
     cmp.b #TASK_CRIT_LEAVE, %d0
     jeq leave_critical
+    cmp.b #TASK_SUPERYIELD, %d0
+    jeq _supertask_swap_task
     cmp.b #TASK_ENTER, %d0
     jeq _run_task
     cmp.b #SYSTEM_EXIT, %d0
@@ -211,7 +215,8 @@ _kern_millis_count:
 _swap_task:
     btst.b #5, (%sp)                    | test supervisor bit of flags on stack
     jne _in_super                       | do not context switch supervisor code (interrupt)
-    
+
+_supertask_swap_task:    
     tas.b (_swap_in_progress)           | set swap_in_progress semaphore
     jne _in_swap                        | if it was already set; exit scheduler
 
@@ -418,6 +423,11 @@ sleep_for:
 | yield control to next task    
 yield:
     move.b #TASK_YIELD, %d0
+    trap #0                            | force a swap
+    rts
+    
+supertask_yield:
+    move.b #TASK_SUPERYIELD, %d0
     trap #0                            | force a swap
     rts
 
