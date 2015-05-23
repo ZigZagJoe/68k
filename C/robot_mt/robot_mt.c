@@ -60,6 +60,7 @@ const uint32_t pan_to_pulse[] = {PAN_LEFT_90_V, PAN_LEFT_77_V, PAN_LEFT_45_V, PA
 // scan patterns
 const uint8_t sp_90_swp[] = {8, PAN_CENTER, PAN_LEFT_22, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_22};
 const uint8_t sp_180_swp[] = {16, PAN_CENTER, PAN_LEFT_22, PAN_LEFT_45, PAN_LEFT_77, PAN_LEFT_90, PAN_LEFT_77, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_77,PAN_RIGHT_90,PAN_RIGHT_77,PAN_RIGHT_45, PAN_RIGHT_22};  
+const uint8_t sp_180_scan[] = {9, PAN_LEFT_90, PAN_LEFT_77, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_77,PAN_RIGHT_90}; 
 const uint8_t sp_center_only[] = {1, PAN_CENTER};
 
 
@@ -177,15 +178,17 @@ void task_handle_obstacle(uint8_t why) {
         sem_wait(&move_sem);
     } while (BUMPER_DEPRESSED);
     
-    // turn around
-    motor_state do_180 = { MOTOR_BCK_FULL, MOTOR_FWD_FULL, 750, 0x0A44, &move_sem };
-    safe_push_state(do_180);
-    sem_wait(&move_sem);    
-    
     // acquire semaphore for scan
     sem_acquire(&sp_sem);
+    
+    // turn around
+    motor_state do_180 = { MOTOR_BCK_FULL, MOTOR_FWD_FULL, 750, 0x0A44, &move_sem };
+    safe_push_state(do_180);    // begin the turn
+    pan_sensor(sp_180_scan[1]); // move the sensor to the first position while turning
+    sem_wait(&move_sem);        // wait for turn complete
+    
     // set 180 scan pattern
-    scan_pattern = &sp_180_swp;
+    scan_pattern = &sp_180_scan;
     scan_i = 1;
     // zero distance array
     memset(last_dist, 0, sizeof(last_dist));
@@ -193,6 +196,9 @@ void task_handle_obstacle(uint8_t why) {
     
     // wait for the scan to be completed
     uint8_t can_exit = 0;
+    int16_t max = 0;
+    int16_t max_i;
+    
     while(!can_exit) {
         yield();
         can_exit = 1;
@@ -200,12 +206,36 @@ void task_handle_obstacle(uint8_t why) {
             if (!last_dist[i]) {
                 can_exit = 0;
                 break;
+            } else if (last_dist[i] > max) {
+                max = last_dist[i];
+                max_i = i;
             }
     }
     
     for (uint8_t i = 0; i < 9; i++) 
             printf("%3d  ", last_dist[i]);
+            
+    printf("\nmax = %d at %d\n",max, max_i);
+    
+    // turn approx towards the farthest clear area
+    if (max_i != PAN_CENTER) {
+        if (max_i > PAN_CENTER) {
+            motor_state do_right = { MOTOR_FWD_FULL, MOTOR_BCK_FULL, 100 * (max_i-PAN_CENTER), 0x0A44, &move_sem };
+            safe_push_state(do_right);        
+        } else {
+            motor_state do_left = { MOTOR_BCK_FULL, MOTOR_FWD_FULL, 100 * (PAN_CENTER-max_i), 0x0A11, &move_sem };
+            safe_push_state(do_left);
+        }
+        sem_wait(&move_sem); 
+    }
         
+    // restore normal scan pattern
+    sem_acquire(&sp_sem);
+    scan_pattern = &sp_90_swp;
+    scan_i = 1;
+    sem_release(&sp_sem);
+    
+    // remove the stop task
     sem_acquire(&ds_sem);
     
     if (curr_state.ID == AVOID_MOTOR_STOP) {
@@ -215,12 +245,7 @@ void task_handle_obstacle(uint8_t why) {
      
     sem_release(&ds_sem);
     
-    // restore normal scan pattern
-    sem_acquire(&sp_sem);
-    scan_pattern = &sp_90_swp;
-    scan_i = 1;
-    sem_release(&sp_sem);
-    
+    // and off we go
 }
 
 // sets motor state to top of state stack, and consumes state when duration expired
