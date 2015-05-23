@@ -8,7 +8,23 @@
 #include <interrupts.h>
 #include <lcd.h>
 #include <time.h>
+#include <kernel.h>
 
+void task_su() {
+    while(true) {
+        cli();
+        sei();
+        
+        for (int i = 0; i < 255; i++) {
+            putc(i);
+            // super task must always yield manually
+            supertask_yield();
+        }
+    
+    }
+    // super task must always exit manually
+    exit_task();
+}
 
 
 //void lzfx_decompress(int a,int b, int c, int d) {}
@@ -16,12 +32,17 @@ int main() {
    // TIL311 = 0x01;
 
     serial_start(SERIAL_SAFE);
-    millis_start();
-    sei();
+    //millis_start();
+    //sei();
     
     
     bset (DDR, 6);
     
+    
+    printf("creating task\n");
+    task_t su = create_task(&task_be_boss,0);
+    task_struct_t *ptr = su >> 16;
+    ptr->FLAGS |= (1<<13);
     
     // 1ms = 169        90
     // 252 = center
@@ -52,7 +73,7 @@ int main() {
         } else if (num <= 110)
             dir = 1;
     }
-    */
+    
     uint32_t start, end;
     
     lcd_init();
@@ -73,5 +94,5 @@ int main() {
     mem_dump(0x1000,27);
     end = millis();
     
-        
+     */   
 }

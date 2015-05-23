@@ -3,7 +3,7 @@
 # RAM or ROM
 CODE_LOC = RAM
 
-#USE_KERNEL = 1
+USE_KERNEL = 1
 
 OPTIMIZE = s
 #NO_CORELIB = true
