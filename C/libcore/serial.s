@@ -111,6 +111,7 @@ _end:
 | enter a character into the tx buffer      
 putc:
 	move.l #tx_buffer, %a0
+	jsr enter_critical
 	
 _dowait:
 	move.w (%a0), %d0     		 | atomic read of head and tail
@@ -119,7 +120,7 @@ _dowait:
 	subi.b #1, %d1
 	cmp.b %d0, %d1
 	jne _rdy                     | if head == tail-1, buffer is full, spin while waiting for tx
-	/* yield */					 | note that this is algebraically equivilent to head+1 == tail
+	/* yield? */				 | note that this is algebraically equivilent to head+1 == tail
 	jra _dowait                  | but it is more efficient because we can use %d0 (head) later
 	
 _rdy:
@@ -127,6 +128,8 @@ _rdy:
 	addi.b #1, (%a0)             | head++
 	
 	ori.b #4, (IMRA)             | unmask interrupt (which will fire immediately)
+	
+	jsr leave_critical
 	
 	rts
 
