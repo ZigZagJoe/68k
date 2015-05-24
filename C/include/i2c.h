@@ -16,8 +16,8 @@
 #define SDA_IN()        bclr_a(DDR,SDA)
 #define READ_SCL()      (GPDR & (1 << SCL))
 
-#define WRITE 0x0
-#define READ 0x1
+#define I2C_WRITE 0x0
+#define I2C_READ 0x1
 
 //#define NO_CLOCK_STRETCH 
 

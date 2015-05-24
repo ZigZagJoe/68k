@@ -177,7 +177,7 @@ uint8_t write_data(uint8_t* indata, uint8_t bytes) {
 	
 	i2c_start();
 	
-	if(!send_slave_address(WRITE))
+	if(!send_slave_address(I2C_WRITE))
 		return 0;	
 	
 	for(index = 0; index < bytes; index++) {
@@ -196,7 +196,7 @@ uint8_t read_bytes(uint8_t* data, uint8_t bytes) {
 	uint8_t index;
 	i2c_start();
 	
-	if(!send_slave_address(READ))
+	if(!send_slave_address(I2C_READ))
 		return 0;	
 		
 	for(index = 0; index < bytes; index++)
