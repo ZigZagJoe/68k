@@ -74,6 +74,7 @@ const uint8_t sp_center_only[] = {1, PAN_CENTER};
 // avoidance trigger distances
 const uint8_t trigger_dists[NUM_PAN_POSITIONS] = {0,0,57,45,40,45,57,0,0};
         
+#define DIST_FAR 100
         
 // low level motor drive speeds
 
@@ -121,8 +122,8 @@ typedef struct {
 // functions
 void estop_motors();
 void lcd_load_ch();
-void push_state(motor_state ms);
-void safe_push_state(motor_state ms); // uses the semaphore
+uint8_t push_state(motor_state ms);
+uint8_t safe_push_state(motor_state ms); // uses the semaphore
 void do_avoidance(uint8_t why);       // spawns avoidance task if neccisary
 void sensor_move(uint32_t count, uint8_t duration);
 void halt_and_exit(char *why, uint8_t code);
@@ -257,7 +258,7 @@ void task_handle_obstacle(uint8_t why) {
     if (curr_state.ID == AVOID_MOTOR_STOP) {
         curr_state.duration = 0;
     } else 
-        halt_and_exit("FATAL: TOP TASK IN task_handle_obstacle IS NOT STOP TASK!", 0xEA);
+        halt_and_exit("FATAL: TOP TASK IN task_handle_obstacle IS NOT STOP TASK!", 0xAA);
      
     sem_release(&ds_sem);
     
@@ -305,12 +306,23 @@ void task_drive() {
                     drive_stack_head++; // pop state
                 }
             }
-        } else 
+        } else {
+            if (cs->notify)
+                *(cs->notify) = 0;
             drive_stack_head++; // ignore state as duration is 0
+        }
         
         sem_release(&ds_sem);
         sleep_for(15);
     }
+}
+
+char dist_to_char(uint8_t ind) {
+    int16_t d = last_dist[ind];
+    if (d == 0) return ' ';
+    if (d > DIST_FAR) return '^';
+    if (d > trigger_dists[ind]) return '-';
+    return '_';
 }
 
 // print the current hardware state to LCD, with a heartbeat
@@ -344,12 +356,18 @@ void task_lcd_status() {
         }
         
         // sensor status
-        lcd_cursor(6,1);
+        lcd_data(' ');
         lcd_data(BUMPER_DEPRESSED?'H':' ');
         lcd_data(task_active(avoidance_task) ? 'A':' ');
         lcd_data(estop?'E':' ');
         lcd_data(' ');
-        lcd_printf("%03d",last_dist[PAN_CENTER]);
+        lcd_data(dist_to_char(PAN_LEFT_45));
+        lcd_data(dist_to_char(PAN_LEFT_22));
+        lcd_data(dist_to_char(PAN_CENTER));
+        lcd_data(dist_to_char(PAN_RIGHT_22));
+        lcd_data(dist_to_char(PAN_RIGHT_45));
+        
+        //lcd_printf("%03d",last_dist[PAN_CENTER]);
         
         // print heartbeat
         lcd_cursor(15,1);
@@ -360,27 +378,6 @@ void task_lcd_status() {
         sleep_for(100);
     }
 }
-
-void pan_sensor(uint8_t p) {
-    int8_t duration = max(5,(abs(current_pan - p)) * 5);
-    current_pan = p;
-    sensor_move(pan_to_pulse[p], duration);  
-}
-
-void sensor_move(uint32_t count, uint8_t duration) {
-    for (uint8_t i = 0; i < duration; i++) {
-        enter_critical();
-        bset(GPDR,PAN_SERVO_BIT);
-        __asm volatile("move.l %0,%%d0\n" \
-                                "1: subi.l #1, %%d0\n" \
-                                "bne 1b\n" \
-                                ::"d"(count):"d0");
-        bclr(GPDR, PAN_SERVO_BIT);
-        leave_critical();
-        sleep_for(10);
-    }
-}
-
 
 void task_distance_sense() {
     sem_init(&sp_sem);
@@ -469,60 +466,43 @@ void task_distance_sense() {
 // monitor scan results and do slight avoidance while implementing the higher goal of this robot
 void task_executive() { 
     sem_t sl_sem;
+    sem_init(&sl_sem);
+    uint8_t juke_ind = 0; 
     
     while(true) {
-        sleep_for(250);
+        sleep_for(200);
         
-        if (task_active(avoidance_task)) 
+        if (task_active(avoidance_task)) {
+            if (juke_ind && sl_sem) {
+                drive_stack[juke_ind].duration = 0;
+                juke_ind = 0;
+            }
             continue;
+        }
         
         int16_t min = 32767;
         uint8_t at = 0;
+        
         for (uint8_t i = PAN_LEFT_45; i <= PAN_RIGHT_45; i++) {
             if ( last_dist[i] < min) {
                 min = last_dist[i];
                 at = i;
             }
         }
-         
-        if (min < 100) {   
+    
+        if (min < DIST_FAR && sl_sem == 0) {   
             printf("Closest object is at %d, dist %d\n", at, min);
-            sem_init(&sl_sem);
-            if (at == PAN_CENTER || at == PAN_LEFT_22) {
-                //motor_state slight_right = { MOTOR_FWD_FULL, correction, duration, 0xCCF4, &sl_sem };
-                //safe_push_state(slight_right);
             
+            if (at <= PAN_CENTER) {
+                motor_state juke_right = { MOTOR_FWD_FULL, at == PAN_LEFT_45 ? MOTOR_FWD_13 : MOTOR_FWD_23, 300, 0xEEC4, &sl_sem };
+                juke_ind = safe_push_state(juke_right);
+            } else  {
+                motor_state juke_left = { at == PAN_RIGHT_45 ? MOTOR_FWD_13 : MOTOR_FWD_23, MOTOR_FWD_FULL, 300, 0xEEC1, &sl_sem };
+                juke_ind = safe_push_state(juke_left);
             }
-           // if 
         }
         
     }
-    /* } else if (distance < 120) {
-        sem_acquire(&ds_sem);
-        
-        uint8_t correction = (distance > 80 && current_pan != PAN_RIGHT_45 && current_pan != PAN_LEFT_45) 
-                                ? MOTOR_FWD_23 : MOTOR_FWD_13;
-                                
-        uint32_t duration = 10000 / distance;
-        
-        if ((curr_state.ID & 0xFF00) != 0xCC00) { 
-            if (current_pan <= PAN_CENTER) {  
-                motor_state slight_right = { MOTOR_FWD_FULL, correction, duration, 0xCCF4 };
-                push_state(slight_right);
-            } else {
-                motor_state slight_left = { correction, MOTOR_FWD_FULL, duration, 0xCCF1 };
-                push_state(slight_left);
-            }
-        } else {
-            curr_state.duration = duration;
-            if (curr_state.ID == 0xCCF4) {
-                curr_state.MR = correction;
-            } else 
-                curr_state.ML = correction;
-        }
-    
-        sem_release(&ds_sem);
-    }*/
 }
 
 void task_print_dist() {
@@ -561,18 +541,20 @@ int main() {
 }
 
 // put a motor state onto the stack
-void push_state(motor_state ms) {
+uint8_t push_state(motor_state ms) {
     if (ms.notify)
         *ms.notify = 1;
     drive_stack_head--;
     drive_stack[drive_stack_head] = ms;
     estop = false;
+    return drive_stack_head;
 }
 
-void safe_push_state(motor_state ms) {
+uint8_t safe_push_state(motor_state ms) {
     sem_acquire(&ds_sem);
-    push_state(ms);
+    uint8_t p = push_state(ms);
     sem_release(&ds_sem);
+    return p;
 }
 
 void estop_motors() {
@@ -654,11 +636,33 @@ void lcd_load_ch() {
     lcd_cursor(0,0); // back to data entry mode
 }
 
-
 void halt_and_exit(char *why, uint8_t code) {
     enter_critical();
     estop_motors();
     puts(why);
+    lcd_clear();
+    lcd_cursor(0,0);
+    lcd_puts(why);
     while(tx_busy()); // wait for message to be printed
     exit(code); // abort
+}
+
+void pan_sensor(uint8_t p) {
+    int8_t duration = max(5,(abs(current_pan - p)) * 5);
+    current_pan = p;
+    sensor_move(pan_to_pulse[p], duration);  
+}
+
+void sensor_move(uint32_t count, uint8_t duration) {
+    for (uint8_t i = 0; i < duration; i++) {
+        enter_critical();
+        bset(GPDR,PAN_SERVO_BIT);
+        __asm volatile("move.l %0,%%d0\n" \
+                                "1: subi.l #1, %%d0\n" \
+                                "bne 1b\n" \
+                                ::"d"(count):"d0");
+        bclr(GPDR, PAN_SERVO_BIT);
+        leave_critical();
+        sleep_for(10);
+    }
 }
