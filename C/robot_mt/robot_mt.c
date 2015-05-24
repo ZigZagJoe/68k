@@ -72,7 +72,7 @@ const uint8_t sp_180_scan[] = {9, PAN_LEFT_90, PAN_LEFT_77, PAN_LEFT_45, PAN_LEF
 const uint8_t sp_center_only[] = {1, PAN_CENTER};
  
 // avoidance trigger distances
-const uint8_t trigger_dists[NUM_PAN_POSITIONS] = {0,0,57,45,40,45,57,0,0};
+const uint8_t trigger_dists[NUM_PAN_POSITIONS] = {0,0,50,43,40,43,50,0,0};
         
 #define DIST_FAR 100
         
@@ -361,6 +361,8 @@ void task_lcd_status() {
         lcd_data(task_active(avoidance_task) ? 'A':' ');
         lcd_data(estop?'E':' ');
         lcd_data(' ');
+        
+        // distance graph
         lcd_data(dist_to_char(PAN_LEFT_45));
         lcd_data(dist_to_char(PAN_LEFT_22));
         lcd_data(dist_to_char(PAN_CENTER));
@@ -446,8 +448,10 @@ void task_distance_sense() {
         last_dist[current_pan] = distance;
        
         if (!task_active(avoidance_task)) 
-            if (distance < trigger_dists[scan_i])
+            if (distance < trigger_dists[scan_i]) {
+                printf("Do avoidance due to range of %d < %d at angle %d\n",distance,trigger_dists[scan_i],scan_i);
                 do_avoidance(RANGE_WARNING);
+            }
             
         // read the next pan position and move sensor to it
         sem_acquire(&sp_sem);
@@ -484,7 +488,7 @@ void task_executive() {
         uint8_t at = 0;
         
         for (uint8_t i = PAN_LEFT_45; i <= PAN_RIGHT_45; i++) {
-            if ( last_dist[i] < min) {
+            if (last_dist[i] && last_dist[i] < min) {
                 min = last_dist[i];
                 at = i;
             }
@@ -494,10 +498,10 @@ void task_executive() {
             printf("Closest object is at %d, dist %d\n", at, min);
             
             if (at <= PAN_CENTER) {
-                motor_state juke_right = { MOTOR_FWD_FULL, at == PAN_LEFT_45 ? MOTOR_FWD_13 : MOTOR_FWD_23, 300, 0xEEC4, &sl_sem };
+                motor_state juke_right = { MOTOR_FWD_FULL, (at == PAN_LEFT_45 || min < 60) ? MOTOR_FWD_13 : MOTOR_FWD_23, 300, 0xEEC4, &sl_sem };
                 juke_ind = safe_push_state(juke_right);
             } else  {
-                motor_state juke_left = { at == PAN_RIGHT_45 ? MOTOR_FWD_13 : MOTOR_FWD_23, MOTOR_FWD_FULL, 300, 0xEEC1, &sl_sem };
+                motor_state juke_left = { (at == PAN_RIGHT_45 || min < 60) ? MOTOR_FWD_13 : MOTOR_FWD_23, MOTOR_FWD_FULL, 300, 0xEEC1, &sl_sem };
                 juke_ind = safe_push_state(juke_left);
             }
         }
@@ -648,7 +652,7 @@ void halt_and_exit(char *why, uint8_t code) {
 }
 
 void pan_sensor(uint8_t p) {
-    int8_t duration = max(5,(abs(current_pan - p)) * 5);
+    int8_t duration = max(5,(abs(current_pan - p)) * 6);
     current_pan = p;
     sensor_move(pan_to_pulse[p], duration);  
 }
