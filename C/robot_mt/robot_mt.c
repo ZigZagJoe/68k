@@ -154,6 +154,10 @@ volatile uint16_t last_dist[NUM_PAN_POSITIONS];            // current scan resul
 volatile uint8_t  estop;              // motor emergency stop: halts drive stack processing
 volatile task_t   avoidance_task;     // used to monitor state of avoidance processing
  
+uint8_t ser_debug = 0;
+
+#define dprintf(...) if (ser_debug) printf(__VA_ARGS__)
+
 ISR(measure_done) {
     dist_raw = TADR;
 }
@@ -229,9 +233,9 @@ void task_handle_obstacle(uint8_t why) {
     }
     
     for (uint8_t i = 0; i < NUM_PAN_POSITIONS; i++) 
-            printf("%3d  ", last_dist[i]);
+            dprintf("%3d  ", last_dist[i]);
             
-    printf("\nmax = %d at %d\n",max, max_i);
+    dprintf("\nFarthest clear distance %d at %d\n",max, max_i);
     
     // turn approximately towards the farthest clear area
     // later use gyro for exact turn
@@ -449,7 +453,7 @@ void task_distance_sense() {
        
         if (!task_active(avoidance_task)) 
             if (distance < trigger_dists[scan_i]) {
-                printf("Do avoidance due to range of %d < %d at angle %d\n",distance,trigger_dists[scan_i],scan_i);
+                dprintf("Do avoidance due to range of %d < %d at angle %d\n",distance,trigger_dists[scan_i],scan_i);
                 do_avoidance(RANGE_WARNING);
             }
             
@@ -495,7 +499,7 @@ void task_executive() {
         }
     
         if (min < DIST_FAR && sl_sem == 0) {   
-            printf("Closest object is at %d, dist %d\n", at, min);
+            dprintf("Closest object is at %d, dist %d\n", at, min);
             
             if (at <= PAN_CENTER) {
                 motor_state juke_right = { MOTOR_FWD_FULL, (at == PAN_LEFT_45 || min < 60) ? MOTOR_FWD_13 : MOTOR_FWD_23, 300, 0xEEC4, &sl_sem };
@@ -511,11 +515,15 @@ void task_executive() {
 
 void task_print_dist() {
     while(true) {
+        sleep_for(500);
+        if (!ser_debug && serial_available()) {
+            ser_debug = 1;
+        } else continue;
+           
         for (uint8_t i = 0; i < NUM_PAN_POSITIONS; i++) 
-            printf("%3d  ", last_dist[i]);
+            dprintf("%3d  ", last_dist[i]);
         
         putc('\n');
-        sleep_for(500);
     }
 }
 
@@ -533,6 +541,8 @@ int main() {
 
     enter_critical(); // ensure all tasks are created simultaneously 
     
+    printf("68k robot firmware built on " __DATE__ " at " __TIME__ "\n");
+    printf("Press any key to begin debug logging.\n");
     create_task(&task_drive, 0);	
 	create_task(&task_distance_sense,0);
     create_task(&task_lcd_status,0);
