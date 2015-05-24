@@ -13,8 +13,8 @@
 
 int read_regs(uint8_t *addr) {
     unsigned char index,success = 0;
-	if(!twi_start_cond())
-		return 0;
+	twi_start_cond();
+	
 	if(!send_slave_address(WRITE))
 		return 0;	
 		
@@ -26,18 +26,13 @@ int read_regs(uint8_t *addr) {
 	__delay_cycles(SCL_SDA_DELAY);
 	write_sda(1);
 	
-	if(!twi_start_cond())
-		return 0;
+	twi_start_cond();
 		
 	if(!send_slave_address(READ))
 		return 0;	
 			
 	for(index = 0; index < 14; index++)
-	{
-		success = i2c_read_byte(addr, 14, index);
-		if(!success)
-			break; 
-	}
+		addr[index] = i2c_read_byte(13 == index);
 	
 	//put stop here
 	write_scl(1);

@@ -74,12 +74,12 @@
 #define PIN_SDA GPDR
 
 /*! \brief Slave 8 bit address (shifted). */
-#define SLAVE_ADDRESS (0x68 << 1)
+#define SLAVE_ADDRESS  0x68 
 
 #define READ_SDA()      (PIN_SDA & (1 << SDA))
-#define SET_SDA_OUT()   bset(DDR_SDA,SDA)
-#define SET_SDA_IN()    DDR_SDA &= ~(1 << SDA)
-#define READ_SCL()      (PIN_SCL & (1 << SCL)) ? 1 : 0
+#define SET_SDA_OUT()   bset_a(DDR_SDA,SDA)
+#define SET_SDA_IN()    bclr_a(DDR_SDA,SDA)
+#define READ_SCL()      (PIN_SCL & (1 << SCL))
 
 #define WRITE 0x0
 #define READ 0x1
@@ -94,17 +94,20 @@
 
 void twi_disable();
 void twi_init();
+
+
 void toggle_scl();
 void write_scl(char x);
-char twi_start_cond(void);
+void twi_start_cond(void);
+void write_sda( char x);
+
 char send_slave_address(unsigned char read);
 char i2c_write_byte(unsigned char byte);
-char i2c_read_byte(unsigned char* data, unsigned char bytes, unsigned char index);
+
+uint8_t i2c_read_byte(uint8_t nack);
 
 char write_data(unsigned char* data, char bytes);
 char read_bytes(unsigned char* data, char bytes);
-
-void write_sda( char x);
 
 
 

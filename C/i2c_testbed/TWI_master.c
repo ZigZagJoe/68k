@@ -71,22 +71,20 @@ void twi_disable()
 
 /*! \brief Sends start condition
  */
-char twi_start_cond(void)
+void twi_start_cond(void)
 {
         write_sda(0);
 	__delay_cycles(I2C_DELAY);
 	
 	write_scl(0);	
-	__delay_cycles(I2C_DELAY);
-	return 1;
-    
+	__delay_cycles(I2C_DELAY);    
 }
 
 /*! \brief Sends slave address
  */
 char send_slave_address(unsigned char read)
 {
-	return i2c_write_byte(SLAVE_ADDRESS | read );
+	return i2c_write_byte((SLAVE_ADDRESS << 1) | read );
 } 
  
 /*! \brief Writes data from buffer.
@@ -99,8 +97,8 @@ char write_data(unsigned char* indata, char bytes)
 {
 	unsigned char index, ack = 0;
 	
-	if(!twi_start_cond())
-		return 0;
+	twi_start_cond();
+	
 	if(!send_slave_address(WRITE))
 		return 0;	
 	
@@ -161,22 +159,19 @@ char i2c_write_byte(unsigned char byte)
  */
 char read_bytes(unsigned char* data, char bytes)
 {
-	unsigned char index,success = 0;
-	if(!twi_start_cond())
-		return 0;
+	unsigned char index;
+	twi_start_cond();
 	if(!send_slave_address(READ))
 		return 0;	
 	for(index = 0; index < bytes; index++)
 	{
-		success = i2c_read_byte(data, bytes, index);
-		if(!success)
-			break; 
+		data[index] = i2c_read_byte(index == (bytes-1));
 	}
 	//put stop here
 	write_scl(1);
 	__delay_cycles(SCL_SDA_DELAY);
 	write_sda(1);
-	return success;
+	return 1;
 	
 	
 }	
@@ -187,7 +182,7 @@ char read_bytes(unsigned char* data, char bytes)
     \param index Position of the incoming byte in hte receive buffer 
     \return 1 if successful, otherwise 0
  */
-char i2c_read_byte(unsigned char* rcvdata, unsigned char bytes, unsigned char index)
+uint8_t i2c_read_byte(uint8_t nack)
 {
         unsigned char byte = 0;
 	unsigned char bit = 0;
@@ -202,10 +197,10 @@ char i2c_read_byte(unsigned char* rcvdata, unsigned char bytes, unsigned char in
               toggle_scl();//goes low
               __delay_cycles(I2C_DELAY);
         }
-	rcvdata[index] = byte;
+
 	//take SDA
 	SET_SDA_OUT();
-	if(index < (bytes-1))
+	if(!nack)
 	{
 		write_sda(0);
 		toggle_scl(); //goes high for the 9th clock
@@ -226,7 +221,7 @@ char i2c_read_byte(unsigned char* rcvdata, unsigned char bytes, unsigned char in
 		//release SDA
 		__delay_cycles(I2C_DELAY);
 	}		
-	return 1;
+	return byte;
 		
 }	
 /*! \brief Writes SCL.
