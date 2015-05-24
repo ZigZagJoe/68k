@@ -8,12 +8,14 @@
 #include <interrupts.h>
 #include <lcd.h>
 #include <time.h>
-#include "TWI_master.h"
+#include "i2c.h"
 
 
 int read_regs(uint8_t *addr) {
+    cli();
+    
     unsigned char index,success = 0;
-	twi_start_cond();
+	i2c_start();
 	
 	if(!send_slave_address(WRITE))
 		return 0;	
@@ -21,12 +23,9 @@ int read_regs(uint8_t *addr) {
 	success = i2c_write_byte(0x3B);
 	if (!success) return 0;
 	
-		//put stop here
-	write_scl(1);
-	__delay_cycles(SCL_SDA_DELAY);
-	write_sda(1);
+	i2c_stop();
 	
-	twi_start_cond();
+	i2c_start();
 		
 	if(!send_slave_address(READ))
 		return 0;	
@@ -34,10 +33,9 @@ int read_regs(uint8_t *addr) {
 	for(index = 0; index < 14; index++)
 		addr[index] = i2c_read_byte(13 == index);
 	
-	//put stop here
-	write_scl(1);
-	__delay_cycles(SCL_SDA_DELAY);
-	write_sda(1);
+	i2c_stop();
+	
+	sei();
 	return success;
 }
 
@@ -54,7 +52,8 @@ int main() {
     uint8_t success = 0; 
 
     printf("Init i2c\n");
-    twi_init(); //!< initialize twi interface
+    i2c_init(); //!< initialize twi interface
+    i2c_set_slave(0x68);
 
     uint8_t pwr_on[] = {0x6B,0};
 
@@ -80,7 +79,7 @@ int main() {
 
        // mem_dump(&registers,14);
         
-        DELAY_MS(250);
+        //DELAY_MS(250);
         
         printf("AcX = %5d  AcY = %5d  AcZ = %5d TMP = %5d GyX = %5d  GyY = %5d  GyZ = %5d\n",reg16[0],reg16[1],reg16[2],reg16[3],reg16[4],reg16[5],reg16[6]);
         
