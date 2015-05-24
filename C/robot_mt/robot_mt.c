@@ -516,9 +516,11 @@ void task_executive() {
 void task_print_dist() {
     while(true) {
         sleep_for(500);
-        if (!ser_debug && serial_available()) {
-            ser_debug = 1;
-        } else continue;
+        
+        if (!ser_debug) {
+            ser_debug = serial_available();
+            continue;
+        } 
            
         for (uint8_t i = 0; i < NUM_PAN_POSITIONS; i++) 
             dprintf("%3d  ", last_dist[i]);
