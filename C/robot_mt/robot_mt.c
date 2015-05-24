@@ -55,17 +55,27 @@
 #define PAN_LEFT_22_V  ((PAN_LEFT_45_V + PAN_CENTER_V) / 2)
 #define PAN_RIGHT_22_V ((PAN_RIGHT_45_V + PAN_CENTER_V) / 2) 
 
+#define NUM_PAN_POSITIONS 9
+
 const uint32_t pan_to_pulse[] = {PAN_LEFT_90_V, PAN_LEFT_77_V, PAN_LEFT_45_V, PAN_LEFT_22_V, PAN_CENTER_V, PAN_RIGHT_22_V, PAN_RIGHT_45_V, PAN_RIGHT_77_V, PAN_RIGHT_90_V};
 
 // scan patterns
+// sweep 90 degrees: provides good compromise of speed and watched area
 const uint8_t sp_90_swp[] = {8, PAN_CENTER, PAN_LEFT_22, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_22};
+// sweep from extreme to extreme, for more complete (but slower) intel
 const uint8_t sp_180_swp[] = {16, PAN_CENTER, PAN_LEFT_22, PAN_LEFT_45, PAN_LEFT_77, PAN_LEFT_90, PAN_LEFT_77, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_77,PAN_RIGHT_90,PAN_RIGHT_77,PAN_RIGHT_45, PAN_RIGHT_22};  
+
+// scan from one extreme to another, for single scans only
 const uint8_t sp_180_scan[] = {9, PAN_LEFT_90, PAN_LEFT_77, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_77,PAN_RIGHT_90}; 
+
+// only read forward
 const uint8_t sp_center_only[] = {1, PAN_CENTER};
-
-
-    
-// low level speeds
+ 
+// avoidance trigger distances
+const uint8_t trigger_dists[NUM_PAN_POSITIONS] = {0,0,57,45,40,45,57,0,0};
+        
+        
+// low level motor drive speeds
 
 // 1.5ms
 #define MOTOR_T_NEUTRAL 111
@@ -116,6 +126,7 @@ void safe_push_state(motor_state ms); // uses the semaphore
 void do_avoidance(uint8_t why);       // spawns avoidance task if neccisary
 void sensor_move(uint32_t count, uint8_t duration);
 void halt_and_exit(char *why, uint8_t code);
+void pan_sensor(uint8_t p);
 
 // tasks
 void task_handle_obstacle(uint8_t why);
@@ -136,11 +147,11 @@ sem_t sp_sem;
 
 volatile uint8_t *scan_pattern;
 volatile uint8_t  scan_i;
-volatile uint8_t  current_pan = 0;         // current position of pan servo
-volatile uint8_t  dist_raw = 0;            // return from timera IRQ
-volatile uint16_t last_dist[9];            // current scan results
-volatile uint8_t  estop = false;           // motor emergency stop: halts drive stack processing
-volatile task_t   avoidance_task = NULL;   // used to monitor state of avoidance processing
+volatile uint8_t  current_pan;             // current position of pan servo
+volatile uint8_t  dist_raw;                // return from timera IRQ
+volatile uint16_t last_dist[NUM_PAN_POSITIONS];            // current scan results
+volatile uint8_t  estop;              // motor emergency stop: halts drive stack processing
+volatile task_t   avoidance_task;     // used to monitor state of avoidance processing
  
 ISR(measure_done) {
     dist_raw = TADR;
@@ -150,6 +161,7 @@ ISR(measure_done) {
 #define BUMPER_HIT 1
 #define RANGE_WARNING 2
 
+// wait for a semaphore to become available, then immediately release it
 void sem_wait(sem_t *sem) {
     sem_acquire(sem);
     sem_release(sem);
@@ -181,6 +193,8 @@ void task_handle_obstacle(uint8_t why) {
     // acquire semaphore for scan
     sem_acquire(&sp_sem);
     
+    // could do a forward scan first, then 180 for rear scan...
+    
     // turn around
     motor_state do_180 = { MOTOR_BCK_FULL, MOTOR_FWD_FULL, 750, 0x0A44, &move_sem };
     safe_push_state(do_180);    // begin the turn
@@ -195,6 +209,7 @@ void task_handle_obstacle(uint8_t why) {
     sem_release(&sp_sem);
     
     // wait for the scan to be completed
+    // also, find the farthest (apparent) clear distance
     uint8_t can_exit = 0;
     int16_t max = 0;
     int16_t max_i;
@@ -202,7 +217,7 @@ void task_handle_obstacle(uint8_t why) {
     while(!can_exit) {
         yield();
         can_exit = 1;
-        for (int i = 0; i < 9; i++)
+        for (int i = 0; i < NUM_PAN_POSITIONS; i++)
             if (!last_dist[i]) {
                 can_exit = 0;
                 break;
@@ -212,18 +227,19 @@ void task_handle_obstacle(uint8_t why) {
             }
     }
     
-    for (uint8_t i = 0; i < 9; i++) 
+    for (uint8_t i = 0; i < NUM_PAN_POSITIONS; i++) 
             printf("%3d  ", last_dist[i]);
             
     printf("\nmax = %d at %d\n",max, max_i);
     
-    // turn approx towards the farthest clear area
+    // turn approximately towards the farthest clear area
+    // later use gyro for exact turn
     if (max_i != PAN_CENTER) {
         if (max_i > PAN_CENTER) {
-            motor_state do_right = { MOTOR_FWD_FULL, MOTOR_BCK_FULL, 100 * (max_i-PAN_CENTER), 0x0A44, &move_sem };
+            motor_state do_right = { MOTOR_FWD_FULL, MOTOR_BCK_FULL, 100 + 50 * (max_i-PAN_CENTER), 0x0A44, &move_sem };
             safe_push_state(do_right);        
         } else {
-            motor_state do_left = { MOTOR_BCK_FULL, MOTOR_FWD_FULL, 100 * (PAN_CENTER-max_i), 0x0A11, &move_sem };
+            motor_state do_left = { MOTOR_BCK_FULL, MOTOR_FWD_FULL, 100 + 50 * (PAN_CENTER-max_i), 0x0A11, &move_sem };
             safe_push_state(do_left);
         }
         sem_wait(&move_sem); 
@@ -249,7 +265,21 @@ void task_handle_obstacle(uint8_t why) {
 }
 
 // sets motor state to top of state stack, and consumes state when duration expired
-void task_drive() {
+void task_drive() {  
+    sem_init(&ds_sem);
+    
+    memset(&drive_stack, 0, sizeof(drive_stack));
+   
+    // configure timers
+	TACR = 0;    // timerA disabled
+ 	TBCR = 0x4;  // prescaler of 50
+    TCDCR |= 0x4 << 4; // prescaler of 50
+    
+    estop_motors();
+       
+    motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, -1 /* never die */, 0xFF, 0 };
+    push_state(go_forward); // this should never die
+    
     while(true) {
         if (BUMPER_DEPRESSED)           // check the emergency bumpers
             do_avoidance(BUMPER_HIT);   // initiate emergency stop handling
@@ -285,6 +315,15 @@ void task_drive() {
 
 // print the current hardware state to LCD, with a heartbeat
 void task_lcd_status() {
+    lcd_init();
+ 	
+ 	sem_init(&lcd_sem);
+   
+	lcd_load_ch();
+
+	lcd_printf("68008 ROBOT LOL");
+	lcd_cursor(0,1);
+	
     uint8_t st = 0;
     
     uint8_t chs[] = {0xA5,' '};
@@ -344,6 +383,8 @@ void sensor_move(uint32_t count, uint8_t duration) {
 
 
 void task_distance_sense() {
+    sem_init(&sp_sem);
+    
     __vectors.user[MFP_INT + MFP_GPI4 - USER_ISR_START] = &measure_done;
     
     bset (DDR, DISTANCE_SENSOR_BIT);
@@ -361,6 +402,8 @@ void task_distance_sense() {
     current_pan = 0;
     scan_i = 1;
     scan_pattern = &sp_90_swp;
+    
+    memset(&last_dist, 0, sizeof(last_dist));
     
     // home sensor
     pan_sensor(scan_pattern[1]);
@@ -405,38 +448,11 @@ void task_distance_sense() {
             
         last_dist[current_pan] = distance;
        
-        if (!task_active(avoidance_task)) {
-            if (distance < 40) //{ // 14 inches
+        if (!task_active(avoidance_task)) 
+            if (distance < trigger_dists[scan_i])
                 do_avoidance(RANGE_WARNING);
-           /* } else if (distance < 120) {
-                sem_acquire(&ds_sem);
-                
-                uint8_t correction = (distance > 80 && current_pan != PAN_RIGHT_45 && current_pan != PAN_LEFT_45) 
-                                        ? MOTOR_FWD_23 : MOTOR_FWD_13;
-                                        
-                uint32_t duration = 10000 / distance;
-                
-                if ((curr_state.ID & 0xFF00) != 0xCC00) { 
-                    if (current_pan <= PAN_CENTER) {  
-                        motor_state slight_right = { MOTOR_FWD_FULL, correction, duration, 0xCCF4 };
-                        push_state(slight_right);
-                    } else {
-                        motor_state slight_left = { correction, MOTOR_FWD_FULL, duration, 0xCCF1 };
-                        push_state(slight_left);
-                    }
-                } else {
-                    curr_state.duration = duration;
-                    if (curr_state.ID == 0xCCF4) {
-                        curr_state.MR = correction;
-                    } else 
-                        curr_state.ML = correction;
-                }
             
-                sem_release(&ds_sem);
-            }*/
-        }
-        
-        // handle more advanced scan patterns here
+        // read the next pan position and move sensor to it
         sem_acquire(&sp_sem);
         scan_i++;
         
@@ -450,10 +466,68 @@ void task_distance_sense() {
     }
 }
 
+// monitor scan results and do slight avoidance while implementing the higher goal of this robot
+void task_executive() { 
+    sem_t sl_sem;
+    
+    while(true) {
+        sleep_for(250);
+        
+        if (task_active(avoidance_task)) 
+            continue;
+        
+        int16_t min = 32767;
+        uint8_t at = 0;
+        for (uint8_t i = PAN_LEFT_45; i <= PAN_RIGHT_45; i++) {
+            if ( last_dist[i] < min) {
+                min = last_dist[i];
+                at = i;
+            }
+        }
+         
+        if (min < 100) {   
+            printf("Closest object is at %d, dist %d\n", at, min);
+            sem_init(&sl_sem);
+            if (at == PAN_CENTER || at == PAN_LEFT_22) {
+                //motor_state slight_right = { MOTOR_FWD_FULL, correction, duration, 0xCCF4, &sl_sem };
+                //safe_push_state(slight_right);
+            
+            }
+           // if 
+        }
+        
+    }
+    /* } else if (distance < 120) {
+        sem_acquire(&ds_sem);
+        
+        uint8_t correction = (distance > 80 && current_pan != PAN_RIGHT_45 && current_pan != PAN_LEFT_45) 
+                                ? MOTOR_FWD_23 : MOTOR_FWD_13;
+                                
+        uint32_t duration = 10000 / distance;
+        
+        if ((curr_state.ID & 0xFF00) != 0xCC00) { 
+            if (current_pan <= PAN_CENTER) {  
+                motor_state slight_right = { MOTOR_FWD_FULL, correction, duration, 0xCCF4 };
+                push_state(slight_right);
+            } else {
+                motor_state slight_left = { correction, MOTOR_FWD_FULL, duration, 0xCCF1 };
+                push_state(slight_left);
+            }
+        } else {
+            curr_state.duration = duration;
+            if (curr_state.ID == 0xCCF4) {
+                curr_state.MR = correction;
+            } else 
+                curr_state.ML = correction;
+        }
+    
+        sem_release(&ds_sem);
+    }*/
+}
 
 void task_print_dist() {
     while(true) {
-        for (uint8_t i = 0; i < 9; i++) 
+        for (uint8_t i = 0; i < NUM_PAN_POSITIONS; i++) 
             printf("%3d  ", last_dist[i]);
         
         putc('\n');
@@ -469,38 +543,17 @@ int main() {
 
  	srand();
  	serial_start(SERIAL_SAFE);
-	lcd_init();
  	
- 	sem_init(&lcd_sem);
-    sem_init(&ds_sem);
-    sem_init(&avoid_sem);
-    sem_init(&sp_sem);
-    
-	lcd_load_ch();
+	sem_init(&avoid_sem);
+    avoidance_task = NULL;
 
-	lcd_printf("68008 ROBOT LOL");
-	lcd_cursor(0,1);
-
-	// configure timers
-	TACR = 0;    // timerA disabled
- 	TBCR = 0x4;  // prescaler of 50
-    TCDCR |= 0x4 << 4; // prescaler of 50
-    
-    memset(&drive_stack, 0, sizeof(drive_stack));
-    memset(&last_dist, 0, sizeof(last_dist));
-    
-    estop_motors();
-   
-    motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, -1 /* never die */, 0xFF, 0 };
-    push_state(go_forward); // this should never die
-    
     enter_critical(); // ensure all tasks are created simultaneously 
     
     create_task(&task_drive, 0);	
 	create_task(&task_distance_sense,0);
     create_task(&task_lcd_status,0);
-    
-   // create_task(&task_print_dist,0);
+    create_task(&task_executive, 0);
+    create_task(&task_print_dist,0);
   
   	leave_critical();
 
@@ -558,7 +611,7 @@ void lcd_load_ch() {
     lcd_data(B00000100);
     lcd_data(B00000100);
     
-    lcd_cgram(CH_UPARR_H); // up arrow
+    lcd_cgram(CH_UPARR_H); // short up arrow
     lcd_data(B00000000);
     lcd_data(B00000100);
     lcd_data(B00001110);
@@ -578,7 +631,7 @@ void lcd_load_ch() {
     lcd_data(B00001110);
     lcd_data(B00000100);
     
-    lcd_cgram(CH_DNARR_H); // down arrow
+    lcd_cgram(CH_DNARR_H); // short down arrow
     lcd_data(B00000000);
     lcd_data(B00000000);
     lcd_data(B00000000);
