@@ -93,7 +93,7 @@ const uint8_t trigger_dists[NUM_PAN_POSITIONS] = {0,0,50,43,40,43,50,0,0};
 #define MOTOR_T_BCK_13 (MOTOR_T_NEUTRAL-38*1/3)
 
 // from motor speed value to timer value
-const uint8_t speed_to_timer[] = {MOTOR_T_BCK_FULL, MOTOR_T_BCK_23, MOTOR_T_BCK_13, MOTOR_T_NEUTRAL, MOTOR_T_FWD_13, MOTOR_T_FWD_23, MOTOR_T_FWD_FULL};
+uint8_t speed_to_timer[] = {MOTOR_T_BCK_FULL, MOTOR_T_BCK_23, MOTOR_T_BCK_13, MOTOR_T_NEUTRAL, MOTOR_T_FWD_13, MOTOR_T_FWD_23, MOTOR_T_FWD_FULL};
 
 // speed to indicator char
 const uint8_t speed_to_ch[] = { CH_DNARR, CH_DNARR_H, CH_DNARR_H, CH_STOP, CH_UPARR_H,CH_UPARR_H, CH_UPARR };
@@ -156,7 +156,8 @@ volatile uint8_t  dist_raw;                // return from timera IRQ
 volatile uint16_t last_dist[NUM_PAN_POSITIONS];            // current scan results
 volatile uint8_t  estop;              // motor emergency stop: halts drive stack processing
 volatile task_t   avoidance_task;     // used to monitor state of avoidance processing
- 
+volatile int16_t  y_dps;
+    
 uint8_t ser_debug = 0;
 
 #define dprintf(...) if (ser_debug) printf(__VA_ARGS__)
@@ -285,8 +286,10 @@ void task_drive() {
     
     estop_motors();
        
-    motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, -1 /* never die */, 0xFF, 0 };
+    motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, -1 /* never die */, 0xFFFF, 0 };
     push_state(go_forward); // this should never die
+    
+    uint8_t stable = 0;
     
     while(true) {
         if (BUMPER_DEPRESSED)           // check the emergency bumpers
@@ -300,7 +303,33 @@ void task_drive() {
         motor_state *cs = &curr_state;
         
         if (cs->duration != 0) {
-            LEFT_MOTOR =  speed_to_timer[-(cs->ML) + MOTOR_SPEEDS]; // convert from signed int to unsigned index
+            
+            // if on base task (move forward), trim motors according to gryo
+            if (cs->ID == 0xFFFF && stable) {
+                if (abs(y_dps) > 3) {
+                    // negative values = turning right
+                    if (y_dps < 0) {
+                        // turning right means left is moving faster than right
+                        // 6 FWD_FULL = forward speed for right, reverse speed for left
+                        // 0 BCK_FULL = reverse speed for right, forward speed for left
+                        if (speed_to_timer[6] != MOTOR_T_FWD_FULL) {
+                            speed_to_timer[6]++; // increase speed of other motor first
+                        } else if (speed_to_timer[0] < MOTOR_T_BCK_13)
+                            speed_to_timer[0]++; // move towards neutral - reduce speed
+                    } else {
+                        if (speed_to_timer[0] != MOTOR_T_BCK_FULL) {
+                            speed_to_timer[0]--; // increase speed of other motor first
+                        } else if (speed_to_timer[6] > MOTOR_T_FWD_13)
+                            speed_to_timer[6]--; // move towards neutral
+                    }
+                }
+            } else {
+                // untrim motors
+                speed_to_timer[6] = MOTOR_T_FWD_FULL;
+                speed_to_timer[0] = MOTOR_T_BCK_FULL;
+            }
+            
+            LEFT_MOTOR  = speed_to_timer[-(cs->ML) + MOTOR_SPEEDS]; // convert from signed int to unsigned index
             RIGHT_MOTOR = speed_to_timer[ (cs->MR) + MOTOR_SPEEDS]; // convert from signed int to unsigned index
 
             TIL311 = cs->ID & 0xFF;
@@ -308,11 +337,14 @@ void task_drive() {
             if (cs->duration != -1) {
                 cs->duration -= 15;
                 if (cs->duration < 1) { 
+                    stable = 0;
                     if (cs->notify)
                         *(cs->notify) = 0;
                     drive_stack_head++; // pop state
-                }
-            }
+                } else
+                    stable = 1;
+            } else
+                stable = 1;
         } else {
             if (cs->notify)
                 *(cs->notify) = 0;
@@ -332,8 +364,6 @@ char dist_to_char(uint8_t ind) {
     return '_';
 }
 
-int16_t y_dps;
-    
 // print the current hardware state to LCD, with a heartbeat
 void task_lcd_status() {
     lcd_init();
@@ -536,8 +566,6 @@ void task_print_dist() {
     }
 }
 
-#define GYRO_250DEG_V_TO_DEG 0.00763F
-
 void task_read_accel() {
       
     int16_t gyro_y = 0;
@@ -545,7 +573,10 @@ void task_read_accel() {
     while(true) {
         int code = i2c_reg_read(&gyro_y, GYRO_ZOUT_H, 2);
         
+        //GYRO_250DEG_V_TO_DEG 0.00763F
+
         y_dps = (gyro_y >> 7) - (gyro_y >> 12) + (gyro_y >> 14); 
+        
         //float y_dps = gyro_y * GYRO_250DEG_V_TO_DEG;
         //printf("%5d\n", (int)y_dps);
         
@@ -566,7 +597,7 @@ void task_init_accel() {
             halt_and_exit("Failed to reset MPU6050",0x5E);
     }
          
-    float gyroBias[3], accelBias[3]; // Bias corrections for gyro and accelerometer
+    float gyroBias[3], accelBias[3]; // bias corrections for gyro and accelerometer
     calibrateMPU6050(gyroBias, accelBias);
     
     sei();
