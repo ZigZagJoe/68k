@@ -79,7 +79,7 @@ i2c_read_byte:
 
     move.b (7,%sp), %d1
     
-_i2c_read_byte:    
+_i2c_read_byte:       | for internal use only 
     clr.l %d0
     SDA_IN
     
@@ -166,7 +166,7 @@ i2c_write_byte:
   
     move.b (7,%sp), %d1
     
-_i2c_write_byte:  
+_i2c_write_byte:       | for internal use only 
     lsl.b #1, %d1
     SDA_OUTCC
     lsl.b #1, %d1
@@ -205,15 +205,13 @@ rec_nak:
 arguments: buffer to write to, start register, num bytes
 returns: bool success
 */
-i2c_reg_read:
-    
-	link.w %fp,#0
+i2c_reg_read: 
 	movm.l %a2-%a3/%d2,-(%sp)
-	move.l 8(%fp),%a3
-	
+
     move.l #GPDR, %a0
     move.l #DDR, %a1
-	andi.b #0b00111111, (%a0)
+    
+	andi.b #0b00111111, (%a0)   | clear bits in GPDR so routines dont need to
     
 	lea _i2c_write_byte, %a2
 	
@@ -225,7 +223,7 @@ i2c_reg_read:
     jbsr (%a2)
 	jbeq _return_failed
 
-	move.b 15(%fp), %d1         | start reg
+	move.b (11+12,%sp), %d1       start reg
 	jbsr (%a2)
 	jbeq _return_failed
 	
@@ -237,14 +235,15 @@ i2c_reg_read:
     jbsr (%a2)
 	jbeq _return_failed
 	
-	move.l 16(%fp),%d2          | count of bytes to move
-
-	/* a4 = dest
+	move.w (14+12,%sp),%d2      | count of bytes to move
+	move.l ( 4+12,%sp),%a3      | destination
+	
+	/* a3 = dest
 	   d2 = count */
 	   
-	subq.l #2, %d2              | gotta send NACK on the last byte
+	subq.w #2, %d2              | gotta send NACK on the last byte
 	
-    lea _i2c_read_byte,%a2
+    lea _i2c_read_byte, %a2
 	
 	moveq #0, %d1               | send ack 
 	
@@ -262,8 +261,7 @@ _read_loop:
 	
 	moveq #1, %d0
 _r_exit:
-	movm.l -12(%fp), %a2-%a3/%d2
-	unlk %fp
+	movm.l (%sp)+, %a2-%a3/%d2
 	rts
 
 _return_failed:
