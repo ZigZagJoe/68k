@@ -114,9 +114,7 @@
 #define FIFO_R_W         0x74
 #define WHO_AM_I_MPU6050 0x75 // Should return 0x68
 
-
-uint8_t i2c_reg_read(uint8_t *addr, uint8_t start, uint8_t count);
-uint8_t i2c_reg_readbyte(uint8_t reg);
-uint8_t i2c_reg_writebyte(uint8_t reg, uint8_t value);
+int16_t tmp_raw_to_F(int16_t x);
+int16_t tmp_raw_to_C(int16_t x);
 
 void calibrateMPU6050(float * gryBiasDPS, float * accBiasMS);

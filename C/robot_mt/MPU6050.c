@@ -2,38 +2,13 @@
 #include <i2c.h>
 #include "MPU6050.h"
 
-uint8_t i2c_reg_read(uint8_t *addr, uint8_t startReg, uint8_t count) {
-	i2c_start();
-	
-	if(!send_slave_address(I2C_WRITE))
-		return 0;	
-		
-	if (!i2c_write_byte(startReg)) 
-	    return 0;
-	
-	i2c_stop();
-	i2c_start();
-		
-	if(!send_slave_address(I2C_READ))
-		return 0;	
-			
-	for(uint8_t i = 0; i < count; i++)
-		addr[i] = i2c_read_byte((count-1) == i);
-	
-	i2c_stop();
-	
-	return 1;
+// these aren't super-accurate, but they are close enough and fast as all get out
+int16_t tmp_raw_to_F(int16_t x) {
+    return (x >> 8) + (x >> 10) + (x >> 11) - (x >> 14) + 98;
 }
 
-uint8_t i2c_reg_readbyte(uint8_t reg) {
-    uint8_t ret;
-    i2c_reg_read(&ret,reg,1);
-    return ret;
-}
-
-uint8_t i2c_reg_writebyte(uint8_t reg, uint8_t value) {
-    uint8_t data[] = {reg,value};
-    return write_data(data, 2);// wake up the MPU6050 by setting 0 to PWR_MGMT_1
+int16_t tmp_raw_to_C(int16_t x) {
+    return (x >> 8) - (x >> 10) + 37;
 }
 
 void calibrateMPU6050(float * gryBiasDPS, float * accBiasMS) {  
@@ -44,13 +19,13 @@ void calibrateMPU6050(float * gryBiasDPS, float * accBiasMS) {
 
     // reset device, reset all registers, clear gyro and accelerometer bias registers
     i2c_reg_writebyte(PWR_MGMT_1, 0x80); // Write a one to bit 7 reset bit; toggle reset device
-    DELAY_MS(100);  
+    DELAY_MS(50);  
 
     // get stable time source
     // Set clock source to be PLL with x-axis gyroscope reference, bits 2:0 = 001
     i2c_reg_writebyte(PWR_MGMT_1, 0x01);  
     i2c_reg_writebyte(PWR_MGMT_2, 0x00); 
-    DELAY_MS(200);
+    DELAY_MS(100);
 
     // Configure device for bias calculation
     i2c_reg_writebyte(INT_ENABLE, 0x00);   // Disable all interrupts
