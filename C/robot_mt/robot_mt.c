@@ -372,9 +372,9 @@ void task_lcd_status() {
    
 	lcd_load_ch();
 
-	lcd_printf("68008 ROBOT LOL");
-	lcd_cursor(0,1);
-	
+	lcd_cursor(0,0);
+	lcd_printf("68008 ROBOT");
+
     uint8_t st = 0;
     
     uint8_t chs[] = {0xA5,' '};
@@ -408,7 +408,7 @@ void task_lcd_status() {
         lcd_data(dist_to_char(PAN_RIGHT_22));
         lcd_data(dist_to_char(PAN_RIGHT_45));
         lcd_cursor(12,0);
-        lcd_printf("%3d",y_dps);
+        lcd_printf("%4d",y_dps);
         
         //lcd_printf("%03d",last_dist[PAN_CENTER]);
         
@@ -578,7 +578,7 @@ void task_read_accel() {
         y_dps = (gyro_y >> 7) - (gyro_y >> 12) + (gyro_y >> 14); 
         
         //float y_dps = gyro_y * GYRO_250DEG_V_TO_DEG;
-        //printf("%5d\n", (int)y_dps);
+        printf("%5d\n", (int)y_dps);
         
         sleep_for(21);
     }
@@ -615,8 +615,18 @@ void task_init_accel() {
 //(1s/(3686400/200)) * 30 / ((74us)/(1in))/2 in in
 
 // initialize the hardware and create tasks
+
+void test() {
+    bset(GPDR,1);
+    bclr(GPDR,1);
+
+}
+
+
 int main() {
  	TIL311 = 0xC5;
+ 	
+ 	//_tick_call = &test;
 
  	srand();
  	serial_start(SERIAL_SAFE);
