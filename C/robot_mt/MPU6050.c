@@ -12,10 +12,9 @@ uint8_t i2c_reg_read(uint8_t *addr, uint8_t startReg, uint8_t count) {
 	    return 0;
 	
 	i2c_stop();
-	
 	i2c_start();
 		
-	if(!send_slave_address(READ))
+	if(!send_slave_address(I2C_READ))
 		return 0;	
 			
 	for(uint8_t i = 0; i < count; i++)

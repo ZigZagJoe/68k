@@ -7,12 +7,15 @@
 // IO devices for my specific machine
 #include <io.h>
 #include <interrupts.h>
-#include <lcd.h>
 #include <time.h>
+#include <binary.h>
+
+#include <i2c.h>
+#include <lcd.h>
 #include <kernel.h>
 #include <semaphore.h>
 
-#include <binary.h>
+#include "MPU6050.h"
 
 // custom lcd characters
 #define CH_UPARR 0
@@ -329,6 +332,8 @@ char dist_to_char(uint8_t ind) {
     return '_';
 }
 
+int16_t y_dps;
+    
 // print the current hardware state to LCD, with a heartbeat
 void task_lcd_status() {
     lcd_init();
@@ -372,6 +377,8 @@ void task_lcd_status() {
         lcd_data(dist_to_char(PAN_CENTER));
         lcd_data(dist_to_char(PAN_RIGHT_22));
         lcd_data(dist_to_char(PAN_RIGHT_45));
+        lcd_cursor(12,0);
+        lcd_printf("%3d",y_dps);
         
         //lcd_printf("%03d",last_dist[PAN_CENTER]);
         
@@ -529,6 +536,51 @@ void task_print_dist() {
     }
 }
 
+#define GYRO_250DEG_V_TO_DEG 0.00763F
+
+void task_read_accel() {
+      
+    int16_t gyro_y = 0;
+
+    while(true) {
+        int code = i2c_reg_read(&gyro_y, GYRO_ZOUT_H, 2);
+        
+        y_dps = (gyro_y >> 7) - (gyro_y >> 12) + (gyro_y >> 14); 
+        //float y_dps = gyro_y * GYRO_250DEG_V_TO_DEG;
+        //printf("%5d\n", (int)y_dps);
+        
+        sleep_for(21);
+    }
+}
+
+void task_init_accel() {
+    printf("Initializing MPU6050... ");
+    cli();
+    
+    i2c_init(); //!< initialize twi interface
+    i2c_set_slave(0x68);
+ 
+    if (!i2c_reg_writebyte(PWR_MGMT_1, 0x80)) { // reset gyro
+       DELAY_MS(20);
+       if (!i2c_reg_writebyte(PWR_MGMT_1, 0x80))  // try again
+            halt_and_exit("Failed to reset MPU6050",0x5E);
+    }
+         
+    float gyroBias[3], accelBias[3]; // Bias corrections for gyro and accelerometer
+    calibrateMPU6050(gyroBias, accelBias);
+    
+    sei();
+    printf ("Done\n");
+
+    // create a normal level task
+    create_task(&task_read_accel,0);
+    
+    // explicitly exit as this is a super-lever task
+    // exiting in this manner is leaving clutter on the supervisor stack
+    // don't use it often...
+    exit_task(); 
+}
+
 //(1s/(3686400/200)) * 30 / ((74us)/(1in))/2 in in
 
 // initialize the hardware and create tasks
@@ -547,10 +599,15 @@ int main() {
     printf("Press any key to begin debug logging.\n");
     create_task(&task_drive, 0);	
 	create_task(&task_distance_sense,0);
-    create_task(&task_lcd_status,0);
     create_task(&task_executive, 0);
+    
+    task_t su = create_task(&task_init_accel,0);
+    task_struct_t *ptr = su >> 16;
+    ptr->FLAGS |= (1<<13);         // promote this task to supervisor level by editing its flags 
+    
+    create_task(&task_lcd_status,0);
     create_task(&task_print_dist,0);
-  
+    
   	leave_critical();
 
 	return 0;
