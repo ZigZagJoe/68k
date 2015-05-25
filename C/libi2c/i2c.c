@@ -6,11 +6,6 @@
 // global state
 uint8_t curr_slave;
 
-#ifdef NO_CLOCK_STRETCH
-uint8_t scl_state;
-#endif
-
-
 // enable i2c bus 
 void i2c_init() {
 	bset_a(DDR, SCL);
@@ -41,20 +36,8 @@ void i2c_stop() {
 
 // set SCL
 void write_scl(uint8_t x) {
-
-#ifdef NO_CLOCK_STRETCH
-    scl_state = x;
-#endif
-
     if(x) {
         bclr_a(DDR, SCL); //tristate
-        
-        
-#ifndef NO_CLOCK_STRETCH
-        //check clock stretching
-        while(!READ_SCL());
-#endif
-
     } else {
         bset_a(DDR, SCL);
         bclr_a(GPDR, SCL);
@@ -71,41 +54,17 @@ void write_sda(uint8_t x) {
     }
 }
 
-// toggles SCL
-void toggle_scl() {
-
-#ifdef NO_CLOCK_STRETCH
-    scl_state = !scl_state;
-    
-    // if it was high...
-    if (!scl_state) {
-#else
-    if (GPDR & (1<<SCL)) {
-#endif
-     
-        bset_a(DDR,SCL); //output 
-        bclr_a(GPDR,SCL);
-    } else {
-        bclr_a(DDR, SCL); //tristate it
-        
-#ifndef NO_CLOCK_STRETCH
-        //check clock stretching
-        while(!READ_SCL());
-#endif
-    }		
-}
-
 // set the address of the current slave
-uint8_t i2c_set_slave(uint8_t addr) {
-    uint8_t last_slave = curr_slave;
-    curr_slave = addr;
+void i2c_set_slave(uint8_t addr) {
+    curr_slave = addr << 1;
 }
 
 // send slave addr
 uint8_t send_slave_address(uint8_t read) {
-	return i2c_write_byte((curr_slave << 1) | read);
+	return i2c_write_byte(curr_slave | read);
 } 
- 
+
+/* 
 // write a single byte out
 uint8_t i2c_write_byte(uint8_t byte) {
     uint8_t bit;
@@ -135,8 +94,8 @@ uint8_t i2c_write_byte(uint8_t byte) {
 	
 	return 1;
 }	
-
-// returns byte. unable to check for failure. argument weither to send ack or nack
+*/
+/*// returns byte. unable to check for failure. argument weither to send ack or nack
 uint8_t i2c_read_byte(uint8_t nack) {
     uint8_t byte = 0;
 	uint8_t bit = 0;
@@ -169,7 +128,7 @@ uint8_t i2c_read_byte(uint8_t nack) {
 	 
 	return byte;
 		
-}	
+}	*/
 
 // write bulk data to device
 uint8_t write_data(uint8_t* indata, uint8_t bytes) {

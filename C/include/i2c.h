@@ -11,22 +11,15 @@
 #define SCL 6
 #define SDA 7
 
-#define READ_SDA()      (GPDR & (1 << SDA))
-#define SDA_OUT()       bset_a(DDR,SDA)
-#define SDA_IN()        bclr_a(DDR,SDA)
-#define READ_SCL()      (GPDR & (1 << SCL))
-
 #define I2C_WRITE 0x0
 #define I2C_READ 0x1
-
-//#define NO_CLOCK_STRETCH 
 
 // library control functions
 void i2c_init();
 void i2c_disable();
 
 // public use data functions
-uint8_t i2c_set_slave(uint8_t addr);
+void i2c_set_slave(uint8_t addr);
 uint8_t i2c_write_byte(uint8_t byte);
 uint8_t i2c_read_byte(uint8_t nack);
 
