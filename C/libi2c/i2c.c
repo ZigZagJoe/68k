@@ -166,3 +166,84 @@ uint8_t read_bytes(uint8_t* data, uint8_t bytes) {
 	return 1;
 }	
 
+
+/*
+#define READ_SDA()      (GPDR & (1 << SDA))
+#define SDA_OUT()       bset_a(DDR,SDA)
+#define SDA_IN()        bclr_a(DDR,SDA)
+#define READ_SCL()      (GPDR & (1 << SCL))
+ 
+// toggles SCL
+void toggle_scl() {
+    if (GPDR & (1<<SCL)) {
+        bset_a(DDR,SCL); //output 
+        bclr_a(GPDR,SCL);
+    } else {
+        bclr_a(DDR, SCL); //tristate it
+    }		
+}
+
+// write a single byte out
+uint8_t i2c_write_byte(uint8_t byte) {
+    uint8_t bit;
+    
+	for (bit = 0; bit < 8; bit++) {
+        write_sda((byte & 0x80) != 0);
+        toggle_scl(); //goes high
+        toggle_scl(); //goes low
+        byte <<= 1;
+    }
+    
+	//release SDA
+	SDA_IN();
+	toggle_scl(); //goes high for the 9th clock
+	
+	// Check for ack
+	if(READ_SDA()) 
+		return 0;			
+	
+	//Pull SCL low
+	toggle_scl(); //end of byte with acknowledgment. 
+	
+	// zzj fix for bad stop condition
+	write_sda(0);
+	//take SDA
+	SDA_OUT();
+	
+	return 1;
+}	
+
+// returns byte. unable to check for failure. argument weither to send ack or nack
+uint8_t i2c_read_byte(uint8_t nack) {
+    uint8_t byte = 0;
+	uint8_t bit = 0;
+	
+	//release SDA
+	SDA_IN();
+	
+	for (bit = 0; bit < 8; bit++) {
+        toggle_scl();//goes high
+        
+        if(READ_SDA())
+            byte |= (1 << (7-bit));
+
+        toggle_scl(); //goes low
+    }
+
+	//take SDA
+	SDA_OUT();
+	
+	if(!nack) {
+		write_sda(0);
+		toggle_scl(); //goes high for the 9th clock
+		toggle_scl();
+		write_sda(1);
+	} else { //send NACK (last byte)
+		write_sda(1);
+		toggle_scl();
+		toggle_scl(); 
+	}		
+	 
+	return byte;
+		
+}	*/
