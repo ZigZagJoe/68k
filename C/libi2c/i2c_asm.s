@@ -223,7 +223,7 @@ i2c_reg_read:
     jbsr (%a2)
 	jbeq _return_failed
 
-	move.b (11+12,%sp), %d1       start reg
+	move.b (11+12,%sp), %d1     | start reg
 	jbsr (%a2)
 	jbeq _return_failed
 	
