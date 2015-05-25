@@ -97,7 +97,7 @@ open:
 	
 run:	$(BIN)
 ifeq ($(CODE_LOC),rom)
-	@echo ERROR: Can only upload a ROM project!
+	make upload
 else
 	upload-strapper $(ULFLAGS) $(PRJ).bin
 endif
