@@ -29,25 +29,11 @@ int main() {
     i2c_init(); //!< initialize twi interface
     i2c_set_slave(0x68);
     
-     if (!i2c_reg_writebyte(PWR_MGMT_1, 0x80))   // reset gyro
+     if (!i2c_reg_writebyte(PWR_MGMT_1, 0))   // reset gyro
         printf("Error: failed to reset MPU6050\n");
         
-    DELAY_MS(100);  
+    DELAY_MS(10);  
   
-    i2c_reg_writebyte(PWR_MGMT_1,0); // disable standby
-   
-    // get stable time source
-    // Set clock source to be PLL with x-axis gyroscope reference, bits 2:0 = 001
-    i2c_reg_writebyte(PWR_MGMT_1, 0x01);  
-    i2c_reg_writebyte(PWR_MGMT_2, 0x00); 
-
-    DELAY_MS(100);  
-            
-    i2c_reg_writebyte(ACCEL_CONFIG, 0xF0); // Enable self test on all three axes and set accelerometer range to +/- 8 g
-    i2c_reg_writebyte(GYRO_CONFIG,  0xE0); // Enable self test on all three axes and set gyro range to +/- 250 degrees/s
-   
-    DELAY_MS(100);  
-    
     float gyroBias[3], accelBias[3]; // Bias corrections for gyro and accelerometer
     calibrateMPU6050(gyroBias, accelBias);
 
@@ -55,29 +41,20 @@ int main() {
     printf("Begin loop\n");
     
     int16_t gyro_y = 0;
-    
+    int16_t all_regs[7]  ;  
 
     while(true) {
         bset(GPDR, 1);
-        int code = i2c_reg_read(&gyro_y, GYRO_ZOUT_H, 2);
+        int code = i2c_reg_read(&gyro_y, GYRO_ZOUT_H, 2); 
         bclr(GPDR, 1);
-           
+         
         int y_dps = (gyro_y >> 7) - (gyro_y >> 12) + (gyro_y >> 14); 
+        printf("%5d\n", y_dps);
         
-       // int y_dps = (int)((float)gyro_y * 0.00763F);
-        
-
-        /*if (!code)
-            printf("Error\n");
-
-       // mem_dump(&registers,14);
-        
-        //DELAY_MS(250);
-        
-        printf("AcX = %5d  AcY = %5d  AcZ = %5d TMP = %5d GyX = %5d  GyY = %5d  GyZ = %5d\n",reg16[0],reg16[1],reg16[2],reg16[3],reg16[4],reg16[5],reg16[6]);*/
-        
-    
-        printf("%5d\n", y_dps);        
+       /* bset(GPDR, 1);
+        int code = i2c_reg_read(&all_regs, ACCEL_XOUT_H, 14);
+        bclr(GPDR, 1);
+        printf("AcX = %5d  AcY = %5d  AcZ = %5d TMP = %5d GyX = %5d  GyY = %5d  GyZ = %5d\n",all_regs[0],all_regs[1],all_regs[2],all_regs[3],all_regs[4],all_regs[5],all_regs[6]); */  
     }
     
   /*AcX=Wire.read()<<8|Wire.read();  // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)    
