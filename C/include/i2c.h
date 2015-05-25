@@ -23,6 +23,12 @@ void i2c_set_slave(uint8_t addr);
 uint8_t i2c_write_byte(uint8_t byte);
 uint8_t i2c_read_byte(uint8_t nack);
 
+// register reads/writes
+uint8_t i2c_reg_read(uint8_t *addr, uint8_t start, uint8_t count);
+uint8_t i2c_reg_readbyte(uint8_t reg);
+uint8_t i2c_reg_writebyte(uint8_t reg, uint8_t value);
+
+// bulk read/writes
 uint8_t write_data(uint8_t* data, uint8_t bytes);
 uint8_t read_bytes(uint8_t* data, uint8_t bytes);
 

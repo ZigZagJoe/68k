@@ -167,6 +167,42 @@ uint8_t read_bytes(uint8_t* data, uint8_t bytes) {
 }	
 
 
+uint8_t i2c_reg_readbyte(uint8_t reg) {
+    uint8_t ret;
+    i2c_reg_read(&ret,reg,1);
+    return ret;
+}
+
+uint8_t i2c_reg_writebyte(uint8_t reg, uint8_t value) {
+    uint8_t data[] = {reg,value};
+    return write_data(data, 2);// wake up the MPU6050 by setting 0 to PWR_MGMT_1
+}
+
+/*
+uint8_t i2c_reg_read(uint8_t *addr, uint8_t startReg, uint8_t count) {
+	i2c_start();
+	
+	if(!send_slave_address(I2C_WRITE))
+		return 0;	
+		
+	if (!i2c_write_byte(startReg)) 
+	    return 0;
+	
+	i2c_stop();
+	i2c_start();
+		
+	if(!send_slave_address(I2C_READ))
+		return 0;	
+			
+	for(uint8_t i = 0; i < count; i++)
+		addr[i] = i2c_read_byte((count-1) == i);
+	
+	i2c_stop();
+	
+	return 1;
+}*/
+
+
 /*
 #define READ_SDA()      (GPDR & (1 << SDA))
 #define SDA_OUT()       bset_a(DDR,SDA)
