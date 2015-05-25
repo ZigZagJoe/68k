@@ -9,6 +9,6 @@ OPTIMIZE = 3
 #NO_CORELIB = true
 
 # Libraries
-LIBS = -ltime -lhd44780
+LIBS = -ltime -lhd44780 -li2c
 
 include ../Makefile_exe.mk
