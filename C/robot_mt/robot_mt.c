@@ -173,7 +173,7 @@ int32_t gyro_acc;      // gyro accumulator
 uint32_t target;       // point at which turn completed
 uint32_t target_slow;  // point to slow down at
 
-uint8_t rot_motor_rev; // reverse speed, for braking
+uint8_t rot_motor_brake;// reverse speed, for braking
 uint8_t rot_motor_slw; // slower speed, for when turn nearly completed
 
 uint8_t pt_braking;    // 1 if slowing down
@@ -337,6 +337,41 @@ void task_drive() {
     
     estop_motors();
 
+
+    while(true) {
+        precise_turn(90);
+        sleep_for(500);
+        precise_turn(90);
+        sleep_for(500);
+        precise_turn(90);
+        sleep_for(500);
+        precise_turn(90);
+        sleep_for(500);   
+        precise_turn(-90);
+        sleep_for(500);
+        precise_turn(-90);
+        sleep_for(500);
+        precise_turn(-90);
+        sleep_for(500);
+        precise_turn(-90);
+        sleep_for(500);   
+        precise_turn(180);
+        sleep_for(500);   
+        precise_turn(45);
+        sleep_for(500); 
+        precise_turn(45);
+        sleep_for(500); 
+        precise_turn(-45);
+        sleep_for(500);   
+        precise_turn(-45);
+        sleep_for(500); 
+        precise_turn(180);
+        sleep_for(500); 
+        precise_turn(-360);
+        sleep_for(1500); 
+    }
+    
+    
     motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, MOTOR_STATE_NEVER_DIE /* never die */, 0xFFFF, 0 };
     push_state(go_forward); // this should never die
     
@@ -684,15 +719,15 @@ int main() {
     printf("68k robot firmware built on " __DATE__ " at " __TIME__ "\n");
     printf("Press any key to begin debug logging.\n");
     create_task(&task_drive, 0);	
-	create_task(&task_distance_sense,0);
-    create_task(&task_executive, 0);
+	//create_task(&task_distance_sense,0);
+    //create_task(&task_executive, 0);
     
     task_t su = create_task(&task_init_accel,0);
     task_struct_t *ptr = su >> 16;
     ptr->FLAGS |= (1<<13);         // promote this task to supervisor level by editing its flags 
     
-    create_task(&task_lcd_status,0);
-    create_task(&task_print_dist,0);
+    //create_task(&task_lcd_status,0);
+    //create_task(&task_print_dist,0);
 
   	leave_critical();
 
@@ -772,32 +807,37 @@ void sensor_move(uint32_t count, uint8_t duration) {
     }
 }
 
+uint8_t rot_motor_brake_slw;
+uint8_t rot_motor_fwd;
 
 void tick_integrate_gyro() {
-    bset_a(GPDR,1);
-    bclr_a(GPDR,1);
-    
     int16_t gyro_y_raw, travel_tick;
     i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2); 
     
     gyro_y_dps = gyro_y_raw / RAW_TO_250DPS;
+    
+    printf("%d\n", gyro_y_raw);
     
     if (!pt_braking) {
         travel_tick = gyro_y_raw / 143; // 1000/7 - integrate the time spent
         gyro_acc += travel_tick;
     
         if (abs(gyro_acc + (travel_tick << EST_SHIFT_FACTOR)) >= target) { 
-            LEFT_MOTOR = rot_motor_rev;
-            RIGHT_MOTOR = rot_motor_rev;
+            LEFT_MOTOR = rot_motor_brake;
+            RIGHT_MOTOR = rot_motor_brake;
             pt_braking = 1; 
-        } else if (abs(gyro_acc) > target_slow) {
-            LEFT_MOTOR = rot_motor_slw;
-            RIGHT_MOTOR = rot_motor_slw;
+        }
+    } else {
+        if ((dir && gyro_y_raw > -2000) || (!dir && gyro_y_raw < 2000)) { 
+            // moving 19deg/sec or less
+            estop_motors();
+            sem_release(&turn_done);  
+        } else if ((pt_braking == 1) && ((dir && gyro_y_raw > -10000) || (!dir && gyro_y_raw < 10000))) { 
+            // brake the opposite way
+            pt_braking = 2;
+            LEFT_MOTOR = rot_motor_fwd;
+            RIGHT_MOTOR = rot_motor_fwd;
         } 
-    } else if ((dir && gyro_y_raw > -1000) || (!dir && gyro_y_raw < 1000)) { 
-         estop_motors();
-         _ontick_event = 0;
-         sem_release(&turn_done);      
     }
 }
 
@@ -811,23 +851,24 @@ void precise_turn(int16_t angle) {
     gyro_acc = 0;
  	
  	target = abs(angle * RAW_TO_250DPS);
- 	target_slow = target - 2000; // about 15 degrees
-
+ 	
     if (angle > 0) {
         dir = 0;
-        rot_motor_rev = MOTOR_T_BCK_23;
+        rot_motor_brake = MOTOR_T_BCK_FULL;
+        rot_motor_brake_slw = MOTOR_T_BCK_13;
         
-        rot_motor_slw = MOTOR_T_FWD_23;
-        RIGHT_MOTOR = MOTOR_T_FWD_FULL;
-        LEFT_MOTOR = MOTOR_T_FWD_FULL;
+        rot_motor_fwd = MOTOR_T_FWD_FULL;
+        
     } else {
         dir = 1;
-        rot_motor_rev = MOTOR_T_FWD_23;
+        rot_motor_brake = MOTOR_T_FWD_FULL;
+        rot_motor_brake_slw = MOTOR_T_FWD_13;
         
-        rot_motor_slw = MOTOR_T_BCK_23;
-        RIGHT_MOTOR = MOTOR_T_BCK_FULL;
-        LEFT_MOTOR = MOTOR_T_BCK_FULL;
+        rot_motor_fwd = MOTOR_T_BCK_FULL;
     }
+            
+    RIGHT_MOTOR = rot_motor_fwd;
+    LEFT_MOTOR = rot_motor_fwd;
     
     sem_init(&turn_done);
     sem_acquire(&turn_done);
@@ -839,6 +880,9 @@ void precise_turn(int16_t angle) {
     leave_critical();
     
     sem_wait(&turn_done);
+
+    sleep_for(500);
+    _ontick_event = 0;
     
     estop = false;
     sem_release(&ds_sem);
