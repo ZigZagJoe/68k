@@ -114,6 +114,8 @@ const uint8_t speed_to_ch[] = { CH_DNARR, CH_DNARR_H, CH_DNARR_H, CH_STOP, CH_UP
 #define MOTOR_FWD_23 2
 #define MOTOR_FWD_FULL 3
 
+#define MOTOR_STATE_NEVER_DIE -1000
+
 /* prototypes */
 
 typedef struct {
@@ -159,7 +161,7 @@ volatile uint8_t  dist_raw;                // return from timera IRQ
 volatile uint16_t last_dist[NUM_PAN_POSITIONS];            // current scan results
 volatile uint8_t  estop;              // motor emergency stop: halts drive stack processing
 volatile task_t   avoidance_task;     // used to monitor state of avoidance processing
-volatile int16_t  y_dps;
+volatile int16_t  gyro_y_dps;
     
 uint8_t ser_debug = 0;
 
@@ -207,7 +209,7 @@ void task_handle_obstacle(uint8_t why) {
     sem_t move_sem;
     sem_init (&move_sem);
     
-    motor_state stop = { MOTOR_STOP, MOTOR_STOP, -1, AVOID_MOTOR_STOP, 0 };
+    motor_state stop = { MOTOR_STOP, MOTOR_STOP, MOTOR_STATE_NEVER_DIE, AVOID_MOTOR_STOP, 0 };
     
     // set base state to stopped
     safe_push_state(stop);
@@ -299,7 +301,7 @@ void task_drive() {
     
     estop_motors();
 
-    motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, -1 /* never die */, 0xFFFF, 0 };
+    motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, MOTOR_STATE_NEVER_DIE /* never die */, 0xFFFF, 0 };
     push_state(go_forward); // this should never die
     
     uint8_t stable = 0;
@@ -318,10 +320,10 @@ void task_drive() {
         if (cs->duration != 0) {
             
             // if on base task (move forward), trim motors according to gryo
-            if (cs->ID == 0xFFFF && stable) {
-                if (abs(y_dps) > 3) {
+            if (cs->ID == 0xFFFF) {
+                if (abs(gyro_y_dps) > 3 && stable) {
                     // negative values = turning right
-                    if (y_dps < 0) {
+                    if (gyro_y_dps < 0) {
                         // turning right means left is moving faster than right
                         // 6 FWD_FULL = forward speed for right, reverse speed for left
                         // 0 BCK_FULL = reverse speed for right, forward speed for left
@@ -347,9 +349,9 @@ void task_drive() {
 
             TIL311 = cs->ID & 0xFF;
         
-            if (cs->duration != -1) {
+            if (cs->duration != MOTOR_STATE_NEVER_DIE) {
                 cs->duration -= 15;
-                if (cs->duration < 1) { 
+                if (cs->duration <= 0) { 
                     stable = 0;
                     if (cs->notify)
                         *(cs->notify) = 0;
@@ -422,7 +424,7 @@ void task_lcd_status() {
         lcd_data(dist_to_char(PAN_RIGHT_22));
         lcd_data(dist_to_char(PAN_RIGHT_45));
         lcd_cursor(12,0);
-        lcd_printf("%4d",y_dps);
+        lcd_printf("%4d",gyro_y_dps);
         
         //lcd_printf("%03d",last_dist[PAN_CENTER]);
         
@@ -582,16 +584,18 @@ void task_print_dist() {
 
 void task_read_accel() { 
     int16_t gyro_y = 0;
+    turn_done = 0;
+            
+    //GYRO_250DEG_V_TO_DEG 0.00763F
 
     while(true) {
-        int code = i2c_reg_read(&gyro_y, GYRO_ZOUT_H, 2);
-        
-        //GYRO_250DEG_V_TO_DEG 0.00763F
-
-        y_dps = (gyro_y >> 7) - (gyro_y >> 12) + (gyro_y >> 14); 
+        if (!turn_done) {// don't sample while the precise turn code is resident, it's updating gyro_y too
+            i2c_reg_read(&gyro_y, GYRO_ZOUT_H, 2);
+            gyro_y_dps = (gyro_y >> 7) - (gyro_y >> 12) + (gyro_y >> 14); 
+        }
         
         //float y_dps = gyro_y * GYRO_250DEG_V_TO_DEG;
-        dprintf("%5d\n", (int)y_dps);
+        dprintf("%5d\n", gyro_y_dps);
         
         sleep_for(21);
     }
@@ -739,6 +743,8 @@ void tick_integrate_gyro() {
     
     int16_t gyro_y_raw, travel_tick;
     i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2); 
+    
+    gyro_y_dps = raw_to_250dps(gyro_y_raw);
     
     if (!pt_braking) {
         travel_tick = integrate7ms(gyro_y_raw);
