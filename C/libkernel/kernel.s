@@ -13,7 +13,7 @@
 .global enter_critical
 .global leave_critical
 .global exit
-.global _tick_call
+.global _ontick_event
 
 /* vars */
 .global _active_task
@@ -35,7 +35,7 @@
 .set _next_thread_id,   0x412 | word
 .set _swap_in_progress, 0x414 | byte
 .set _skip_next_tick,   0x415 | byte
-.set _tick_call,        0x416 | long
+.set _ontick_event,        0x416 | long
 
 | IO device declartions
 .set IO_BASE,  0xC0000
@@ -114,7 +114,7 @@ _kernel_start:
     clr.b (_skip_next_tick)
     clr.l (_active_task)
     clr.w (_next_thread_id)
-    clr.l (_tick_call)
+    clr.l (_ontick_event)
     
     /* initialize struct statuses to 0 (inactive) */
     move.l #0x460, %a0
@@ -211,11 +211,11 @@ _in_super:
 _kern_millis_count:
     addq.l #1, (millis_counter)
     
-    tst.l (_tick_call)
+    tst.l (_ontick_event)
     jeq _no_call
     
     movem.l %a0-%a1/%d0-%d1, -(%sp)
-    move.l (_tick_call), %a0
+    move.l (_ontick_event), %a0
     jsr (%a0)
     movem.l (%sp)+, %a0-%a1/%d0-%d1
     

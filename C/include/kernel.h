@@ -26,7 +26,7 @@ typedef volatile struct __attribute__((packed)) {
 
 extern task_struct_t * _active_task;
 
-extern __vector _tick_call;
+extern __vector _ontick_event;
 
 #define CURRENT_TASK_ID (_active_task->ID)
 #define abort() exit(0xAB)
