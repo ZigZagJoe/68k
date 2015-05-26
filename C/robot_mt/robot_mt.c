@@ -216,6 +216,10 @@ void task_handle_obstacle(uint8_t why) {
     
     estop = false;
     
+    // acquire semaphore for scan
+    sem_acquire(&sp_sem);
+    task_t sensor_move = create_task(&task_prep_sensor,0);  
+    
     // reverse for breathing room
     motor_state go_back = { MOTOR_BCK_FULL, MOTOR_BCK_FULL, 300, 0x0ABB, &move_sem };
     do {
@@ -225,15 +229,10 @@ void task_handle_obstacle(uint8_t why) {
         sem_wait(&move_sem);
     } while (BUMPER_DEPRESSED);
     
-    // acquire semaphore for scan
-    sem_acquire(&sp_sem);
+    wait_for_exit(sensor_move);
     
     // could do a forward scan first, then 180 for rear scan...
     
-    create_task(&task_prep_sensor,0);  
-    precise_turn(180);          // begin the turn
-  
-    // set 180 scan pattern
     scan_pattern = &sp_180_scan;
     scan_i = 1;
     // zero distance array
@@ -259,6 +258,43 @@ void task_handle_obstacle(uint8_t why) {
             }
     }
     
+    dprintf("FWD 180: ");
+    for (uint8_t i = 0; i < NUM_PAN_POSITIONS; i++) 
+            dprintf("%3d  ", last_dist[i]);
+       
+    dprintf("\n");
+         
+    // turn and do another scan
+    sem_acquire(&sp_sem);
+    sensor_move = create_task(&task_prep_sensor,0);  
+    precise_turn(180);          // begin the turn
+  
+    // set 180 scan pattern
+    scan_pattern = &sp_180_scan;
+    scan_i = 1;
+    // zero distance array
+    memset(last_dist, 0, sizeof(last_dist));
+    sem_release(&sp_sem);
+    
+    // wait for the scan to be completed
+    // also, find the farthest (apparent) clear distance
+    can_exit = 0;
+    max = 0;
+
+    while(!can_exit) {
+        yield();
+        can_exit = 1;
+        for (int i = 0; i < NUM_PAN_POSITIONS; i++)
+            if (!last_dist[i]) {
+                can_exit = 0;
+                break;
+            } else if (last_dist[i] > max) {
+                max = last_dist[i];
+                max_i = i;
+            }
+    }
+    
+    dprintf("BCK 180: ");
     for (uint8_t i = 0; i < NUM_PAN_POSITIONS; i++) 
             dprintf("%3d  ", last_dist[i]);
             
@@ -595,7 +631,7 @@ void task_read_accel() {
         }
         
         //float y_dps = gyro_y * GYRO_250DEG_V_TO_DEG;
-        dprintf("%5d\n", gyro_y_dps);
+        //dprintf("%5d\n", gyro_y_dps);
         
         sleep_for(21);
     }
@@ -766,9 +802,8 @@ void tick_integrate_gyro() {
 }
 
 void precise_turn(int16_t angle) {
+    printf("Turn %d deg\n",angle);
     sem_acquire(&ds_sem);
-    
-    printf("Precise turn of %d degrees\n",angle);
     
     enter_critical();
     
