@@ -589,7 +589,8 @@ void task_read_accel() {
     }
 }
 
-void do_turn();
+void  precise_turn(int16_t angle);
+void turn_test();
 
 
 void task_init_accel() {
@@ -612,7 +613,7 @@ void task_init_accel() {
     printf ("Done\n");
 
     // create a normal level task
-    create_task(&do_turn,0);
+    create_task(&turn_test,0);
     
     // explicitly exit as this is a super-lever task
     // exiting in this manner is leaving clutter on the supervisor stack
@@ -635,79 +636,106 @@ int16_t integrate7ms(int16_t x) {
     return  (x >> 7) - (x >> 10) + (x >> 13) + (x >> 15);
 }
 
-int32_t gyro_acc;
-uint32_t target;
-uint32_t target_slow;
+#define EST_SHIFT_FACTOR 3
+// factor to use as a shift to multiply current velocity at - begin stop if would exceed
 
-uint8_t rot_motor_rev;
-uint8_t rot_motor_slw;
+int32_t gyro_acc;      // gyro accumulator
+uint32_t target;       // point at which turn completed
+uint32_t target_slow;  // point to slow down at
 
-volatile uint8_t done;
+uint8_t rot_motor_rev; // reverse speed, for braking
+uint8_t rot_motor_slw; // slower speed, for when turn nearly completed
 
-void integrate_gyro() {
-    int16_t gyro_y_raw, travel;
+uint8_t pt_braking;    // 1 if slowing down
+uint8_t dir;           // 0 if left, 1 if right
+
+sem_t turn_done;
+
+void tick_integrate_gyro() {
+    int16_t gyro_y_raw, travel_tick;
     i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2); 
     
-    travel = integrate7ms(gyro_y_raw);
-    gyro_acc += travel;
+    if (!pt_braking) {
+        travel_tick = integrate7ms(gyro_y_raw);
+        gyro_acc += travel_tick;
     
-    if (abs(gyro_acc) >target_slow) {
-        LEFT_MOTOR = rot_motor_slw;
-        RIGHT_MOTOR = rot_motor_slw;
-    }
-    
-    if (abs(gyro_acc + (travel << 3)) >= target) { 
-        LEFT_MOTOR = rot_motor_rev;
-        RIGHT_MOTOR = rot_motor_rev;
-        done = 1;
-        _tick_call = 0; 
+        if (abs(gyro_acc + (travel_tick << EST_SHIFT_FACTOR)) >= target) { 
+            LEFT_MOTOR = rot_motor_rev;
+            RIGHT_MOTOR = rot_motor_rev;
+            pt_braking = 1; 
+        } else if (abs(gyro_acc) > target_slow) {
+            LEFT_MOTOR = rot_motor_slw;
+            RIGHT_MOTOR = rot_motor_slw;
+        } 
+    } else if ((dir && gyro_y_raw > -1000) || (!dir && gyro_y_raw < 1000)) { 
+         estop_motors();
+         _ontick_event = 0;
+         sem_release(&turn_done);      
     }
 }
 
-void do_turn(int16_t angle) {
-    dprintf("Perform precise turn of %d degrees\n",angle);
+void precise_turn(int16_t angle) {
+    printf("Perform precise turn of %d degrees\n",angle);
+    
+    sleep_for(500);
     
     enter_critical();
     
- 	gyro_acc = 0;
- 	target = abs(angle * 131);
- 	target_slow = (target * 3)/4;
+    pt_braking = 0;
+    gyro_acc = 0;
  	
- 	done = 0;
- 
+ 	target = abs(angle * 131);
+ 	target_slow = target - 2000; // about 15 degrees
+
     if (angle > 0) {
-        rot_motor_rev = MOTOR_T_BCK_13;
+        dir = 0;
+        rot_motor_rev = MOTOR_T_BCK_23;
         
         rot_motor_slw = MOTOR_T_FWD_23;
         RIGHT_MOTOR = MOTOR_T_FWD_FULL;
         LEFT_MOTOR = MOTOR_T_FWD_FULL;
     } else {
-        rot_motor_rev = MOTOR_T_FWD_13;
+        dir = 1;
+        rot_motor_rev = MOTOR_T_FWD_23;
         
         rot_motor_slw = MOTOR_T_BCK_23;
         RIGHT_MOTOR = MOTOR_T_BCK_FULL;
         LEFT_MOTOR = MOTOR_T_BCK_FULL;
     }
     
-    _tick_call = &integrate_gyro;
-
+    sem_init(&turn_done);
+    sem_acquire(&turn_done);
+    
+    _ontick_event = &tick_integrate_gyro;
+    
+    // every tick, the current rotation velocity will be integrated
+    // once it hits near the target angle, the motors will be braked and the turn is done
     leave_critical();
     
-    while(!done) yield();
-    
-    enter_critical();
-    
-    int16_t gyro_y_raw;
-    while (true) {
-        i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2); 
-        if (abs(gyro_y_raw) <= 1000) 
-            break;
-    }
-    
-    estop_motors();
-    leave_critical();
+    sem_wait(&turn_done);
 }
 
+void turn_test() {
+    while(true) {
+        precise_turn(-90);
+        sleep_for(1000);
+        precise_turn(-90);
+        sleep_for(1000);
+        precise_turn(-90);
+        sleep_for(1000);
+        precise_turn(-90);
+        sleep_for(1000);
+        precise_turn(90);
+        sleep_for(1000);
+        precise_turn(90);
+        sleep_for(1000);
+        precise_turn(90);
+        sleep_for(1000);
+        precise_turn(90);
+        sleep_for(1000);
+        
+    }
+}
 
 int main() {
  	TIL311 = 0xC5;
@@ -724,14 +752,14 @@ int main() {
     printf("Press any key to begin debug logging.\n");
     create_task(&task_drive, 0);	
 	//create_task(&task_distance_sense,0);
-    //create_task(&task_executive, 0);
+   // create_task(&task_executive, 0);
     
     task_t su = create_task(&task_init_accel,0);
     task_struct_t *ptr = su >> 16;
     ptr->FLAGS |= (1<<13);         // promote this task to supervisor level by editing its flags 
     
-    create_task(&task_lcd_status,0);
-    //create_task(&task_print_dist,0);
+   // create_task(&task_lcd_status,0);
+  //  create_task(&task_print_dist,0);
 
   	leave_critical();
 
