@@ -2,26 +2,13 @@
 #include <i2c.h>
 #include "MPU6050.h"
 
-// these aren't super-accurate, but they are close enough and fast as all get out
+// these aren't super-accurate, but they are close enough and fast
 int16_t tmp_raw_to_F(int16_t x) {
-    return (x >> 8) + (x >> 10) + (x >> 11) - (x >> 14) + 98;
+    return x / 189 + 98;
 }
 
 int16_t tmp_raw_to_C(int16_t x) {
-    return (x >> 8) - (x >> 10) + 37;
-}
-
-
-// from 16 bit int to degrees
-// x * (250/32768)    
-
-int16_t raw_to_250dps(int16_t x) {
-   return (x >> 7) - (x >> 12) + (x >> 14); 
-}
-
-// x * (7/1000)
-int16_t integrate7ms(int16_t x) {
-    return  (x >> 7) - (x >> 10) + (x >> 13) + (x >> 15);
+    return x / 340 + 37;
 }
 
 void calibrateMPU6050(float * gryBiasDPS, float * accBiasMS) {  

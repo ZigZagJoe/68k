@@ -619,15 +619,15 @@ void task_print_dist() {
 }
 
 void task_read_accel() { 
-    int16_t gyro_y = 0;
+    int16_t gyro_y_raw = 0;
     turn_done = 0;
             
     //GYRO_250DEG_V_TO_DEG 0.00763F
 
     while(true) {
         if (!turn_done) {// don't sample while the precise turn code is resident, it's updating gyro_y too
-            i2c_reg_read(&gyro_y, GYRO_ZOUT_H, 2);
-            gyro_y_dps = (gyro_y >> 7) - (gyro_y >> 12) + (gyro_y >> 14); 
+            i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2);
+            gyro_y_dps = gyro_y_raw / RAW_TO_250DPS;
         }
         
         //float y_dps = gyro_y * GYRO_250DEG_V_TO_DEG;
@@ -780,10 +780,10 @@ void tick_integrate_gyro() {
     int16_t gyro_y_raw, travel_tick;
     i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2); 
     
-    gyro_y_dps = raw_to_250dps(gyro_y_raw);
+    gyro_y_dps = gyro_y_raw / RAW_TO_250DPS;
     
     if (!pt_braking) {
-        travel_tick = integrate7ms(gyro_y_raw);
+        travel_tick = gyro_y_raw / 143; // 1000/7 - integrate the time spent
         gyro_acc += travel_tick;
     
         if (abs(gyro_acc + (travel_tick << EST_SHIFT_FACTOR)) >= target) { 
@@ -810,7 +810,7 @@ void precise_turn(int16_t angle) {
     pt_braking = 0;
     gyro_acc = 0;
  	
- 	target = abs(angle * 131);
+ 	target = abs(angle * RAW_TO_250DPS);
  	target_slow = target - 2000; // about 15 degrees
 
     if (angle > 0) {
