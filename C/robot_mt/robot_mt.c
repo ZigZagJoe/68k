@@ -60,6 +60,8 @@
 
 #define NUM_PAN_POSITIONS 9
 
+const int32_t pan_ind_to_angle[] = {90,77,45,22,0,-22,-45,-77,-90};
+
 const uint32_t pan_to_pulse[] = {PAN_LEFT_90_V, PAN_LEFT_77_V, PAN_LEFT_45_V, PAN_LEFT_22_V, PAN_CENTER_V, PAN_RIGHT_22_V, PAN_RIGHT_45_V, PAN_RIGHT_77_V, PAN_RIGHT_90_V};
 
 // scan patterns
@@ -262,16 +264,8 @@ void task_handle_obstacle(uint8_t why) {
     
     // turn approximately towards the farthest clear area
     // later use gyro for exact turn
-    if (max_i != PAN_CENTER) {
-        if (max_i > PAN_CENTER) {
-            motor_state do_right = { MOTOR_FWD_FULL, MOTOR_BCK_FULL, 100 + 50 * (max_i-PAN_CENTER), 0x0A44, &move_sem };
-            safe_push_state(do_right);        
-        } else {
-            motor_state do_left = { MOTOR_BCK_FULL, MOTOR_FWD_FULL, 100 + 50 * (PAN_CENTER-max_i), 0x0A11, &move_sem };
-            safe_push_state(do_left);
-        }
-        sem_wait(&move_sem); 
-    }
+    if (max_i != PAN_CENTER)
+        precise_turn(pan_ind_to_angle[max_i]);
         
     // restore normal scan pattern
     sem_acquire(&sp_sem);
@@ -597,7 +591,7 @@ void task_read_accel() {
         y_dps = (gyro_y >> 7) - (gyro_y >> 12) + (gyro_y >> 14); 
         
         //float y_dps = gyro_y * GYRO_250DEG_V_TO_DEG;
-        printf("%5d\n", (int)y_dps);
+        dprintf("%5d\n", (int)y_dps);
         
         sleep_for(21);
     }
@@ -650,15 +644,15 @@ int main() {
     printf("68k robot firmware built on " __DATE__ " at " __TIME__ "\n");
     printf("Press any key to begin debug logging.\n");
     create_task(&task_drive, 0);	
-	//create_task(&task_distance_sense,0);
-   // create_task(&task_executive, 0);
+	create_task(&task_distance_sense,0);
+    create_task(&task_executive, 0);
     
     task_t su = create_task(&task_init_accel,0);
     task_struct_t *ptr = su >> 16;
     ptr->FLAGS |= (1<<13);         // promote this task to supervisor level by editing its flags 
     
-   // create_task(&task_lcd_status,0);
-  //  create_task(&task_print_dist,0);
+    create_task(&task_lcd_status,0);
+    create_task(&task_print_dist,0);
 
   	leave_critical();
 
@@ -740,6 +734,9 @@ void sensor_move(uint32_t count, uint8_t duration) {
 
 
 void tick_integrate_gyro() {
+    bset_a(GPDR,1);
+    bclr_a(GPDR,1);
+    
     int16_t gyro_y_raw, travel_tick;
     i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2); 
     
