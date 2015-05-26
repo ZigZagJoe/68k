@@ -37,6 +37,37 @@ void full_read() {
     }
 }    
     
+int16_t raw_to_250dps(int16_t x) {
+   return (x >> 7) - (x >> 12) + (x >> 14); 
+}
+
+int16_t integrate7ms(int16_t x) {
+    return  (x >> 7) - (x >> 10) + (x >> 13) + (x >> 15);
+}
+
+#define DEG_TO_RAW 131
+
+void integrate() {
+    int16_t gyro_y = 0;
+    int32_t acc = 0;
+    
+    uint8_t i = 0;
+    while(true) {
+        DELAY_MS(6);
+        DELAY(20);
+        bset_a(GPDR, 1);
+        bclr_a(GPDR, 1);
+        i2c_reg_read(&gyro_y, GYRO_ZOUT_H, 2); 
+        acc+=integrate7ms(gyro_y);
+    
+        i++;
+        if (i == 60) {
+            i = 0;
+            printf("%d\n",raw_to_250dps(acc));
+        }
+    }
+
+}
     
 //void lzfx_decompress(int a,int b, int c, int d) {}
 int main() {
@@ -66,8 +97,8 @@ int main() {
     printf("Begin loop\n");
 
     //partial_read();
-    full_read();
-    
+    //full_read();
+    integrate();
 }
 
 void leave_critical() {
