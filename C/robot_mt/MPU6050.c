@@ -11,6 +11,19 @@ int16_t tmp_raw_to_C(int16_t x) {
     return (x >> 8) - (x >> 10) + 37;
 }
 
+
+// from 16 bit int to degrees
+// x * (250/32768)    
+
+int16_t raw_to_250dps(int16_t x) {
+   return (x >> 7) - (x >> 12) + (x >> 14); 
+}
+
+// x * (7/1000)
+int16_t integrate7ms(int16_t x) {
+    return  (x >> 7) - (x >> 10) + (x >> 13) + (x >> 15);
+}
+
 void calibrateMPU6050(float * gryBiasDPS, float * accBiasMS) {  
 
     uint8_t data[12]; // data array to hold accelerometer and gyro x, y, z, data
@@ -161,3 +174,5 @@ void calibrateMPU6050(float * gryBiasDPS, float * accBiasMS) {
     accBiasMS[1] = (float)accel_bias[1]/(float)accelsensitivity;
     accBiasMS[2] = (float)accel_bias[2]/(float)accelsensitivity;
 }
+
+

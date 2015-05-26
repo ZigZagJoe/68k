@@ -131,6 +131,7 @@ void do_avoidance(uint8_t why);       // spawns avoidance task if neccisary
 void sensor_move(uint32_t count, uint8_t duration);
 void halt_and_exit(char *why, uint8_t code);
 void pan_sensor(uint8_t p);
+void precise_turn(int16_t angle);
 
 // tasks
 void task_handle_obstacle(uint8_t why);
@@ -160,6 +161,23 @@ volatile int16_t  y_dps;
     
 uint8_t ser_debug = 0;
 
+
+#define EST_SHIFT_FACTOR 3
+// factor to use as a shift to multiply current velocity at - begin stop if would exceed
+
+int32_t gyro_acc;      // gyro accumulator
+uint32_t target;       // point at which turn completed
+uint32_t target_slow;  // point to slow down at
+
+uint8_t rot_motor_rev; // reverse speed, for braking
+uint8_t rot_motor_slw; // slower speed, for when turn nearly completed
+
+uint8_t pt_braking;    // 1 if slowing down
+uint8_t dir;           // 0 if left, 1 if right
+
+sem_t turn_done;
+
+
 #define dprintf(...) if (ser_debug) printf(__VA_ARGS__)
 
 ISR(measure_done) {
@@ -177,6 +195,10 @@ void sem_wait(sem_t *sem) {
 }
 
 #define AVOID_MOTOR_STOP 0x0A55
+
+void task_prep_sensor() {
+    pan_sensor(sp_180_scan[1]); // move the sensor to the first position while turning
+}
 
 void task_handle_obstacle(uint8_t why) {
     // semaphore for synchronous motor actions
@@ -204,12 +226,9 @@ void task_handle_obstacle(uint8_t why) {
     
     // could do a forward scan first, then 180 for rear scan...
     
-    // turn around
-    motor_state do_180 = { MOTOR_BCK_FULL, MOTOR_FWD_FULL, 750, 0x0A44, &move_sem };
-    safe_push_state(do_180);    // begin the turn
-    pan_sensor(sp_180_scan[1]); // move the sensor to the first position while turning
-    sem_wait(&move_sem);        // wait for turn complete
-    
+    create_task(&task_prep_sensor,0);  
+    precise_turn(180);          // begin the turn
+  
     // set 180 scan pattern
     scan_pattern = &sp_180_scan;
     scan_i = 1;
@@ -285,9 +304,7 @@ void task_drive() {
     TCDCR |= 0x4 << 4; // prescaler of 50
     
     estop_motors();
-     
-     return;
-       
+
     motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, -1 /* never die */, 0xFFFF, 0 };
     push_state(go_forward); // this should never die
     
@@ -375,8 +392,6 @@ void task_lcd_status() {
 	lcd_load_ch();
 
 	lcd_cursor(0,0);
-	
-	return;
 	
 	lcd_printf("68008 ROBOT");
 
@@ -571,8 +586,7 @@ void task_print_dist() {
     }
 }
 
-void task_read_accel() {
-      
+void task_read_accel() { 
     int16_t gyro_y = 0;
 
     while(true) {
@@ -588,9 +602,6 @@ void task_read_accel() {
         sleep_for(21);
     }
 }
-
-void  precise_turn(int16_t angle);
-void turn_test();
 
 
 void task_init_accel() {
@@ -613,7 +624,7 @@ void task_init_accel() {
     printf ("Done\n");
 
     // create a normal level task
-    create_task(&turn_test,0);
+    create_task(&task_read_accel,0);
     
     // explicitly exit as this is a super-lever task
     // exiting in this manner is leaving clutter on the supervisor stack
@@ -624,118 +635,6 @@ void task_init_accel() {
 //(1s/(3686400/200)) * 30 / ((74us)/(1in))/2 in in
 
 // initialize the hardware and create tasks
-
-// from 16 bit int to degrees
-// x * (250/32768)    
-int16_t raw_to_250dps(int16_t x) {
-   return (x >> 7) - (x >> 12) + (x >> 14); 
-}
-
-// x * (7/1000)
-int16_t integrate7ms(int16_t x) {
-    return  (x >> 7) - (x >> 10) + (x >> 13) + (x >> 15);
-}
-
-#define EST_SHIFT_FACTOR 3
-// factor to use as a shift to multiply current velocity at - begin stop if would exceed
-
-int32_t gyro_acc;      // gyro accumulator
-uint32_t target;       // point at which turn completed
-uint32_t target_slow;  // point to slow down at
-
-uint8_t rot_motor_rev; // reverse speed, for braking
-uint8_t rot_motor_slw; // slower speed, for when turn nearly completed
-
-uint8_t pt_braking;    // 1 if slowing down
-uint8_t dir;           // 0 if left, 1 if right
-
-sem_t turn_done;
-
-void tick_integrate_gyro() {
-    int16_t gyro_y_raw, travel_tick;
-    i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2); 
-    
-    if (!pt_braking) {
-        travel_tick = integrate7ms(gyro_y_raw);
-        gyro_acc += travel_tick;
-    
-        if (abs(gyro_acc + (travel_tick << EST_SHIFT_FACTOR)) >= target) { 
-            LEFT_MOTOR = rot_motor_rev;
-            RIGHT_MOTOR = rot_motor_rev;
-            pt_braking = 1; 
-        } else if (abs(gyro_acc) > target_slow) {
-            LEFT_MOTOR = rot_motor_slw;
-            RIGHT_MOTOR = rot_motor_slw;
-        } 
-    } else if ((dir && gyro_y_raw > -1000) || (!dir && gyro_y_raw < 1000)) { 
-         estop_motors();
-         _ontick_event = 0;
-         sem_release(&turn_done);      
-    }
-}
-
-void precise_turn(int16_t angle) {
-    printf("Perform precise turn of %d degrees\n",angle);
-    
-    sleep_for(500);
-    
-    enter_critical();
-    
-    pt_braking = 0;
-    gyro_acc = 0;
- 	
- 	target = abs(angle * 131);
- 	target_slow = target - 2000; // about 15 degrees
-
-    if (angle > 0) {
-        dir = 0;
-        rot_motor_rev = MOTOR_T_BCK_23;
-        
-        rot_motor_slw = MOTOR_T_FWD_23;
-        RIGHT_MOTOR = MOTOR_T_FWD_FULL;
-        LEFT_MOTOR = MOTOR_T_FWD_FULL;
-    } else {
-        dir = 1;
-        rot_motor_rev = MOTOR_T_FWD_23;
-        
-        rot_motor_slw = MOTOR_T_BCK_23;
-        RIGHT_MOTOR = MOTOR_T_BCK_FULL;
-        LEFT_MOTOR = MOTOR_T_BCK_FULL;
-    }
-    
-    sem_init(&turn_done);
-    sem_acquire(&turn_done);
-    
-    _ontick_event = &tick_integrate_gyro;
-    
-    // every tick, the current rotation velocity will be integrated
-    // once it hits near the target angle, the motors will be braked and the turn is done
-    leave_critical();
-    
-    sem_wait(&turn_done);
-}
-
-void turn_test() {
-    while(true) {
-        precise_turn(-90);
-        sleep_for(1000);
-        precise_turn(-90);
-        sleep_for(1000);
-        precise_turn(-90);
-        sleep_for(1000);
-        precise_turn(-90);
-        sleep_for(1000);
-        precise_turn(90);
-        sleep_for(1000);
-        precise_turn(90);
-        sleep_for(1000);
-        precise_turn(90);
-        sleep_for(1000);
-        precise_turn(90);
-        sleep_for(1000);
-        
-    }
-}
 
 int main() {
  	TIL311 = 0xC5;
@@ -807,6 +706,107 @@ void do_avoidance(uint8_t why) {
     leave_critical();
 }
 
+
+void halt_and_exit(char *why, uint8_t code) {
+    enter_critical();
+    estop_motors();
+    puts(why);
+    lcd_clear();
+    lcd_cursor(0,0);
+    lcd_puts(why);
+    while(tx_busy()); // wait for message to be printed
+    exit(code); // abort
+}
+
+void pan_sensor(uint8_t p) {
+    int8_t duration = max(5,(abs(current_pan - p)) * 6);
+    current_pan = p;
+    sensor_move(pan_to_pulse[p], duration);  
+}
+
+void sensor_move(uint32_t count, uint8_t duration) {
+    for (uint8_t i = 0; i < duration; i++) {
+        enter_critical();
+        bset(GPDR,PAN_SERVO_BIT);
+        __asm volatile("move.l %0,%%d0\n" \
+                                "1: subi.l #1, %%d0\n" \
+                                "bne 1b\n" \
+                                ::"d"(count):"d0");
+        bclr(GPDR, PAN_SERVO_BIT);
+        leave_critical();
+        sleep_for(10);
+    }
+}
+
+
+void tick_integrate_gyro() {
+    int16_t gyro_y_raw, travel_tick;
+    i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2); 
+    
+    if (!pt_braking) {
+        travel_tick = integrate7ms(gyro_y_raw);
+        gyro_acc += travel_tick;
+    
+        if (abs(gyro_acc + (travel_tick << EST_SHIFT_FACTOR)) >= target) { 
+            LEFT_MOTOR = rot_motor_rev;
+            RIGHT_MOTOR = rot_motor_rev;
+            pt_braking = 1; 
+        } else if (abs(gyro_acc) > target_slow) {
+            LEFT_MOTOR = rot_motor_slw;
+            RIGHT_MOTOR = rot_motor_slw;
+        } 
+    } else if ((dir && gyro_y_raw > -1000) || (!dir && gyro_y_raw < 1000)) { 
+         estop_motors();
+         _ontick_event = 0;
+         sem_release(&turn_done);      
+    }
+}
+
+void precise_turn(int16_t angle) {
+    sem_acquire(&ds_sem);
+    
+    printf("Precise turn of %d degrees\n",angle);
+    
+    enter_critical();
+    
+    pt_braking = 0;
+    gyro_acc = 0;
+ 	
+ 	target = abs(angle * 131);
+ 	target_slow = target - 2000; // about 15 degrees
+
+    if (angle > 0) {
+        dir = 0;
+        rot_motor_rev = MOTOR_T_BCK_23;
+        
+        rot_motor_slw = MOTOR_T_FWD_23;
+        RIGHT_MOTOR = MOTOR_T_FWD_FULL;
+        LEFT_MOTOR = MOTOR_T_FWD_FULL;
+    } else {
+        dir = 1;
+        rot_motor_rev = MOTOR_T_FWD_23;
+        
+        rot_motor_slw = MOTOR_T_BCK_23;
+        RIGHT_MOTOR = MOTOR_T_BCK_FULL;
+        LEFT_MOTOR = MOTOR_T_BCK_FULL;
+    }
+    
+    sem_init(&turn_done);
+    sem_acquire(&turn_done);
+    
+    _ontick_event = &tick_integrate_gyro;
+    
+    // every tick, the current rotation velocity will be integrated
+    // once it hits near the target angle, the motors will be braked and the turn is done
+    leave_critical();
+    
+    sem_wait(&turn_done);
+    
+    estop = false;
+    sem_release(&ds_sem);
+}
+
+
 // load the custom characters into the LCD
 void lcd_load_ch() {
     lcd_cgram(CH_UPARR); // up arrow
@@ -862,33 +862,3 @@ void lcd_load_ch() {
     lcd_cursor(0,0); // back to data entry mode
 }
 
-void halt_and_exit(char *why, uint8_t code) {
-    enter_critical();
-    estop_motors();
-    puts(why);
-    lcd_clear();
-    lcd_cursor(0,0);
-    lcd_puts(why);
-    while(tx_busy()); // wait for message to be printed
-    exit(code); // abort
-}
-
-void pan_sensor(uint8_t p) {
-    int8_t duration = max(5,(abs(current_pan - p)) * 6);
-    current_pan = p;
-    sensor_move(pan_to_pulse[p], duration);  
-}
-
-void sensor_move(uint32_t count, uint8_t duration) {
-    for (uint8_t i = 0; i < duration; i++) {
-        enter_critical();
-        bset(GPDR,PAN_SERVO_BIT);
-        __asm volatile("move.l %0,%%d0\n" \
-                                "1: subi.l #1, %%d0\n" \
-                                "bne 1b\n" \
-                                ::"d"(count):"d0");
-        bclr(GPDR, PAN_SERVO_BIT);
-        leave_critical();
-        sleep_for(10);
-    }
-}

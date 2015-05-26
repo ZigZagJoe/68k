@@ -117,4 +117,7 @@
 int16_t tmp_raw_to_F(int16_t x);
 int16_t tmp_raw_to_C(int16_t x);
 
+int16_t raw_to_250dps(int16_t x);
+int16_t integrate7ms(int16_t x);
+
 void calibrateMPU6050(float * gryBiasDPS, float * accBiasMS);
