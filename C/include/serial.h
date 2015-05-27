@@ -53,4 +53,6 @@ extern uint8_t getc();
 extern void putc(char ch);
 extern void putc_sync(char ch);
 
+extern int print_dec(int32_t dec);
+
 #endif
