@@ -798,6 +798,7 @@ void sensor_move(uint32_t count, uint8_t duration) {
 
 int32_t gyro_acc;      // gyro accumulator
 uint32_t target;       // point at which turn completed
+int16_t gyro_last;
 
 uint8_t pt_braking;    // 1 if slowing down
 
@@ -815,6 +816,7 @@ int8_t motor_dir;
 int8_t motor_value;
 // current throttle
 
+// reduce the motor deadzone
 int pwr_to_motor(int x) {
     if (x > 1)      return MOTOR_T_NEUTRAL + 10 + x;
     if (x < -1)    return MOTOR_T_NEUTRAL - 10 + x;
@@ -825,7 +827,7 @@ int pwr_to_motor(int x) {
 // negative = backward    
     
 void tick_integrate_gyro() {
-    int16_t gyro_y_raw, travel_tick;
+    int16_t gyro_y_raw, diff_raw, travel_tick;
     
     i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2); 
     
@@ -834,51 +836,55 @@ void tick_integrate_gyro() {
     travel_tick = gyro_y_raw / 143; // 1000/7 - integrate the time spent
     gyro_acc += travel_tick;
     
-
-    int dead = 200;
-    int est_dist = 60;
-    int factor = 1;
+    diff_raw = gyro_y_raw - gyro_last;
+    gyro_last = gyro_y_raw;
+       
+    printf("%d",gyro_y_raw);
     
-    int abs_gyro = abs(gyro_acc); 
-    uint8_t undershoot = (abs_gyro + (travel_tick * est_dist)) < (target - dead);
-    uint8_t overshoot = (abs_gyro + (travel_tick * est_dist)) > (target + dead);
-    
-   // int err = abs(abs_gyro - ((int)target));
-   // factor = min((factor * err)/10000,factor);
-    
-    //printf("%d", gyro_y_raw);
-   
-    printf("%d %d\n",gyro_y_dps, motor_value);
-    if (!turn_done) {
+    if (!turn_done) { // log only
         puts("\n");
         return;
     }
     
+    int deadzone = 200;
+    int est_dist = 60;
+    int adj_factor = 1;
+    
+    int abs_gyro = abs(gyro_acc); 
+    uint8_t undershoot = (abs_gyro + (travel_tick * est_dist)) < (target - deadzone);
+    uint8_t overshoot = (abs_gyro + (travel_tick * est_dist)) > (target + deadzone);
+    
+    //motor_value range is +- 18, -1 to 1 is dead zone
+  
+   // int err = abs(abs_gyro - ((int)target));
+   // factor = min((factor * err)/10000,factor);
+    
+    //printf("%d", gyro_y_raw);
+
     if (undershoot) { 
-        // increase power
+        // increase power in the forward direction
         if (motor_value != rot_motor_fwd) {
-            motor_value = constrain(motor_value + (-motor_dir * factor), -28, 28);
+            motor_value = constrain(motor_value + (-motor_dir * adj_factor), -28, 28);
              // speed up
             LEFT_MOTOR = pwr_to_motor(motor_value);
             RIGHT_MOTOR = pwr_to_motor(motor_value);
             puts("U\n");
         } else puts("\n");
-    } else {
+    } else if (overshoot) {
+        // decrease power in backward direction
         if (motor_value != rot_motor_brake) {
-            motor_value = constrain(motor_value + (motor_dir * factor), -28, 28);
-            // slow down
+            motor_value = constrain(motor_value + (motor_dir * adj_factor), -28, 28);
             LEFT_MOTOR = pwr_to_motor(motor_value);
             RIGHT_MOTOR = pwr_to_motor(motor_value);
             puts("D\n");
         } else puts("\n");
-    }// else puts("\n");
+    } else puts("\n");
     
     if ((abs_gyro - target) < 1000 && abs(gyro_y_raw) < 1000) {
         puts("Done\n");
         estop_motors();
         //_ontick_event = 0;
         sem_release(&turn_done);
-    
     }
     
    // puts("\n");
@@ -906,7 +912,8 @@ void precise_turn(int16_t angle) {
         RIGHT_MOTOR = MOTOR_T_BCK_FULL;
         LEFT_MOTOR = MOTOR_T_BCK_FULL;
     }
-            
+          
+    gyro_last = 0;  
     rot_motor_fwd = motor_value;
     rot_motor_brake = -motor_value;
            
