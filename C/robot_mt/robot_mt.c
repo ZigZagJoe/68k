@@ -166,22 +166,6 @@ volatile int16_t  gyro_y_dps;
 uint8_t ser_debug = 0;
 
 
-#define EST_SHIFT_FACTOR 3
-// factor to use as a shift to multiply current velocity at - begin stop if would exceed
-
-int32_t gyro_acc;      // gyro accumulator
-uint32_t target;       // point at which turn completed
-uint32_t target_slow;  // point to slow down at
-
-uint8_t rot_motor_brake;// reverse speed, for braking
-uint8_t rot_motor_slw; // slower speed, for when turn nearly completed
-
-uint8_t pt_braking;    // 1 if slowing down
-uint8_t dir;           // 0 if left, 1 if right
-
-sem_t turn_done;
-
-
 #define dprintf(...) if (ser_debug) printf(__VA_ARGS__)
 
 ISR(measure_done) {
@@ -340,10 +324,10 @@ void task_drive() {
 
     while(true) {
         precise_turn(90);
-        sleep_for(500);
-        precise_turn(90);
-        sleep_for(500);
-        precise_turn(90);
+        sleep_for(1000);
+        precise_turn(-90);
+        sleep_for(1000);
+       /* precise_turn(90);
         sleep_for(500);
         precise_turn(90);
         sleep_for(500);   
@@ -368,7 +352,7 @@ void task_drive() {
         precise_turn(180);
         sleep_for(500); 
         precise_turn(-360);
-        sleep_for(1500); 
+        sleep_for(1500); */
     }
     
     
@@ -655,12 +639,12 @@ void task_print_dist() {
 
 void task_read_accel() { 
     int16_t gyro_y_raw = 0;
-    turn_done = 0;
+   // turn_done = 0;
             
     //GYRO_250DEG_V_TO_DEG 0.00763F
 
     while(true) {
-        if (!turn_done) {// don't sample while the precise turn code is resident, it's updating gyro_y too
+       /* if (!turn_done) {// don't sample while the precise turn code is resident, it's updating gyro_y too
             i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2);
             gyro_y_dps = gyro_y_raw / RAW_TO_250DPS;
         }
@@ -668,7 +652,7 @@ void task_read_accel() {
         //float y_dps = gyro_y * GYRO_250DEG_V_TO_DEG;
         //dprintf("%5d\n", gyro_y_dps);
         
-        sleep_for(21);
+        sleep_for(21);*/
     }
 }
 
@@ -807,38 +791,97 @@ void sensor_move(uint32_t count, uint8_t duration) {
     }
 }
 
-uint8_t rot_motor_brake_slw;
-uint8_t rot_motor_fwd;
 
+
+#define EST_SHIFT_FACTOR 3
+// factor to use as a shift to multiply current velocity at - begin stop if would exceed
+
+int32_t gyro_acc;      // gyro accumulator
+uint32_t target;       // point at which turn completed
+
+uint8_t pt_braking;    // 1 if slowing down
+
+sem_t turn_done;
+
+int8_t rot_motor_fwd;
+int8_t rot_motor_brake;
+
+// towards target
+
+int8_t motor_dir;
+// positive = forward
+// negative = backward
+
+int8_t motor_value;
+// current throttle
+
+int pwr_to_motor(int x) {
+    if (x > 1)      return MOTOR_T_NEUTRAL + 10 + x;
+    if (x < -1)    return MOTOR_T_NEUTRAL - 10 + x;
+    return MOTOR_T_NEUTRAL;
+}
+
+// positive = forward
+// negative = backward    
+    
 void tick_integrate_gyro() {
     int16_t gyro_y_raw, travel_tick;
+    
     i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2); 
     
     gyro_y_dps = gyro_y_raw / RAW_TO_250DPS;
+     
+    travel_tick = gyro_y_raw / 143; // 1000/7 - integrate the time spent
+    gyro_acc += travel_tick;
     
-    printf("%d\n", gyro_y_raw);
+
+    int dead = 200;
+    int est_dist = 60;
+    int factor = 1;
     
-    if (!pt_braking) {
-        travel_tick = gyro_y_raw / 143; // 1000/7 - integrate the time spent
-        gyro_acc += travel_tick;
+    int abs_gyro = abs(gyro_acc); 
+    uint8_t undershoot = (abs_gyro + (travel_tick * est_dist)) < (target - dead);
+    uint8_t overshoot = (abs_gyro + (travel_tick * est_dist)) > (target + dead);
     
-        if (abs(gyro_acc + (travel_tick << EST_SHIFT_FACTOR)) >= target) { 
-            LEFT_MOTOR = rot_motor_brake;
-            RIGHT_MOTOR = rot_motor_brake;
-            pt_braking = 1; 
-        }
-    } else {
-        if ((dir && gyro_y_raw > -2000) || (!dir && gyro_y_raw < 2000)) { 
-            // moving 19deg/sec or less
-            estop_motors();
-            sem_release(&turn_done);  
-        } else if ((pt_braking == 1) && ((dir && gyro_y_raw > -10000) || (!dir && gyro_y_raw < 10000))) { 
-            // brake the opposite way
-            pt_braking = 2;
-            LEFT_MOTOR = rot_motor_fwd;
-            RIGHT_MOTOR = rot_motor_fwd;
-        } 
+   // int err = abs(abs_gyro - ((int)target));
+   // factor = min((factor * err)/10000,factor);
+    
+    //printf("%d", gyro_y_raw);
+   
+    printf("%d %d\n",gyro_y_dps, motor_value);
+    if (!turn_done) {
+        puts("\n");
+        return;
     }
+    
+    if (undershoot) { 
+        // increase power
+        if (motor_value != rot_motor_fwd) {
+            motor_value = constrain(motor_value + (-motor_dir * factor), -28, 28);
+             // speed up
+            LEFT_MOTOR = pwr_to_motor(motor_value);
+            RIGHT_MOTOR = pwr_to_motor(motor_value);
+            puts("U\n");
+        } else puts("\n");
+    } else {
+        if (motor_value != rot_motor_brake) {
+            motor_value = constrain(motor_value + (motor_dir * factor), -28, 28);
+            // slow down
+            LEFT_MOTOR = pwr_to_motor(motor_value);
+            RIGHT_MOTOR = pwr_to_motor(motor_value);
+            puts("D\n");
+        } else puts("\n");
+    }// else puts("\n");
+    
+    if ((abs_gyro - target) < 1000 && abs(gyro_y_raw) < 1000) {
+        puts("Done\n");
+        estop_motors();
+        //_ontick_event = 0;
+        sem_release(&turn_done);
+    
+    }
+    
+   // puts("\n");
 }
 
 void precise_turn(int16_t angle) {
@@ -853,23 +896,20 @@ void precise_turn(int16_t angle) {
  	target = abs(angle * RAW_TO_250DPS);
  	
     if (angle > 0) {
-        dir = 0;
-        rot_motor_brake = MOTOR_T_BCK_FULL;
-        rot_motor_brake_slw = MOTOR_T_BCK_13;
-        
-        rot_motor_fwd = MOTOR_T_FWD_FULL;
-        
+        motor_dir = -1;
+        motor_value = 28;
+        RIGHT_MOTOR = MOTOR_T_FWD_FULL;
+        LEFT_MOTOR = MOTOR_T_FWD_FULL;
     } else {
-        dir = 1;
-        rot_motor_brake = MOTOR_T_FWD_FULL;
-        rot_motor_brake_slw = MOTOR_T_FWD_13;
-        
-        rot_motor_fwd = MOTOR_T_BCK_FULL;
+        motor_dir = 1;
+        motor_value = -28;
+        RIGHT_MOTOR = MOTOR_T_BCK_FULL;
+        LEFT_MOTOR = MOTOR_T_BCK_FULL;
     }
             
-    RIGHT_MOTOR = rot_motor_fwd;
-    LEFT_MOTOR = rot_motor_fwd;
-    
+    rot_motor_fwd = motor_value;
+    rot_motor_brake = -motor_value;
+           
     sem_init(&turn_done);
     sem_acquire(&turn_done);
     
