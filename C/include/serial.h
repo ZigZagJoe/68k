@@ -42,6 +42,10 @@ extern __serial_handler *on_xmit_error;
 void serial_start(uint8_t fast);
 void serial_stop();
 
+void serial_wait();
+
+extern volatile uint8_t* serial_redirect_buff;
+
 extern bool serial_available();
 extern bool tx_busy();
 

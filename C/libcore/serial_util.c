@@ -26,8 +26,14 @@ ISR(ser_xmt_err)  {
 		(*on_xmit_error)(TXERR);
 }
 
+void serial_wait() {
+    while(tx_busy());
+}
+
 void serial_start(uint8_t fast) {
-    __vectors.user[MFP_INT + MFP_CHAR_RDY - USER_ISR_START] =  fast ? (&_charRecISR_fast) : (&_charRecISR_safe);
+	serial_redirect_buff = 0; // disable redirect
+	
+	 __vectors.user[MFP_INT + MFP_CHAR_RDY - USER_ISR_START] =  fast ? (&_charRecISR_fast) : (&_charRecISR_safe);
     __vectors.user[MFP_INT + MFP_XMIT_EMPTY - USER_ISR_START] =  &_charXmtISR;
     __vectors.user[MFP_INT + MFP_REC_ERR - USER_ISR_START] = &ser_rec_err;
     __vectors.user[MFP_INT + MFP_XMIT_ERR - USER_ISR_START] = &ser_xmt_err;
@@ -45,7 +51,7 @@ void serial_start(uint8_t fast) {
 	TXERR = 0;
 	
 	UDR = '\n';  	 // prime the transmitter so that the XMIT_EMPTY interrupt will be pending
-	
+
 	// set interrupt mask to 0
     // sei();
 }

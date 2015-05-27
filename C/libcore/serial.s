@@ -110,6 +110,18 @@ _end:
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | enter a character into the tx buffer      
 putc:
+
+    move.l #serial_redirect_buff, %a0
+    tst.l (%a0)
+    jeq no_mem
+    
+    move.l (%a0), %a1
+    move.b 7(%sp), (%a1)+
+    move.l %a1, (%a0)
+    rts
+    
+no_mem:
+    
 	move.l #tx_buffer, %a0
 	jsr enter_critical
 	
@@ -181,6 +193,9 @@ getc:
 	
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | Variables
+
+.global serial_redirect_buff
+serial_redirect_buff: .long 0
 
    .bss                          | ser_buffer structure
 rx_buffer: .space 258            | head, tail, 256 bytes of buffer
