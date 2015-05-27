@@ -322,11 +322,16 @@ void task_drive() {
     estop_motors();
 
 
+    precise_turn(90);
+    
+        return;
+    
     while(true) {
-        precise_turn(90);
+      
         sleep_for(1000);
-        precise_turn(-90);
-        sleep_for(1000);
+        return;
+        //precise_turn(-90);
+        //sleep_for(1000);
        /* precise_turn(90);
         sleep_for(500);
         precise_turn(90);
@@ -694,7 +699,7 @@ int main() {
 
  	srand();
  	serial_start(SERIAL_SAFE);
- 	
+
 	sem_init(&avoid_sem);
     avoidance_task = NULL;
 
@@ -824,7 +829,9 @@ int pwr_to_motor(int x) {
 }
 
 // positive = forward
-// negative = backward    
+// negative = backward 
+
+
     
 void tick_integrate_gyro() {
     int16_t gyro_y_raw, diff_raw, travel_tick;
@@ -838,9 +845,14 @@ void tick_integrate_gyro() {
     
     diff_raw = gyro_y_raw - gyro_last;
     gyro_last = gyro_y_raw;
-       
-    printf("%d",gyro_y_raw);
-    
+     
+     print_dec(gyro_y_raw);
+     putc(',');
+      print_dec(gyro_acc);
+     putc(',');
+     print_dec(diff_raw);
+     putc(',');
+
     if (!turn_done) { // log only
         puts("\n");
         return;
@@ -856,29 +868,34 @@ void tick_integrate_gyro() {
     
     //motor_value range is +- 18, -1 to 1 is dead zone
   
-   // int err = abs(abs_gyro - ((int)target));
+    int err = abs(abs_gyro - ((int)target));
    // factor = min((factor * err)/10000,factor);
+  
+    int power_cap = 28;
+    power_cap = min (28, 28 * err/2000);
     
-    //printf("%d", gyro_y_raw);
-
+    //printf("%d,", motor_value);
+    
     if (undershoot) { 
         // increase power in the forward direction
         if (motor_value != rot_motor_fwd) {
-            motor_value = constrain(motor_value + (-motor_dir * adj_factor), -28, 28);
-             // speed up
-            LEFT_MOTOR = pwr_to_motor(motor_value);
-            RIGHT_MOTOR = pwr_to_motor(motor_value);
+            motor_value += (-motor_dir * adj_factor);
+        
             puts("U\n");
         } else puts("\n");
     } else if (overshoot) {
-        // decrease power in backward direction
+        // increase power in backward direction
         if (motor_value != rot_motor_brake) {
-            motor_value = constrain(motor_value + (motor_dir * adj_factor), -28, 28);
-            LEFT_MOTOR = pwr_to_motor(motor_value);
-            RIGHT_MOTOR = pwr_to_motor(motor_value);
+            motor_value += (motor_dir * adj_factor);
+            
             puts("D\n");
         } else puts("\n");
     } else puts("\n");
+    
+    motor_value = constrain(motor_value, -power_cap, power_cap);
+    LEFT_MOTOR = pwr_to_motor(motor_value);
+    RIGHT_MOTOR = pwr_to_motor(motor_value);
+    
     
     if ((abs_gyro - target) < 1000 && abs(gyro_y_raw) < 1000) {
         puts("Done\n");
