@@ -1,11 +1,21 @@
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| SUPERFAST BIT-BANG I2C FOR 68K
+| I hope you like macros!
+
 .text
 .align 2
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| export/input
 
 .global i2c_write_byte
 .global i2c_read_byte
 .global i2c_reg_read
 
 .extern curr_slave
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| constants
 
 .set MFP_BASE, 0xC0000    | start of IO range for MFP
 .set GPDR, MFP_BASE + 0x1 | gpio data register
@@ -14,8 +24,7 @@
 .set SCL, 6
 .set SDA, 7
 
-| I hope you like macros!
-
+| we keep all commonly used values in registers for massive speed ups
 .macro SETUP_REGS
     moveq #SCL, %d2          
     moveq #SDA, %d1   
@@ -26,39 +35,47 @@
     andi.b #0b00111111, (%a0)   | clear bits in GPDR so subroutines do not have to
 .endm
 
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| line control macros
 .macro SDA_IN
-    bclr %d1, (%a1)    | DDR
+    bclr %d1, (%a1)         | DDR
 .endm
 
 .macro SDA_OUT
-    bset %d1, (%a1)    | DDR
+    bset %d1, (%a1)         | DDR
 .endm
 
 .macro TST_SDA
-    btst %d1, (%a0)    | GPDR
+    btst %d1, (%a0)         | GPDR
 .endm
 
-.macro SCL_HI  | alow SCL be pulled hi
-    bclr %d2, (%a1)    | DDR
+| alow SCL be pulled hi
+.macro SCL_HI
+    bclr %d2, (%a1)         | DDR
 .endm
 
-.macro SDA_HI  | allow SDA be pulled hi
-    bclr %d1, (%a1)    | DDR
+| allow SDA be pulled hi
+.macro SDA_HI  
+    bclr %d1, (%a1)         | DDR
 .endm
 
-.macro SCL_LO   | force SCL low
-    bset %d2, (%a1)    | DDR
+| force SCL low
+.macro SCL_LO   
+    bset %d2, (%a1)         | DDR
 .endm
 
-.macro SDA_LO  | force SDA low
-    bset %d1, (%a1)    | DDR
+| force SDA low
+.macro SDA_LO  
+    bset %d1, (%a1)         | DDR
 .endm
 
+| line start state
 .macro I2C_START 
     SDA_LO
     SCL_LO
 .endm
 
+| line stop state
 .macro I2C_STOP
     SCL_HI
     SDA_HI
@@ -76,6 +93,9 @@
     SCL_HI
     SCL_LO
 .endm
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| output a byte in %d0 and jump to local label 9f on nack
 
 .macro WRITE_BYTE
     lsl.b #1, %d0
@@ -106,6 +126,10 @@
     SDA_OUT
 .endm
 
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| read a byte into %d0
+| must be followed by SEND_ACK or SEND_NACK
+
 .macro READ_BYTE
     clr.b %d0
         
@@ -114,13 +138,13 @@
     SCL_HI
     TST_SDA
     jeq 1f 
-    bset %d1, %d0        | contains SDA (7)
+    bset %d1, %d0           | contains SDA (7)
 1:
     SCL_LO
     SCL_HI
     TST_SDA
     jeq 1f   
-    bset %d2, %d0        | contains SCL (6)
+    bset %d2, %d0           | contains SCL (6)
 1:
     SCL_LO
     SCL_HI
@@ -176,11 +200,10 @@
     SCL_LO
 .endm
 
-/*
-uint8_t i2c_read_byte(uint8_t nack)
-argument: send ack/nack
-returns byte read
-*/
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| uint8_t i2c_read_byte(uint8_t nack)
+| argument: send ack/nack
+| returns: byte read
 
 i2c_read_byte:
     move.l %d2, -(%sp)
@@ -189,7 +212,7 @@ i2c_read_byte:
     
     READ_BYTE
   
-    tst.b (11,%sp)     | send ACK or NACK?
+    tst.b (11,%sp)              | send ACK or NACK?
     jne 2f
     
     SEND_ACK
@@ -202,10 +225,10 @@ i2c_read_byte:
     move.l (%sp)+, %d2
     rts
     
-/* uint8_t i2c_write_byte(uint8_t byte);
-argument: byte to send
-returns bool success (ack)/fail (nack)
-*/
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| uint8_t i2c_write_byte(uint8_t byte)
+| argument: byte to send
+| returns bool success (ack)/fail (nack)
 
 i2c_write_byte:
     move.l %d2, -(%sp)
@@ -220,15 +243,16 @@ i2c_write_byte:
     move.l (%sp)+, %d2
     rts
     
-9:                     | nack, xmit failed
+9:                              | nack, xmit failed
     moveq #0, %d0
     move.l (%sp)+, %d2
     rts
     
-/* uint8_t i2c_reg_read(uint8_t *addr, uint8_t startReg, uint8_t count) 
-arguments: buffer to write to, start register, num bytes
-returns: bool success
-*/
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| uint8_t i2c_reg_read(uint8_t *addr, uint8_t startReg, uint8_t count) 
+| arguments: buffer to write to, start reg byte, num bytes
+| returns: bool success
+
 i2c_reg_read: 
 	movm.l %a2/%d2-%d3,-(%sp)
 
@@ -253,10 +277,7 @@ i2c_reg_read:
 	
 	move.w (14+12,%sp),%d3      | count of bytes to move
 	move.l ( 4+12,%sp),%a2      | destination
-	
-	/* a3 = dest
-	   d2 = count */
-	   
+
 	subq.w #2, %d3              | must send NACK on the last byte
 
 _read_loop:                     | send count-1 bytes with acks
@@ -273,12 +294,12 @@ _read_loop:                     | send count-1 bytes with acks
 	I2C_STOP
 	
 	moveq #1, %d0
+	
 _r_exit:
 	movm.l (%sp)+, %a2/%d2-%d3
 	rts
 
-9:
-_return_failed:
-	moveq #0,%d0
+9:                              | this is hit if the write byte instructions rec a NACK
+	moveq #0,%d0                | return failure
 	jbra _r_exit
 
