@@ -114,13 +114,13 @@
     SCL_HI
     TST_SDA
     jeq 1f 
-    ori.b #0b10000000, %d0   
+    bset %d1, %d0        | contains SDA (7)
 1:
     SCL_LO
     SCL_HI
     TST_SDA
     jeq 1f   
-    ori.b #0b01000000, %d0   
+    bset %d2, %d0        | contains SCL (6)
 1:
     SCL_LO
     SCL_HI
