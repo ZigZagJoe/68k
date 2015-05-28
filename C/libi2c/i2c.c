@@ -175,7 +175,7 @@ uint8_t i2c_reg_readbyte(uint8_t reg) {
 
 uint8_t i2c_reg_writebyte(uint8_t reg, uint8_t value) {
     uint8_t data[] = {reg,value};
-    return write_data(data, 2);// wake up the MPU6050 by setting 0 to PWR_MGMT_1
+    return write_data(data, 2); // wake up the MPU6050 by setting 0 to PWR_MGMT_1
 }
 
 /*
