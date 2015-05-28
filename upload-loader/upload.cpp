@@ -997,7 +997,7 @@ void monitor(int fd) {
             serputc(fd,getchar());
         
         while (1 == read(fd, &ch, 1)) {
-            if (isprint(ch) || ch == '\n') {
+            if (isprint(ch) || ch == '\n' || ch == '\t') {
                 putchar(ch);
             } else {
                // printf("ʘ");
