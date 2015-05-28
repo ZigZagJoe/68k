@@ -1,9 +1,9 @@
 # 68008 executable makefile stub
 
 # RAM or ROM
-CODE_LOC = RAM
+CODE_LOC = ROM
 
-USE_KERNEL = 1
+#USE_KERNEL = 1
 
 OPTIMIZE = s
 #NO_CORELIB = true
