@@ -848,17 +848,18 @@ void tick_integrate_gyro() {
      
      print_dec(gyro_y_raw);
      putc(',');
-      print_dec(gyro_acc);
+     print_dec(gyro_acc / 131);
      putc(',');
-     print_dec(diff_raw);
-     putc(',');
+   //  putc(',');
+  //   print_dec(diff_raw);
+  //   putc(',');
 
     if (!turn_done) { // log only
         puts("\n");
         return;
     }
     
-    int deadzone = 200;
+    int deadzone = 100;
     int est_dist = 60;
     int adj_factor = 1;
     
@@ -872,10 +873,11 @@ void tick_integrate_gyro() {
    // factor = min((factor * err)/10000,factor);
   
     int power_cap = 28;
-    power_cap = min (28, 28 * err/2000);
+    power_cap = constrain (20 * err/2000, 5, 28);
     
-    //printf("%d,", motor_value);
-    
+    print_dec(power_cap);
+    //print_dec(err);
+     
     if (undershoot) { 
         // increase power in the forward direction
         if (motor_value != rot_motor_fwd) {
@@ -892,12 +894,11 @@ void tick_integrate_gyro() {
         } else puts("\n");
     } else puts("\n");
     
-    motor_value = constrain(motor_value, -power_cap, power_cap);
+    motor_value = constrain(motor_value, 0, power_cap);
     LEFT_MOTOR = pwr_to_motor(motor_value);
     RIGHT_MOTOR = pwr_to_motor(motor_value);
     
-    
-    if ((abs_gyro - target) < 1000 && abs(gyro_y_raw) < 1000) {
+    if (err < deadzone) {
         puts("Done\n");
         estop_motors();
         //_ontick_event = 0;
@@ -932,7 +933,7 @@ void precise_turn(int16_t angle) {
           
     gyro_last = 0;  
     rot_motor_fwd = motor_value;
-    rot_motor_brake = -motor_value;
+    rot_motor_brake = 0;
            
     sem_init(&turn_done);
     sem_acquire(&turn_done);
@@ -945,7 +946,7 @@ void precise_turn(int16_t angle) {
     
     sem_wait(&turn_done);
 
-    sleep_for(500);
+    sleep_for(1000);
     _ontick_event = 0;
     
     estop = false;
