@@ -50,7 +50,7 @@ extern void sleep_for(uint32_t time);
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
-#define abs(x) ((x)>0?(x):-(x))
+#define abs(x) (((x) > 0) ? (x) : (-(x)))
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
   
 #define ROL(num, bits) (((num) << (bits)) | ((num) >> (32 - (bits))))

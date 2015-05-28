@@ -1,3 +1,44 @@
+
+
+const char btohex[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+
+void puthexN(uint8_t x) {
+    putc(btohex[x]);
+}
+
+void puthexB(uint8_t x) {
+    puthexN((x >> 4) & 0xF);
+    puthexN(x & 0xF);
+}
+
+void puthexW(uint16_t x) {
+    puthexB((x>>8) & 0xFF);
+    puthexB(x & 0xFF);
+}   
+ 
+void puthexL(uint32_t x) {
+    puthexW((x>>16) & 0xFFFF);
+    puthexW(x & 0xFFFF);
+}   
+
+  printf("Redirecting serial...\n");
+    serial_wait();
+   /* 
+    uint8_t *buff_start = ADDR(0x40000);
+    serial_redirect_buff = buff_start;
+    */
+    precise_turn(90);
+    
+   /* uint8_t *buff_end = serial_redirect_buff;
+    serial_redirect_buff = 0;
+    
+    printf("Turn complete, serial un-redirected.\n");
+    printf("Chars written: %d\n", buff_end - 0x40000);
+    
+    while (buff_start != buff_end) {
+        putc(*buff_start++);
+    }*/
+
    // allow the ISR to blink LED
 	 move.b #2, (0xC0001)     | LED ON
      move.b #0, (0xC0001)     | LED off
