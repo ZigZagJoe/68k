@@ -1,4 +1,11 @@
 .text
+.align 2
+
+.global i2c_write_byte
+.global i2c_read_byte
+.global i2c_reg_read
+
+.extern curr_slave
 
 .set MFP_BASE, 0xC0000    | start of IO range for MFP
 .set GPDR, MFP_BASE + 0x1 | gpio data register
@@ -7,12 +14,17 @@
 .set SCL, 6
 .set SDA, 7
 
-.global i2c_write_byte
-.global i2c_read_byte
-.global i2c_reg_read
+| I hope you like macros!
 
-.extern curr_slave
-
+.macro SETUP_REGS
+    moveq #SCL, %d2          
+    moveq #SDA, %d1   
+    
+    move.l #GPDR, %a0
+    move.l #DDR, %a1
+    
+    andi.b #0b00111111, (%a0)   | clear bits in GPDR so subroutines do not have to
+.endm
 
 .macro SDA_IN
     bclr %d1, (%a1)    | DDR
@@ -173,14 +185,7 @@ returns byte read
 i2c_read_byte:
     move.l %d2, -(%sp)
     
-    move.l #GPDR, %a0
-    move.l #DDR, %a1
-    
-    | clear bits in GPDR, so dont need to unset them during run
-    andi.b #0b00111111, (%a0)
-
-    moveq #SDA, %d1
-    moveq #SCL, %d2   | keep SCL in %d2 to speed up clock cycles
+    SETUP_REGS
     
     READ_BYTE
   
@@ -205,16 +210,10 @@ returns bool success (ack)/fail (nack)
 i2c_write_byte:
     move.l %d2, -(%sp)
     
-    move.l #GPDR, %a0
-    move.l #DDR, %a1
-    
-    | clear bits in GPDR, so dont need to unset them during run
-    andi.b #0b00111111, (%a0)
+    SETUP_REGS
   
     move.b (11,%sp), %d0
-    
-    moveq #SDA, %d1    | keep SDA in %d1 to speed up data bits
-    moveq #SCL, %d2
+  
     WRITE_BYTE
     
     moveq #1, %d0
@@ -233,13 +232,8 @@ returns: bool success
 i2c_reg_read: 
 	movm.l %a2/%d2-%d3,-(%sp)
 
-    move.l #GPDR, %a0
-    move.l #DDR, %a1
-    
-	andi.b #0b00111111, (%a0)   | clear bits in GPDR so subroutines do not have to
-    moveq #SCL, %d2          
-    moveq #SDA, %d1   
-    
+	SETUP_REGS
+	
 	I2C_START
 	
 	/* LSB 0 = write */
@@ -247,7 +241,7 @@ i2c_reg_read:
     move.b %d3, %d0             | current slave address
     WRITE_BYTE
 
-	move.b (11+12,%sp), %d0      | start reg
+	move.b (11+12,%sp), %d0     | start reg
 	WRITE_BYTE
 	
 	I2C_STOP
@@ -257,8 +251,8 @@ i2c_reg_read:
     ori.b #1, %d0               | set LSB = read
     WRITE_BYTE
 	
-	move.w (14+12,%sp),%d3       | count of bytes to move
-	move.l ( 4+12,%sp),%a2       | destination
+	move.w (14+12,%sp),%d3      | count of bytes to move
+	move.l ( 4+12,%sp),%a2      | destination
 	
 	/* a3 = dest
 	   d2 = count */
@@ -266,15 +260,15 @@ i2c_reg_read:
 	subq.w #2, %d3              | must send NACK on the last byte
 
 _read_loop:                     | send count-1 bytes with acks
-	READ_BYTE                   | send byte with ack
+	READ_BYTE                   | read byte with ack
 	SEND_ACK
-    move.b %d0, (%a2)+
+    move.b %d0, (%a2)+          | write byte to buffer
     
 	dbra %d3, _read_loop
 	
-	READ_BYTE                   | send final byte with nack
+	READ_BYTE                   | read final byte with nack
 	SEND_NACK
-    move.b %d0, (%a2)+
+    move.b %d0, (%a2)+          | write byte to buffer
     
 	I2C_STOP
 	
