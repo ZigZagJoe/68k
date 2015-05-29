@@ -254,52 +254,52 @@ i2c_write_byte:
 | returns: bool success
 
 i2c_reg_read: 
-	movm.l %a2/%d2-%d3,-(%sp)
+    movm.l %a2/%d2-%d3,-(%sp)
 
-	SETUP_REGS
-	
-	I2C_START
-	
-	/* LSB 0 = write */
+    SETUP_REGS
+    
+    I2C_START
+    
+    /* LSB 0 = write */
     move.b (curr_slave), %d3
     move.b %d3, %d0             | current slave address
     WRITE_BYTE
 
-	move.b (11+12,%sp), %d0     | start reg
-	WRITE_BYTE
-	
-	I2C_STOP
-	I2C_START
-	
+    move.b (11+12,%sp), %d0     | start reg
+    WRITE_BYTE
+    
+    I2C_STOP
+    I2C_START
+    
     move.b %d3, %d0             | current slave address
     ori.b #1, %d0               | set LSB = read
     WRITE_BYTE
-	
-	move.w (14+12,%sp),%d3      | count of bytes to move
-	move.l ( 4+12,%sp),%a2      | destination
+    
+    move.w (14+12,%sp),%d3      | count of bytes to move
+    move.l ( 4+12,%sp),%a2      | destination
 
-	subq.w #2, %d3              | must send NACK on the last byte
+    subq.w #2, %d3              | must send NACK on the last byte
 
 _read_loop:                     | send count-1 bytes with acks
-	READ_BYTE                   | read byte with ack
-	SEND_ACK
+    READ_BYTE                   | read byte with ack
+    SEND_ACK
     move.b %d0, (%a2)+          | write byte to buffer
     
-	dbra %d3, _read_loop
-	
-	READ_BYTE                   | read final byte with nack
-	SEND_NACK
+    dbra %d3, _read_loop
+    
+    READ_BYTE                   | read final byte with nack
+    SEND_NACK
     move.b %d0, (%a2)+          | write byte to buffer
     
-	I2C_STOP
-	
-	moveq #1, %d0
-	
+    I2C_STOP
+    
+    moveq #1, %d0
+    
 _r_exit:
-	movm.l (%sp)+, %a2/%d2-%d3
-	rts
+    movm.l (%sp)+, %a2/%d2-%d3
+    rts
 
 9:                              | this is hit if the write byte instructions rec a NACK
-	moveq #0,%d0                | return failure
-	jbra _r_exit
+    moveq #0,%d0                | return failure
+    jbra _r_exit
 
