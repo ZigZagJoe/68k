@@ -55,4 +55,10 @@ extern void putc_sync(char ch);
 
 extern int print_dec(int32_t dec);
 
+void puthexN(uint8_t x);
+void puthexB(uint8_t x);
+void puthexW(uint16_t x);
+void puthexL(uint32_t x);
+
+
 #endif

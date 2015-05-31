@@ -60,3 +60,24 @@ void serial_stop() {
 	//IERA &= ~(INT_REC_FULL | INT_REC_ERR | INT_XMIT_ERR | INT_XMIT_EMPTY);
     IMRA &= ~(INT_REC_FULL | INT_REC_ERR | INT_XMIT_ERR | INT_XMIT_EMPTY);
 }
+
+const char btohex[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+
+void puthexN(uint8_t x) {
+    putc(btohex[x]);
+}
+
+void puthexB(uint8_t x) {
+    puthexN((x >> 4) & 0xF);
+    puthexN(x & 0xF);
+}
+
+void puthexW(uint16_t x) {
+    puthexB((x>>8) & 0xFF);
+    puthexB(x & 0xFF);
+}   
+ 
+void puthexL(uint32_t x) {
+    puthexW((x>>16) & 0xFFFF);
+    puthexW(x & 0xFFFF);
+}   
