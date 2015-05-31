@@ -1,4 +1,90 @@
 
+/*
+void do_turn_test() {
+    while(true) {
+   
+        precise_turn(90);
+        sleep_for(500);
+        precise_turn(-90);
+        sleep_for(500);
+        precise_turn(90);
+        sleep_for(500);
+        precise_turn(90);
+        sleep_for(500);   
+        precise_turn(-90);
+        sleep_for(500);
+        precise_turn(-90);
+        sleep_for(500);
+        precise_turn(-90);
+        sleep_for(500);
+        precise_turn(-90);
+        sleep_for(500);   
+        precise_turn(180);
+        sleep_for(500);   
+        precise_turn(45);
+        sleep_for(500); 
+        precise_turn(45);
+        sleep_for(500); 
+        precise_turn(-45);
+        sleep_for(500);   
+        precise_turn(-45);
+        sleep_for(500); 
+        precise_turn(180);
+        sleep_for(500); 
+        precise_turn(-360);
+        sleep_for(1500); 
+    }
+}*/
+
+void scan_fwd() {
+    while(true) {
+        while (!BUMPER_DEPRESSED) yield();
+        sleep_for(500);
+        
+        sem_acquire(&sp_sem);
+        
+        task_t sensor_move = create_task(&task_prep_sensor,0);  
+        wait_for_exit(sensor_move);
+
+        scan_pattern = &sp_180_scan;
+        scan_i = 0; // will move to first index when sp_sem is released
+        // zero distance array
+        memset(last_dist, 0, sizeof(last_dist));
+        sem_release(&sp_sem);
+
+        while(true) {
+            sleep_for(50);
+            sem_acquire(&sp_sem);
+            if (scan_pattern[scan_i] == PAN_HALT)
+                break;
+            sem_release(&sp_sem);
+        }
+            
+        // wait for the scan to be completed
+        // also, find the farthest (apparent) clear distance
+        uint8_t can_exit = 0;
+        int16_t max = 0;
+        int16_t max_i;
+
+        for (int i = 0; i < NUM_PAN_POSITIONS; i++)
+            if (last_dist[i] > max) {
+                max = last_dist[i];
+                max_i = i;
+            }
+   
+        printf("FWD 180: ");
+        for (uint8_t i = 0; i < NUM_PAN_POSITIONS; i++) 
+            printf("%3d  ", last_dist[i]);
+
+        printf("\n");
+        
+        scan_i = 0;
+        scan_pattern = &sp_90_swp;
+    
+        sem_release(&sp_sem);
+    }
+}
+
 
 const char btohex[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 
