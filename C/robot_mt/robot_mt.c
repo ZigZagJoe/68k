@@ -44,6 +44,7 @@
 #define PAN_RIGHT_45 6  
 #define PAN_RIGHT_77 7  
 #define PAN_RIGHT_90 8
+#define PAN_HALT 255
 
 // low level pulse lengths
 #define PAN_LEFT_90_V  430
@@ -71,13 +72,13 @@ const uint8_t sp_90_swp[] = {8, PAN_CENTER, PAN_LEFT_22, PAN_LEFT_45, PAN_LEFT_2
 const uint8_t sp_180_swp[] = {16, PAN_CENTER, PAN_LEFT_22, PAN_LEFT_45, PAN_LEFT_77, PAN_LEFT_90, PAN_LEFT_77, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_77,PAN_RIGHT_90,PAN_RIGHT_77,PAN_RIGHT_45, PAN_RIGHT_22};  
 
 // scan from one extreme to another, for single scans only
-const uint8_t sp_180_scan[] = {9, PAN_LEFT_90, PAN_LEFT_77, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_77,PAN_RIGHT_90}; 
+const uint8_t sp_180_scan[] = {10, PAN_LEFT_90, PAN_LEFT_77, PAN_LEFT_45, PAN_LEFT_22, PAN_CENTER, PAN_RIGHT_22, PAN_RIGHT_45, PAN_RIGHT_77,PAN_RIGHT_90, PAN_HALT}; 
 
 // only read forward
 const uint8_t sp_center_only[] = {1, PAN_CENTER};
  
 // avoidance trigger distances
-const uint8_t trigger_dists[NUM_PAN_POSITIONS] = {0,0,50,43,40,43,50,0,0};
+const uint8_t trigger_dists[NUM_PAN_POSITIONS] = {0,0,40,33,30,33,40,0,0};
         
 #define DIST_FAR 100
         
@@ -94,8 +95,6 @@ const uint8_t trigger_dists[NUM_PAN_POSITIONS] = {0,0,50,43,40,43,50,0,0};
 #define MOTOR_T_FWD_13 (MOTOR_T_NEUTRAL+38*1/3)
 #define MOTOR_T_BCK_13 (MOTOR_T_NEUTRAL-38*1/3)
 
-// from motor speed value to timer value
-uint8_t speed_to_timer[] = {MOTOR_T_BCK_FULL, MOTOR_T_BCK_23, MOTOR_T_BCK_13, MOTOR_T_NEUTRAL, MOTOR_T_FWD_13, MOTOR_T_FWD_23, MOTOR_T_FWD_FULL};
 
 // speed to indicator char
 const uint8_t speed_to_ch[] = { CH_DNARR, CH_DNARR_H, CH_DNARR_H, CH_STOP, CH_UPARR_H,CH_UPARR_H, CH_UPARR };
@@ -154,6 +153,8 @@ sem_t ds_sem;
 sem_t avoid_sem;
 sem_t sp_sem;
 
+uint8_t ser_debug = 0;
+
 volatile uint8_t *scan_pattern;
 volatile uint8_t  scan_i;
 volatile uint8_t  current_pan;             // current position of pan servo
@@ -163,7 +164,18 @@ volatile uint8_t  estop;              // motor emergency stop: halts drive stack
 volatile task_t   avoidance_task;     // used to monitor state of avoidance processing
 volatile int16_t  gyro_y_dps;
     
-uint8_t ser_debug = 0;
+// from motor speed value to timer value
+uint8_t speed_to_timer[] = {MOTOR_T_BCK_FULL, MOTOR_T_BCK_23, MOTOR_T_BCK_13, MOTOR_T_NEUTRAL, MOTOR_T_FWD_13, MOTOR_T_FWD_23, MOTOR_T_FWD_FULL};
+
+int32_t gyro_y_acc;      // gyro accumulator
+int32_t y_target;        // point at which turn completed
+int16_t gyro_y_last;
+
+sem_t turn_done;
+
+int8_t motor_dir;
+int8_t motor_value;
+// current throttle
 
 
 #define dprintf(...) if (ser_debug) printf(__VA_ARGS__)
@@ -215,69 +227,69 @@ void task_handle_obstacle(uint8_t why) {
     
     wait_for_exit(sensor_move);
     
-    // could do a forward scan first, then 180 for rear scan...
+    TIL311 = 0x5F;
     
     scan_pattern = &sp_180_scan;
-    scan_i = 1;
+    scan_i = 0; // will move to first index when sp_sem is released
     // zero distance array
     memset(last_dist, 0, sizeof(last_dist));
     sem_release(&sp_sem);
     
     // wait for the scan to be completed
-    // also, find the farthest (apparent) clear distance
-    uint8_t can_exit = 0;
-    int16_t max = 0;
-    int16_t max_i;
-    
-    while(!can_exit) {
-        yield();
-        can_exit = 1;
-        for (int i = 0; i < NUM_PAN_POSITIONS; i++)
-            if (!last_dist[i]) {
-                can_exit = 0;
-                break;
-            } else if (last_dist[i] > max) {
-                max = last_dist[i];
-                max_i = i;
-            }
+      
+    while(true) {
+        sleep_for(50);
+        sem_acquire(&sp_sem);
+        if (scan_pattern[scan_i] == PAN_HALT)
+            break;
+        sem_release(&sp_sem);
     }
+        
+    
+    int16_t front_scan[NUM_PAN_POSITIONS];
+    memcpy(front_scan, last_dist, sizeof(last_dist));
     
     dprintf("FWD 180: ");
     for (uint8_t i = 0; i < NUM_PAN_POSITIONS; i++) 
-            dprintf("%3d  ", last_dist[i]);
+            dprintf("%3d  ", front_scan[i]);
        
     dprintf("\n");
-         
-    // turn and do another scan
-    sem_acquire(&sp_sem);
-    sensor_move = create_task(&task_prep_sensor,0);  
-    precise_turn(180);          // begin the turn
+      
+    TIL311 = 0x7A;   
+    create_task(&task_prep_sensor,0);  // turn the sensor while turning
+    precise_turn(180);                 // begin the turn
   
+    TIL311 = 0x5B;
     // set 180 scan pattern
     scan_pattern = &sp_180_scan;
-    scan_i = 1;
+    scan_i = 0; // will move to first index when sp_sem is released
     // zero distance array
     memset(last_dist, 0, sizeof(last_dist));
     sem_release(&sp_sem);
     
-    // wait for the scan to be completed
-    // also, find the farthest (apparent) clear distance
-    can_exit = 0;
-    max = 0;
-
-    while(!can_exit) {
-        yield();
-        can_exit = 1;
-        for (int i = 0; i < NUM_PAN_POSITIONS; i++)
-            if (!last_dist[i]) {
-                can_exit = 0;
-                break;
-            } else if (last_dist[i] > max) {
-                max = last_dist[i];
-                max_i = i;
-            }
-    }
+     // wait for the scan to be completed
     
+    while(true) {
+        sleep_for(50);
+        sem_acquire(&sp_sem);
+        if (scan_pattern[scan_i] == PAN_HALT)
+            break;
+        sem_release(&sp_sem);
+    }
+        
+    scan_pattern = &sp_90_swp;
+    scan_i = 0; // restore normal scan pattern
+    
+    // find the farthest (apparent) clear distance
+    uint16_t max = 0;
+    uint8_t max_i = 0;
+
+    for (int i = 0; i < NUM_PAN_POSITIONS; i++)
+        if (last_dist[i] > max) {
+            max = last_dist[i];
+            max_i = i;
+        }
+
     dprintf("BCK 180: ");
     for (uint8_t i = 0; i < NUM_PAN_POSITIONS; i++) 
             dprintf("%3d  ", last_dist[i]);
@@ -286,13 +298,13 @@ void task_handle_obstacle(uint8_t why) {
     
     // turn approximately towards the farthest clear area
     // later use gyro for exact turn
+    
+    TIL311 = 0xCD;
+    
     if (max_i != PAN_CENTER)
         precise_turn(pan_ind_to_angle[max_i]);
         
-    // restore normal scan pattern
-    sem_acquire(&sp_sem);
-    scan_pattern = &sp_90_swp;
-    scan_i = 1;
+    // resume scanning
     sem_release(&sp_sem);
     
     // remove the stop task
@@ -303,12 +315,13 @@ void task_handle_obstacle(uint8_t why) {
     } else 
         halt_and_exit("FATAL: TOP TASK IN task_handle_obstacle IS NOT STOP TASK!", 0xAA);
      
+    TIL311 = 0xAD;
     sem_release(&ds_sem);
     
     // and off we go
 }
 
-void do_test();
+//void do_turn_test();
 
 // sets motor state to top of state stack, and consumes state when duration expired
 void task_drive() {  
@@ -323,9 +336,8 @@ void task_drive() {
     
     estop_motors();
     
-    do_test();
-    
-    
+    //do_turn_test();
+      
     motor_state go_forward = { MOTOR_FWD_FULL, MOTOR_FWD_FULL, MOTOR_STATE_NEVER_DIE /* never die */, 0xFFFF, 0 };
     push_state(go_forward); // this should never die
     
@@ -471,7 +483,7 @@ void task_distance_sense() {
     bset (DDR, DISTANCE_SENSOR_BIT);
 	bset (AER, 4);  // set positive edge triggered for TAI
 	bclr (IMRA, 5); // mask timer A overflow IRQ. just going to check it later, don't want actual interrupt
-    bset (IERA, 5); // enable timera interrupt, so if it triggers the bit in IPRA will be set
+    bset (IERA, 5); // enable the interrupt, so on overflow the bit in IPRA will be set
     
     bset (IERB, 6); // enable gpip4 interrupt...
     bset (IMRB, 6); // &unmask it
@@ -481,7 +493,7 @@ void task_distance_sense() {
     uint16_t distance;
 
     current_pan = 0;
-    scan_i = 1;
+    scan_i = 0;
     scan_pattern = &sp_90_swp;
     
     memset(&last_dist, 0, sizeof(last_dist));
@@ -491,7 +503,32 @@ void task_distance_sense() {
     pan_sensor(scan_pattern[1]);
     pan_sensor(scan_pattern[1]);
     
-	while(true) {         
+	while(true) {  
+	     // read the next pan position and move sensor to it
+        sem_acquire(&sp_sem);
+        
+        scan_i++;
+        
+        if ((scan_i-1) >= scan_pattern[0]) 
+            scan_i = 1;
+           
+        if (scan_pattern[scan_i] == PAN_HALT) {
+            puts("Scan complete, wait.\n"); 
+            while (scan_pattern[scan_i] == PAN_HALT) {
+                sem_release(&sp_sem);
+                yield();
+                sem_acquire(&sp_sem);
+            }
+            sem_release(&sp_sem);
+            puts("Resume\n");
+            continue;
+        } 
+      
+        if (current_pan != scan_pattern[scan_i])
+            pan_sensor(scan_pattern[scan_i]); 
+            
+        sem_release(&sp_sem);
+               
         enter_critical();
         
         TACR = 0;
@@ -521,42 +558,36 @@ void task_distance_sense() {
             distance = 255; // assume the worst case distance
         } else {
             distance = 255 - dist_raw;
-            if (bisset(IPRA,5))  // timer overflow occurred
+            if (bisset(IPRA, 5))  // timer overflow occurred
                 distance += 255;
         }
         
-       // printf("%d: %d\n",current_pan, distance);
+        printf("%d: %d\n",current_pan, distance);
             
         last_dist[current_pan] = distance;
+       
+      /* puts("Updated ");
+       puthexN(current_pan);
+       putc('\n');*/
        
         if (!task_active(avoidance_task)) 
             if (distance < trigger_dists[scan_i]) {
                 dprintf("Do avoidance due to range of %d < %d at angle %d\n",distance,trigger_dists[scan_i],scan_i);
                 do_avoidance(RANGE_WARNING);
             }
-            
-        // read the next pan position and move sensor to it
-        sem_acquire(&sp_sem);
-        scan_i++;
-        
-        if ((scan_i-1) >= scan_pattern[0]) 
-            scan_i = 1;
-        
-        if (current_pan != scan_pattern[scan_i])
-            pan_sensor(scan_pattern[scan_i]); 
-            
-        sem_release(&sp_sem);
     }
 }
 
-// monitor scan results and do slight avoidance while implementing the higher goal of this robot
+// monitor scan results and do slight avoidance while implementing the higher goal of this robot (which is?)
 void task_executive() { 
     sem_t sl_sem;
     sem_init(&sl_sem);
     uint8_t juke_ind = 0; 
     
+    const uint16_t juke_duration = 300;
+    
     while(true) {
-        sleep_for(200);
+        sleep_for(juke_duration);
         
         if (task_active(avoidance_task)) {
             if (juke_ind && sl_sem) {
@@ -580,10 +611,10 @@ void task_executive() {
             dprintf("Closest object is at %d, dist %d\n", at, min);
             
             if (at <= PAN_CENTER) {
-                motor_state juke_right = { MOTOR_FWD_FULL, (at == PAN_LEFT_45 || min < 60) ? MOTOR_FWD_13 : MOTOR_FWD_23, 300, 0xEEC4, &sl_sem };
+                motor_state juke_right = { MOTOR_FWD_FULL, (at == PAN_LEFT_45 || min < 60) ? MOTOR_FWD_13 : MOTOR_FWD_23, juke_duration, 0xEEC4, &sl_sem };
                 juke_ind = safe_push_state(juke_right);
             } else  {
-                motor_state juke_left = { (at == PAN_RIGHT_45 || min < 60) ? MOTOR_FWD_13 : MOTOR_FWD_23, MOTOR_FWD_FULL, 300, 0xEEC1, &sl_sem };
+                motor_state juke_left = { (at == PAN_RIGHT_45 || min < 60) ? MOTOR_FWD_13 : MOTOR_FWD_23, MOTOR_FWD_FULL, juke_duration, 0xEEC1, &sl_sem };
                 juke_ind = safe_push_state(juke_left);
             }
         }
@@ -609,20 +640,21 @@ void task_print_dist() {
 
 void task_read_accel() { 
     int16_t gyro_y_raw = 0;
-   // turn_done = 0;
+    turn_done = 0;
             
     //GYRO_250DEG_V_TO_DEG 0.00763F
 
     while(true) {
-       /* if (!turn_done) {// don't sample while the precise turn code is resident, it's updating gyro_y too
+        if (!turn_done) {// don't sample while the precise turn code is running, it's updating gyro_y too
             i2c_reg_read(&gyro_y_raw, GYRO_ZOUT_H, 2);
             gyro_y_dps = gyro_y_raw / RAW_TO_250DPS;
-        }
+        } else 
+            dprintf("%5d\n", gyro_y_acc);
         
         //float y_dps = gyro_y * GYRO_250DEG_V_TO_DEG;
         //dprintf("%5d\n", gyro_y_dps);
         
-        sleep_for(21);*/
+        sleep_for(21);
     }
 }
 
@@ -631,7 +663,7 @@ void task_init_accel() {
     printf("Initializing MPU6050... ");
     cli();
     
-    i2c_init(); //!< initialize twi interface
+    i2c_init(); // initialize i2c interface
     i2c_set_slave(0x68);
  
     if (!i2c_reg_writebyte(PWR_MGMT_1, 0x80)) { // reset gyro
@@ -651,7 +683,7 @@ void task_init_accel() {
     
     // explicitly exit as this is a super-lever task
     // exiting in this manner is leaving clutter on the supervisor stack
-    // don't use it often...
+    // don't use do this often...
     exit_task(); 
 }
 
@@ -673,16 +705,16 @@ int main() {
     printf("68k robot firmware built on " __DATE__ " at " __TIME__ "\n");
     printf("Press any key to begin debug logging.\n");
     create_task(&task_drive, 0);	
-	//create_task(&task_distance_sense,0);
-    //create_task(&task_executive, 0);
+	create_task(&task_distance_sense,0);
+    create_task(&task_executive, 0);
     
     task_t su = create_task(&task_init_accel,0);
     task_struct_t *ptr = su >> 16;
     ptr->FLAGS |= (1<<13);         // promote this task to supervisor level by editing its flags 
     
-    //create_task(&task_lcd_status,0);
-    //create_task(&task_print_dist,0);
-
+    create_task(&task_lcd_status,0);
+    create_task(&task_print_dist,0);
+  
   	leave_critical();
 
 	return 0;
@@ -714,7 +746,8 @@ void estop_motors() {
 // spawns avoidance process
 void do_avoidance(uint8_t why) { 
     enter_critical();
-    
+    TIL311 = 0xAA;
+        
     if (!sem_try(&avoid_sem)) { // already in progress
         leave_critical();
         return;
@@ -742,7 +775,7 @@ void halt_and_exit(char *why, uint8_t code) {
 }
 
 void pan_sensor(uint8_t p) {
-    int8_t duration = max(5,(abs(current_pan - p)) * 6);
+    int8_t duration = max(5,(abs(current_pan - p)) * 5);
     current_pan = p;
     sensor_move(pan_to_pulse[p], duration);  
 }
@@ -761,16 +794,6 @@ void sensor_move(uint32_t count, uint8_t duration) {
     }
 }
 
-int32_t gyro_y_acc;      // gyro accumulator
-int32_t y_target;          // point at which turn completed
-int16_t gyro_y_last;
-
-sem_t turn_done;
-
-int8_t motor_dir;
-int8_t motor_value;
-// current throttle
-
 // reduce the motor deadzone
 int pwr_to_motor(int x) {
     if (x > 1)      return MOTOR_T_NEUTRAL + 10 + x;
@@ -780,8 +803,7 @@ int pwr_to_motor(int x) {
 
 // positive = forward
 // negative = backward 
-
-    
+ 
 void tick_integrate_gyro() {
     int16_t gyro_y_raw, gyro_y_diff, travel_tick;
     
@@ -795,25 +817,21 @@ void tick_integrate_gyro() {
     
     gyro_y_last = gyro_y_raw;
      
-     print_dec(travel_tick);
+    /* print_dec(travel_tick);
      putc(',');
      print_dec(gyro_y_acc / 131);
      putc(',');
-     
-   //  print_dec(gyro_y_diff);
-   //  putc(',');
- 
-	int8_t turn_max_pwr = 28;
-    int8_t turn_min_pwr = -5;
+     */
 
-    int deadzone = 200;
-    int lookahead = 10;
+	int8_t turn_max_pwr = 28;
+    int8_t turn_min_pwr = -28;
+
+    int deadzone = 300;
+    int lookahead = 13;
     int adj_factor = 10;
     
     int abs_y_acc = abs(gyro_y_acc); 
-   
-  //  int est_endpt = abs_y_acc + (travel_tick * est_dist);
-    
+
     int est_endpt = gyro_y_acc + travel_tick * lookahead;
     est_endpt += ((((int)gyro_y_diff) * lookahead * lookahead) / 143) >> 1;   
     est_endpt = abs(est_endpt);
@@ -822,23 +840,6 @@ void tick_integrate_gyro() {
     uint8_t overshoot = est_endpt > (y_target + deadzone);
  
     int err = abs(abs_y_acc - y_target);
-    
-    //print_dec(err);
-    //putc(',');
-    
-   // print_dec(est_endpt);
-    //putc(',');
-   // factor = min((factor * err)/10000,factor);
-  
- 
-   // power_cap = constrain (20 * err/2000, 5, 28);
-    
-    ////print_dec(err);
-       
-    if (!turn_done) { // log only
-        puts("\n");
-        return;
-    }
     
     if (undershoot) { 
         motor_value += adj_factor;
@@ -850,67 +851,16 @@ void tick_integrate_gyro() {
     LEFT_MOTOR = pwr_to_motor(motor_dir ? (motor_value) : (-motor_value));
     RIGHT_MOTOR = pwr_to_motor(motor_dir ? (motor_value) : (-motor_value));
     
-    print_dec(motor_value);
-    putc('\n');
+   /* print_dec(motor_value);
+    putc('\n');*/
     
     if (err < deadzone) {
-        puts("Done\n");
         estop_motors();
-        //_ontick_event = 0;
+        _ontick_event = 0;
         sem_release(&turn_done);
     }
 }
 
-void do_test() {
-    
-    precise_turn(90);
-    while(true);
-    
-    while(true) {
-      
-        precise_turn(45);
-        sleep_for(500); 
-        precise_turn(45);
-        sleep_for(500); 
-        precise_turn(-45);
-        sleep_for(500); 
-        precise_turn(-45);
-        sleep_for(500);
-    
-        continue;
-        
-        /*precise_turn(90);
-        sleep_for(500);
-        precise_turn(-90);
-        sleep_for(500);
-        precise_turn(90);
-        sleep_for(500);
-        precise_turn(90);
-        sleep_for(500);   
-        precise_turn(-90);
-        sleep_for(500);
-        precise_turn(-90);
-        sleep_for(500);
-        precise_turn(-90);
-        sleep_for(500);
-        precise_turn(-90);
-        sleep_for(500);   
-        precise_turn(180);
-        sleep_for(500);   
-        precise_turn(45);
-        sleep_for(500); 
-        precise_turn(45);
-        sleep_for(500); 
-        precise_turn(-45);
-        sleep_for(500);   
-        precise_turn(-45);
-        sleep_for(500); 
-        precise_turn(180);
-        sleep_for(500); */
-        precise_turn(-360);
-        sleep_for(1500); 
-    }
-}
 
 void precise_turn(int16_t angle) {
     printf("Turn %d deg\n",angle);
@@ -936,8 +886,8 @@ void precise_turn(int16_t angle) {
     
     sem_wait(&turn_done);
 
-    sleep_for(1000);
-    _ontick_event = 0;
+   /* sleep_for(1000);
+    _ontick_event = 0;*/
     
     estop = false;
     sem_release(&ds_sem);
