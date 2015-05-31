@@ -83,15 +83,15 @@
 
 | set SDA according to carry bit
 .macro SDA_OUTCC
-    jcc 1f
-    SDA_HI
-    jbra 2f
+    jcc 1f         | 18 / 12
+    SDA_HI         | 16
+    jbra 2f        | 18
 1:
-    SDA_LO
+    SDA_LO         | 16
 2:
 
-    SCL_HI
-    SCL_LO
+    SCL_HI         | 16
+    SCL_LO         | 16
 .endm
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -260,19 +260,18 @@ i2c_reg_read:
     
     I2C_START
     
-    /* LSB 0 = write */
-    move.b (curr_slave), %d3
-    move.b %d3, %d0             | current slave address
+    move.b (curr_slave), %d3 
+    move.b %d3, %d0             | current slave address, LSB is 0 - write
     WRITE_BYTE
 
-    move.b (11+12,%sp), %d0     | start reg
+    move.b (11+12,%sp), %d0     | write start register
     WRITE_BYTE
     
     I2C_STOP
     I2C_START
     
     move.b %d3, %d0             | current slave address
-    ori.b #1, %d0               | set LSB = read
+    ori.b #1, %d0               | set LSB 1 = read
     WRITE_BYTE
     
     move.w (14+12,%sp),%d3      | count of bytes to move
@@ -280,26 +279,26 @@ i2c_reg_read:
 
     subq.w #2, %d3              | must send NACK on the last byte
 
-_read_loop:                     | send count-1 bytes with acks
-    READ_BYTE                   | read byte with ack
-    SEND_ACK
+_read_loop:                     | read count-1 bytes with acks
+    READ_BYTE                   | read byte
+    SEND_ACK                    | send ack
     move.b %d0, (%a2)+          | write byte to buffer
     
     dbra %d3, _read_loop
     
-    READ_BYTE                   | read final byte with nack
-    SEND_NACK
+    READ_BYTE                   | read final byte
+    SEND_NACK                   | send nack
     move.b %d0, (%a2)+          | write byte to buffer
     
     I2C_STOP
     
-    moveq #1, %d0
+    moveq #1, %d0               | return success
     
-_r_exit:
+_regr_exit:
     movm.l (%sp)+, %a2/%d2-%d3
     rts
 
-9:                              | this is hit if the write byte instructions rec a NACK
+9:                              | this is hit if the write byte macros get a NACK
     moveq #0,%d0                | return failure
-    jbra _r_exit
+    jbra _regr_exit
 
