@@ -56,31 +56,62 @@ int16_t integrate7ms(int16_t x) {
 }*/
 
 #define DEG_TO_RAW 131
+#define INTR_TIMR_D (1 << 4)
 
-void integrate() {
+
+int32_t gryo_acc_l = 0;
+int32_t gryo_acc_m = 0;
+int32_t gryo_acc_t = 0;
+       
+int16_t gyro_last;
+
+ISR(integrate) {
     int16_t gyro_y = 0;
-    int32_t acc = 0;
     
-    uint8_t i = 0;
-    while(true) {
-        bset_a(GPDR, 1);
-        DELAY_MS(6);
-        DELAY(20);
-        bset_a(GPDR, 1);
-        bclr_a(GPDR, 1);
-        i2c_reg_read(&gyro_y, GYRO_ZOUT_H, 2); 
-        
-       // acc += integrate7ms(gyro_y);
-        acc += gyro_y / 143;
+    bset_a(GPDR, 1);
+    i2c_reg_read(&gyro_y, GYRO_ZOUT_H, 2); 
     
-        i++;
-        if (i == 60) {
-            i = 0;
-            printf("%d\n",acc/131);
-        }
-        bclr_a(GPDR, 1);
-    }
+     int16_t gyro_diff = gyro_y - gyro_last;
+    
+   // acc += integrate7ms(gyro_y);
+    gryo_acc_l += gyro_y / 143;
+    gryo_acc_m += (((int32_t)gyro_y + gyro_last) >> 1) / 143;
+    gryo_acc_t += (gyro_y + (gyro_diff >> 1)) / 143;
 
+    gyro_last = gyro_y;
+    bclr_a(GPDR, 1);
+}
+
+void integrate_readout() {
+
+    __vectors.user[MFP_INT + MFP_TIMERD - USER_ISR_START] = &integrate;
+	
+	VR = MFP_INT;
+	TCDCR &= 0xF0; // disable timer D
+	
+	//TDDR = 129;	 // ~142.86 hz
+	//TCDCR |= 0x7;  // set prescaler of 200
+	
+	//TDDR = 184;	 // ~100 hz
+	//TCDCR |= 0x7;  // set prescaler of 200
+	
+	TDDR = 129;      // ~1000 hz
+	TCDCR |= 0x7;    // set prescaler of 50
+	
+	IERB |= INTR_TIMR_D;
+	IMRB |= INTR_TIMR_D;
+	
+	
+    while(true) {
+        print_dec(gryo_acc_l);
+        putc('\t');
+        print_dec(gryo_acc_m);
+        putc('\t');
+        print_dec(gryo_acc_t);
+        putc('\n');
+        DELAY_MS(100);
+    
+    }
 }
  
 //void lzfx_decompress(int a,int b, int c, int d) {}
@@ -88,8 +119,8 @@ int main() {
    // TIL311 = 0x01;
 
     serial_start(SERIAL_SAFE);
-    //millis_start();
     sei();
+
 
     bset(DDR,1);
     bclr_a(GPDR,1);    
@@ -112,10 +143,11 @@ int main() {
 
     //DELAY_MS(200);  // Delay a while to let the device execute the self-test
     printf("Begin loop\n");
-
+    
+ 
    // partial_read();
-    full_read();
-    //integrate();
+    //full_read();
+    integrate_readout();
 }
 
 void leave_critical() {
