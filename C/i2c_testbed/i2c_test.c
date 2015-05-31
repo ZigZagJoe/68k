@@ -145,7 +145,7 @@ int main() {
     printf("Begin loop\n");
     
  
-   // partial_read();
+    //partial_read();
     //full_read();
     integrate_readout();
 }
