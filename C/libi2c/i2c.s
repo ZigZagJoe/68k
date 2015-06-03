@@ -45,14 +45,6 @@
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | line control macros
-.macro SDA_IN
-    bclr %d1, (%a1)         | DDR
-.endm
-
-.macro SDA_OUT
-    bset %d1, (%a1)         | DDR
-.endm
-
 .macro TST_SDA
     btst %d1, (%a0)         | GPDR
 .endm
@@ -111,6 +103,8 @@
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | output a byte in %d0 and jump to local label 9f on nack
+| in  SCL 0 SDA X
+| out SCL 0 SDA 0
 
 .macro WRITE_BYTE
     lsl.b #1, %d0
@@ -130,36 +124,42 @@
     lsl.b #1, %d0
     SDA_OUTCC
 
-    SDA_IN
+    SDA_HI                   | allow the slave to drive the bus low
     
     SCL_HI
     TST_SDA
-    jne 9f
-    SCL_LO
+    jne 9f                   | nack received!
     
+    ori.b #0b11000000, (%a1) | set SDA and SCL both low
+.endm
+
+.macro ON_XMIT_FAILED
+9:                           | this is hit if the write byte macros get a NACK
+    SCL_LO
     SDA_LO
-    SDA_OUT
+    I2C_STOP
 .endm
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | read a byte into %d0
 | must be followed by SEND_ACK or SEND_NACK
+| in  SCL 0 SDA X
+| out SCL 0 SDA 0
 
 .macro READ_BYTE
     clr.b %d0
-        
-    SDA_IN
+    SDA_HI
     
     SCL_HI
     TST_SDA
     jeq 1f 
-    bset %d1, %d0           | contains SDA (7)
+    bset %d1, %d0            | contains SDA (7)
 1:
     SCL_LO
     SCL_HI
     TST_SDA
     jeq 1f   
-    bset %d2, %d0           | contains SCL (6)
+    bset %d2, %d0            | contains SCL (6)
 1:
     SCL_LO
     SCL_HI
@@ -198,22 +198,21 @@
     ori.b #0b00000001, %d0   
 1:
     SCL_LO
-
-    SDA_OUT
 .endm
 
 .macro SEND_ACK
     SDA_LO
     SCL_HI
     SCL_LO
-    SDA_HI
 .endm
 
 .macro SEND_NACK    
     SDA_HI
     SCL_HI
     SCL_LO
+    SDA_LO
 .endm
+
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | void i2c_start_cond()
@@ -256,10 +255,10 @@ i2c_read_byte:
     move.l %d2, -(%sp)
     
     SETUP_REGS
-    
+             
     READ_BYTE
   
-    tst.b (11,%sp)              | send ACK or NACK?
+    tst.b (11, %sp)              | send ACK or NACK?
     jne 2f
     
     SEND_ACK
@@ -291,7 +290,7 @@ i2c_write_byte:
     move.l (%sp)+, %d2
     rts
     
-9:                              | nack, xmit failed
+ON_XMIT_FAILED
     moveq #0, %d0
     move.l (%sp)+, %d2
     rts
@@ -350,7 +349,7 @@ i2c_bulk_read:
     
 _enter_rl:
     subq.w #2, %d3              | must send NACK on the last byte
-
+    
 _read_loop:                     | read count-1 bytes with acks
     READ_BYTE                   | read byte
     SEND_ACK                    | send ack
@@ -370,8 +369,7 @@ _regr_exit:
     movm.l (%sp)+, %a2/%d2-%d3
     rts
     
-9:                              | this is hit if the write byte macros get a NACK
-    I2C_STOP
+ON_XMIT_FAILED
     moveq #0,%d0                | return failure 
     jbra _regr_exit
     
@@ -436,8 +434,7 @@ _w_exit:
     movm.l (%sp)+, %a2/%d2-%d3
     rts
     
-9:                              | this is hit if the write byte macros get a NACK
-    I2C_STOP
+ON_XMIT_FAILED
     moveq #0, %d0               | return failure
     jbra _w_exit
     
