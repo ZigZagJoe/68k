@@ -8,10 +8,13 @@
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | export/input
 
+.global i2c_init
 .global i2c_write_byte
 .global i2c_read_byte
+.global i2c_bulk_write
+.global i2c_bulk_read
 .global i2c_reg_read
-.global i2c_init
+.global i2c_reg_write
 
 .extern curr_slave
 
@@ -327,6 +330,30 @@ _regr_exit:
     jbra _regr_exit
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| uint8_t i2c_reg_write(uint8_t *addr, uint8_t startReg, uint16_t count) 
+| arguments: buffer to write to, start reg byte, num bytes
+| returns: bool success
+
+i2c_reg_write: 
+    movm.l %a2/%d2-%d3,-(%sp)
+
+    SETUP_REGS
+    
+    I2C_START
+    
+    move.b (curr_slave), %d3 
+    move.b %d3, %d0             | current slave address, LSB is 0 - write
+    WRITE_BYTE
+
+    move.b (11+12,%sp), %d0     | write start register
+    WRITE_BYTE
+ 
+    move.w (14+12,%sp),%d3      | count of bytes to move
+    move.l ( 4+12,%sp),%a2      | destination
+
+    jbra _enter_wl              | we share the read loop with i2c_bulk_read
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | uint8_t i2c_bulk_write(uint8_t *addr, uint16_t count) 
 | arguments: buffer to read from, num bytes
 | returns: bool success
@@ -343,7 +370,8 @@ i2c_bulk_write:
     
     move.w (10+12,%sp),%d3      | count of bytes to send
     move.l ( 4+12,%sp),%a2      | destination
-    
+
+_enter_wl:   
     subq.w #1, %d3
 
 _write_loop:                    | read count-1 bytes with acks
