@@ -43,6 +43,9 @@ void full_read() {
         printf("AcX = %5d  AcY = %5d  AcZ = %5d TMP = %5d GyX = %5d  GyY = %5d  GyZ = %5d\n",all_regs[0],all_regs[1],all_regs[2],tmp_raw_to_F(all_regs[3]),all_regs[4],all_regs[5],all_regs[6]);
         serial_wait();
     }
+    
+    /* mem_dump(all_regs, 14);
+        while(true);*/
 }    
 
 // 2.66ms
@@ -146,7 +149,7 @@ int main() {
     
  
     //partial_read();
-    //full_read();
+    full_read();
     integrate_readout();
 }
 
