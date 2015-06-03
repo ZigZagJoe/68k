@@ -5,6 +5,8 @@
 .text
 .align 2
 
+.set CLOCK_STRETCHING, 0    | support SCL clock stretching? incurs massive speed penalty
+
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | export/input
 
@@ -23,9 +25,9 @@
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | constants
 
-.set MFP_BASE, 0xC0000    | start of IO range for MFP
-.set GPDR, MFP_BASE + 0x1 | gpio data register
-.set DDR, MFP_BASE + 0x5  | gpio data direction register
+.set MFP_BASE, 0xC0000      | start of IO range for MFP
+.set GPDR, MFP_BASE + 0x1   | gpio data register
+.set DDR, MFP_BASE + 0x5    | gpio data direction register
 
 .set SCL, 6
 .set SDA, 7
@@ -58,6 +60,13 @@
 | alow SCL be pulled hi
 .macro SCL_HI
     bclr %d2, (%a1)         | DDR
+  
+.if CLOCK_STRETCHING  
+1:                          | detect clock stretching: wait for SCL to go high 
+    btst %d2, (%a0)         | GPDR
+    jeq 1b
+.endif
+
 .endm
 
 | allow SDA be pulled hi
@@ -215,10 +224,10 @@ i2c_start_cond:
     
     andi.b #0b00111111, (GPDR) 
     
-    bclr #SCL, (%a1)  | stop condition
+    bclr #SCL, (%a1)            | stop condition
     bclr #SDA, (%a1)
     
-    bset #SDA, (%a1)  | start condition
+    bset #SDA, (%a1)            | start condition
     bset #SCL, (%a1)
     
     rts  
@@ -232,7 +241,7 @@ i2c_stop_cond:
     
     andi.b #0b00111111, (GPDR) 
     
-    bclr #SCL, (%a1)  | stop condition
+    bclr #SCL, (%a1)            | stop condition
     bclr #SDA, (%a1)
     
     rts  
