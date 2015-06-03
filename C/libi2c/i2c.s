@@ -9,6 +9,8 @@
 | export/input
 
 .global i2c_init
+.global i2c_stop_cond
+.global i2c_start_cond
 .global i2c_write_byte
 .global i2c_read_byte
 .global i2c_bulk_write
@@ -36,7 +38,7 @@
     move.l #GPDR, %a0
     move.l #DDR, %a1
     
-    andi.b #0b00111111, (%a0)   | clear bits in GPDR so subroutines do not have to
+    andi.b #0b00111111, (%a0) | clear bits in GPDR so subroutines do not have to
 .endm
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -205,7 +207,39 @@
 .endm
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| void i2c_start_cond()
+| emits a stop then a start condition on the i2c bus
+
+i2c_start_cond:
+    move.l #DDR, %a1
+    
+    andi.b #0b00111111, (GPDR) 
+    
+    bclr #SCL, (%a1)  | stop condition
+    bclr #SDA, (%a1)
+    
+    bset #SDA, (%a1)  | start condition
+    bset #SCL, (%a1)
+    
+    rts  
+ 
+ ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| void i2c_stop_cond()
+| emits a stop condition on the i2c bus   
+
+i2c_stop_cond:
+    move.l #DDR, %a1
+    
+    andi.b #0b00111111, (GPDR) 
+    
+    bclr #SCL, (%a1)  | stop condition
+    bclr #SDA, (%a1)
+    
+    rts  
+    
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | uint8_t i2c_read_byte(uint8_t nack)
+| reads a single byte from the i2c bus with nack or ack 
 | argument: send ack/nack
 | returns: byte read
 
@@ -230,6 +264,7 @@ i2c_read_byte:
     rts
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| writes a single byte to the i2c bus
 | uint8_t i2c_write_byte(uint8_t byte)
 | argument: byte to send
 | returns bool success (ack)/fail (nack)
@@ -254,6 +289,7 @@ i2c_write_byte:
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | uint8_t i2c_reg_read(uint8_t *addr, uint8_t startReg, uint16_t count) 
+| writes a register byte to bus then reads count bytes from i2c bus into addr
 | arguments: buffer to write to, start reg byte, num bytes
 | returns: bool success
 
@@ -285,6 +321,7 @@ i2c_reg_read:
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | uint8_t i2c_bulk_read(uint8_t *addr, uint16_t count) 
+| reads count bytes from i2c bus into addr
 | arguments: buffer to write to, num bytes
 | returns: bool success
 
@@ -331,7 +368,8 @@ _regr_exit:
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | uint8_t i2c_reg_write(uint8_t *addr, uint8_t startReg, uint16_t count) 
-| arguments: buffer to write to, start reg byte, num bytes
+| writes startReg then count bytes from addr to i2c bus
+| arguments: buffer to read from, start reg byte, num bytes
 | returns: bool success
 
 i2c_reg_write: 
@@ -355,6 +393,7 @@ i2c_reg_write:
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | uint8_t i2c_bulk_write(uint8_t *addr, uint16_t count) 
+| writes count bytes from addr to i2c bus
 | arguments: buffer to read from, num bytes
 | returns: bool success
 
@@ -395,11 +434,10 @@ _w_exit:
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | void i2c_init() 
-| sets i2c lines high. honestly, it may as well be optional
+| initializes i2c bus. Effectively optional.
 
 i2c_init:
-    andi.b #0b00111111, (GPDR) 
-    andi.b #0b00111111, (DDR)   
+    jsr i2c_stop_cond
     move.b #0, (curr_slave)
     rts
     

@@ -1,7 +1,7 @@
-// software I2C library
+// software I2C library, superfast ASM
 
-#ifndef i2c_H
-#define i2c_H
+#ifndef I2C_ASM_H
+#define I2C_ASM_H
 
 #include <stdint.h>
 
@@ -26,6 +26,4 @@ uint8_t i2c_reg_writebyte(uint8_t reg, uint8_t value);
 uint8_t i2c_bulk_read(uint8_t *addr, uint16_t count);
 uint8_t i2c_bulk_write(uint8_t *addr, uint16_t count) ;
 
-uint8_t send_slave_address(uint8_t read);
-
-#endif /* i2c_H */
+#endif /* I2C_ASM_H */
