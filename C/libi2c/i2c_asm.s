@@ -11,6 +11,7 @@
 .global i2c_write_byte
 .global i2c_read_byte
 .global i2c_reg_read
+.global i2c_init
 
 .extern curr_slave
 
@@ -249,7 +250,7 @@ i2c_write_byte:
     rts
     
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| uint8_t i2c_reg_read(uint8_t *addr, uint8_t startReg, uint8_t count) 
+| uint8_t i2c_reg_read(uint8_t *addr, uint8_t startReg, uint16_t count) 
 | arguments: buffer to write to, start reg byte, num bytes
 | returns: bool success
 
@@ -273,10 +274,32 @@ i2c_reg_read:
     move.b %d3, %d0             | current slave address
     ori.b #1, %d0               | set LSB 1 = read
     WRITE_BYTE
-    
+ 
     move.w (14+12,%sp),%d3      | count of bytes to move
     move.l ( 4+12,%sp),%a2      | destination
 
+    jbra _enter_rl              | we share the read loop with i2c_bulk_read
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| uint8_t i2c_bulk_read(uint8_t *addr, uint16_t count) 
+| arguments: buffer to write to, num bytes
+| returns: bool success
+
+i2c_bulk_read: 
+    movm.l %a2/%d2-%d3,-(%sp)
+
+    SETUP_REGS
+    
+    I2C_START
+    
+    move.b (curr_slave), %d0    | current slave address
+    ori.b #1, %d0               | set LSB 1 = read
+    WRITE_BYTE
+    
+    move.w (10+12,%sp),%d3      | count of bytes to move
+    move.l ( 4+12,%sp),%a2      | destination
+    
+_enter_rl:
     subq.w #2, %d3              | must send NACK on the last byte
 
 _read_loop:                     | read count-1 bytes with acks
@@ -293,12 +316,62 @@ _read_loop:                     | read count-1 bytes with acks
     I2C_STOP
     
     moveq #1, %d0               | return success
-    
+       
 _regr_exit:
     movm.l (%sp)+, %a2/%d2-%d3
     rts
-
+    
 9:                              | this is hit if the write byte macros get a NACK
-    moveq #0,%d0                | return failure
+    I2C_STOP
+    moveq #0,%d0                | return failure 
     jbra _regr_exit
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| uint8_t i2c_bulk_write(uint8_t *addr, uint16_t count) 
+| arguments: buffer to read from, num bytes
+| returns: bool success
 
+i2c_bulk_write: 
+    movm.l %a2/%d2-%d3,-(%sp)
+
+    SETUP_REGS
+    
+    I2C_START
+    
+    move.b (curr_slave), %d0    | current slave address    
+    WRITE_BYTE                  | LSB 0 = write
+    
+    move.w (10+12,%sp),%d3      | count of bytes to send
+    move.l ( 4+12,%sp),%a2      | destination
+    
+    subq.w #1, %d3
+
+_write_loop:                    | read count-1 bytes with acks
+    move.b (%a2)+, %d0          | read byte from buffer
+    WRITE_BYTE                  | write it
+
+    dbra %d3, _write_loop
+    
+    I2C_STOP
+    
+    moveq #1, %d0               | return success
+       
+_w_exit:
+    movm.l (%sp)+, %a2/%d2-%d3
+    rts
+    
+9:                              | this is hit if the write byte macros get a NACK
+    I2C_STOP
+    moveq #0, %d0               | return failure
+    jbra _w_exit
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| void i2c_init() 
+| sets i2c lines high. honestly, it may as well be optional
+
+i2c_init:
+    andi.b #0b00111111, (GPDR) 
+    andi.b #0b00111111, (DDR)   
+    move.b #0, (curr_slave)
+    rts
+    
