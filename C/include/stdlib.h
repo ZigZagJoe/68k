@@ -11,14 +11,21 @@ extern uint8_t *__stack_start;
 extern uint8_t *__stack_end;
 extern uint8_t *__data_start;
 
-#define DELAY(X) __asm volatile("move.l %0,%%d0\n" \
+#define DELAY_BIG(X) __asm volatile("move.l %0,%%d0\n" \
                                 "1: subi.l #1, %%d0\n" \
                                 "bne 1b\n" \
                                 ::"i"(X):"d0");
 
+#define DELAY_SML(X) __asm volatile("move.w %0,%%d0\n" \
+                                "1: dbra %%d0, 1b\n" \
+                                ::"i"(X):"d0");
 // @ 8mhz, on 68008
-#define MILLISECOND_DELAY 174
-#define DELAY_MS(x) DELAY(x*MILLISECOND_DELAY)
+#define MILLISECOND_DELAY 218
+#define MICROSECOND_DELAY .5525
+
+#define DELAY_US(x) if (x > 50000) { DELAY_MS(x/1000); } else { DELAY_SML((short)(x*MICROSECOND_DELAY)); }
+    
+#define DELAY_MS(x) DELAY_BIG(x*MILLISECOND_DELAY)
 #define DELAY_S(x) DELAY_MS(x*1000);
 #define DELAY_HALF_SECOND DELAY_MS(500);
 
