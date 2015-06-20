@@ -16,14 +16,18 @@ extern uint8_t *__data_start;
                                 "bne 1b\n" \
                                 ::"i"(X):"d0");
 
+// 16, 18 / 26 (not taken)
+// 16 + 26 + 18 * x
 #define DELAY_SML(X) __asm volatile("move.w %0,%%d0\n" \
                                 "1: dbra %%d0, 1b\n" \
                                 ::"i"(X):"d0");
-// @ 8mhz, on 68008
+// @ 10mhz, on 68008
 #define MILLISECOND_DELAY 218
-#define MICROSECOND_DELAY .5525
+#define MICROSECOND_DELAY .55555
 
-#define DELAY_US(x) if (x > 50000) { DELAY_MS(x/1000); } else { DELAY_SML((short)(x*MICROSECOND_DELAY)); }
+// do not use for more than 115ms
+// accuracy decreases rapidly under 100us, minimum 9us
+#define DELAY_US(x) DELAY_SML(max(0,(unsigned short)(x*MICROSECOND_DELAY)-2))
     
 #define DELAY_MS(x) DELAY_BIG(x*MILLISECOND_DELAY)
 #define DELAY_S(x) DELAY_MS(x*1000);
