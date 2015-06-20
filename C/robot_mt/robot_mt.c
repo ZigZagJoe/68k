@@ -47,9 +47,9 @@
 #define PAN_HALT 255
 
 // low level pulse lengths
-#define PAN_LEFT_90_V  430
-#define PAN_CENTER_V   270
-#define PAN_RIGHT_90_V  100
+#define PAN_LEFT_90_V  538
+#define PAN_CENTER_V   338
+#define PAN_RIGHT_90_V  125
 
 // calculated angles
 #define PAN_LEFT_45_V  ((PAN_LEFT_90_V + PAN_CENTER_V) / 2)
@@ -78,22 +78,23 @@ const uint8_t sp_180_scan[] = {10, PAN_LEFT_90, PAN_LEFT_77, PAN_LEFT_45, PAN_LE
 const uint8_t sp_center_only[] = {1, PAN_CENTER};
  
 // avoidance trigger distances
-const uint8_t trigger_dists[NUM_PAN_POSITIONS] = {0,0,40,33,30,33,40,0,0};
+const uint8_t trigger_dists[NUM_PAN_POSITIONS] = {0,0,43,38,35,38,43,0,0};
         
-#define DIST_FAR 100
+#define DIST_FAR 110
         
 // low level motor drive speeds
 
 // 1.5ms
-#define MOTOR_T_NEUTRAL 111
+#define MOTOR_T_NEUTRAL 120
+#define MOTOR_DIST 40
 // 1ms
-#define MOTOR_T_FWD_FULL (MOTOR_T_NEUTRAL+38)
+#define MOTOR_T_FWD_FULL (MOTOR_T_NEUTRAL+MOTOR_DIST)
 // 2ms
-#define MOTOR_T_BCK_FULL (MOTOR_T_NEUTRAL-38)
-#define MOTOR_T_FWD_23 (MOTOR_T_NEUTRAL+38*2/3)
-#define MOTOR_T_BCK_23 (MOTOR_T_NEUTRAL-38*2/3)
-#define MOTOR_T_FWD_13 (MOTOR_T_NEUTRAL+38*1/3)
-#define MOTOR_T_BCK_13 (MOTOR_T_NEUTRAL-38*1/3)
+#define MOTOR_T_BCK_FULL (MOTOR_T_NEUTRAL-MOTOR_DIST)
+#define MOTOR_T_FWD_23 (MOTOR_T_NEUTRAL+MOTOR_DIST*2/3)
+#define MOTOR_T_BCK_23 (MOTOR_T_NEUTRAL-MOTOR_DIST*2/3)
+#define MOTOR_T_FWD_13 (MOTOR_T_NEUTRAL+MOTOR_DIST*1/3)
+#define MOTOR_T_BCK_13 (MOTOR_T_NEUTRAL-MOTOR_DIST*1/3)
 
 
 // speed to indicator char
@@ -654,7 +655,7 @@ void task_read_accel() {
         //float y_dps = gyro_y * GYRO_250DEG_V_TO_DEG;
         //dprintf("%5d\n", gyro_y_dps);
         
-        sleep_for(21);
+        sleep_for(24);
     }
 }
 
@@ -804,6 +805,9 @@ int pwr_to_motor(int x) {
 // positive = forward
 // negative = backward 
  
+#define INTEGRATE_TICK 167
+// 1000 ms / tick freq
+
 void tick_integrate_gyro() {
     int16_t gyro_y_raw, gyro_y_diff, travel_tick;
     
@@ -812,7 +816,7 @@ void tick_integrate_gyro() {
     gyro_y_diff = gyro_y_raw - gyro_y_last;
     gyro_y_dps = gyro_y_raw / RAW_TO_250DPS;
      
-    travel_tick = (gyro_y_raw + (gyro_y_diff >> 1)) / 143; // trapezoidal approximation of distance
+    travel_tick = (gyro_y_raw + (gyro_y_diff >> 1)) / INTEGRATE_TICK; // trapezoidal approximation of distance
     gyro_y_acc += travel_tick;
     
     gyro_y_last = gyro_y_raw;
@@ -833,7 +837,7 @@ void tick_integrate_gyro() {
     int abs_y_acc = abs(gyro_y_acc); 
 
     int est_endpt = gyro_y_acc + travel_tick * lookahead;
-    est_endpt += ((((int)gyro_y_diff) * lookahead * lookahead) / 143) >> 1;   
+    est_endpt += ((((int)gyro_y_diff) * lookahead * lookahead) / INTEGRATE_TICK) >> 1;   
     est_endpt = abs(est_endpt);
     
     uint8_t undershoot = est_endpt < (y_target - deadzone);

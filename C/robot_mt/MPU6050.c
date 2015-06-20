@@ -2,6 +2,8 @@
 #include <i2c.h>
 #include "MPU6050.h"
 
+#include <stdlib.h>
+
 // these aren't super-accurate, but they are close enough and fast
 int16_t tmp_raw_to_F(int16_t x) {
     return x / 189 + 98;
@@ -48,7 +50,7 @@ void calibrateMPU6050(float * gryBiasDPS, float * accBiasMS) {
     // Configure FIFO to capture accelerometer and gyro data for bias calculation
     i2c_reg_writebyte(USER_CTRL, 0x40);   // Enable FIFO  
     i2c_reg_writebyte(FIFO_EN, 0x78);     // Enable gyro and accelerometer sensors for FIFO  (max size 1024 bytes in MPU-6050)
-    DELAY_MS(60); // accumulate 80 samples in 80 milliseconds = 960 bytes
+    DELAY_MS(80); // accumulate 80 samples in 80 milliseconds = 960 bytes
 
     // At end of sample accumulation, turn off FIFO sensor read
     i2c_reg_writebyte(FIFO_EN, 0x00);        // Disable gyro and accelerometer sensors for FIFO
@@ -97,12 +99,14 @@ void calibrateMPU6050(float * gryBiasDPS, float * accBiasMS) {
     data[5] = (-gyro_bias[2]/4)       & 0xFF;
 
     // Push gyro biases to hardware registers; works well for gyro but not for accelerometer
-    i2c_reg_writebyte(XG_OFFS_USRH, data[0]); 
+   i2c_reg_write(data, XG_OFFS_USRH, 6);
+    
+   /* i2c_reg_writebyte(XG_OFFS_USRH, data[0]); 
     i2c_reg_writebyte(XG_OFFS_USRL, data[1]);
     i2c_reg_writebyte(YG_OFFS_USRH, data[2]);
     i2c_reg_writebyte(YG_OFFS_USRL, data[3]);
     i2c_reg_writebyte(ZG_OFFS_USRH, data[4]);
-    i2c_reg_writebyte(ZG_OFFS_USRL, data[5]);
+    i2c_reg_writebyte(ZG_OFFS_USRL, data[5]);*/
 
     gryBiasDPS[0] = (float) gyro_bias[0]/(float) gyrosensitivity; // construct gyro bias in deg/s for later manual subtraction
     gryBiasDPS[1] = (float) gyro_bias[1]/(float) gyrosensitivity;
