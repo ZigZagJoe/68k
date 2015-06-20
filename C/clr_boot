@@ -1,0 +1,2 @@
+#!/bin/sh
+upload-loader -f -s disable_bootable.s68
