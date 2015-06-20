@@ -16,16 +16,18 @@ void putHexChar(uint8_t ch) {
 	putc(hexchar[ch & 0xF]);
 }
 
+uint32_t t_a, t_b;
+
 void task_time() {
 	printf("TIME TASK (ID %d) started.\n",CURRENT_TASK_ID);
 	yield();
 	while(true) {
 		uint32_t t = millis();
-		uint32_t a = t/1000;
-		uint16_t b = (t%1000)/100;
-		TIL311 = (((uint8_t) a) << 4) | (b&0xF);
+		t_a = t/1000;
+		t_b = (t%1000)/100;
+		TIL311 = (((uint8_t) t_a) << 4) | (t_b&0xF);
 		lcd_cursor(0,0);
-        lcd_printf("Runtime: %d.%d    ",a, b);
+        lcd_printf("Runtime: %d.%d    ",t_a, t_b);
     }
 }
 
@@ -33,7 +35,9 @@ void task_time() {
 #define MD5_START 0x10000
 #define MD5_END 0x60000
 
+int failed = 0;
 uint8_t PRINT_ID = 2;
+uint8_t expect[] = {0x2A,0xB4,0xD6,0x61, 0xCC,0x16,0xC5,0xC5, 0x60,0x6F,0xBC,0x3A, 0xC5,0x61,0x15,0x3D};
 
 void task_md5() {
 	printf("MD5 TASK (ID %d) started.\n",CURRENT_TASK_ID);
@@ -50,32 +54,45 @@ void task_md5() {
 		md5_finish(&state, digest);
 	
 		yield();
-		
-		putHexChar(CURRENT_TASK_ID);
-		putc(' ');
 
+		uint8_t pass = 1;
 		for (uint8_t i = 0; i < 16; i++) 
-			putHexChar(digest[i]);
+		    if (digest[i] != expect[i]) pass = false;
 			
-		putc('\n');
+
+		enter_critical();	
+		printf("TASK %d ",CURRENT_TASK_ID);
 		
-		if (CURRENT_TASK_ID == PRINT_ID) {
-			enter_critical();
-			
+        if (!pass) {
+            failed++;	
+		    puts("FAILED (");
+
+            for (uint8_t i = 0; i < 16; i++) 
+                putHexChar(digest[i]);
+            
+            putc(')');
+            
+            lcd_clear();
+            lcd_cursor(0,1);
+            lcd_printf("FC%d %d.%ds",failed ,t_a, t_b);
+		} else 
+		    puts("passed");
+		    
+		printf(" at %d.%ds\n",t_a, t_b);
+        	
+		if (CURRENT_TASK_ID == PRINT_ID && !failed) {
 			lcd_cursor(0,1);
 			
 			for (uint8_t p = 0; p < 6; p++) 
 				lcd_printf("%02X",digest[p]);
 			
 			lcd_printf(" #%02X",PRINT_ID);
-
+            
 			if (++PRINT_ID > 30) 
-				PRINT_ID = 2;
-				
-			leave_critical();
+				PRINT_ID = 2;	
 		}
-				
-		yield();
+			
+		leave_critical();	
 	}
 }
 
@@ -110,7 +127,8 @@ int main() {
 	}
 	
 	puts("Starting tasks.\n");
-
+    puts("EXPECT: 2AB4D661CC16C5C5606FBC3AC561153D\n");
+    
   	enter_critical();   // prevent the tasks from being run until they are all created
 	create_task(&task_time,0);
   	
