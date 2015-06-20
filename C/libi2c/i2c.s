@@ -5,10 +5,14 @@
 .text
 .align 2
 
-.set CLOCK_STRETCHING, 0    | support SCL clock stretching? incurs massive speed penalty
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| compile-time configuration
+
+.set CLOCK_STRETCHING, 0    | support clock stretching? incurs 33% speed penalty 
+                            | but ensures compatibility with 100khz-only devices
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| export/input
+| function export/input
 
 .global i2c_init
 .global i2c_stop_cond
@@ -32,6 +36,9 @@
 .set SCL, 6
 .set SDA, 7
 
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| macros
+
 | we keep all commonly used values in registers for massive speed ups
 .macro SETUP_REGS
     moveq #SCL, %d2          
@@ -43,10 +50,12 @@
     andi.b #0b00111111, (%a0) | clear bits in GPDR so subroutines do not have to
 .endm
 
-|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| line control macros
-.macro TST_SDA
-    btst %d1, (%a0)         | GPDR
+.macro DELAY_IF_SLOW
+.if CLOCK_STRETCHING
+    nop
+    nop
+    nop
+.endif
 .endm
 
 | alow SCL be pulled hi
@@ -61,14 +70,18 @@
 
 .endm
 
-| allow SDA be pulled hi
-.macro SDA_HI  
-    bclr %d1, (%a1)         | DDR
-.endm
-
 | force SCL low
 .macro SCL_LO   
     bset %d2, (%a1)         | DDR
+.endm
+
+.macro TST_SDA
+    btst %d1, (%a0)         | GPDR
+.endm
+
+| allow SDA be pulled hi
+.macro SDA_HI  
+    bclr %d1, (%a1)         | DDR
 .endm
 
 | force SDA low
@@ -79,12 +92,16 @@
 | line start state
 .macro I2C_START 
     SDA_LO
+    DELAY_IF_SLOW
     SCL_LO
+    DELAY_IF_SLOW
 .endm
 
 | line stop state
 .macro I2C_STOP
+    DELAY_IF_SLOW
     SCL_HI
+    DELAY_IF_SLOW
     SDA_HI
 .endm
 
@@ -102,7 +119,7 @@
 .endm
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| output a byte in %d0 and jump to local label 9f on nack
+| output a byte in %d0 and jump forward to ON_XMIT_FAILED if nack
 | in  SCL 0 SDA X
 | out SCL 0 SDA 0
 
@@ -140,6 +157,16 @@
     I2C_STOP
 .endm
 
+| unrolled bit of code for READ_BYTE
+.macro READBIT 
+1:
+    SCL_LO
+    DELAY_IF_SLOW
+    SCL_HI
+    TST_SDA
+    jeq 1f   
+.endm
+
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | read a byte into %d0
 | must be followed by SEND_ACK or SEND_NACK
@@ -154,47 +181,19 @@
     TST_SDA
     jeq 1f 
     bset %d1, %d0            | contains SDA (7)
-1:
-    SCL_LO
-    SCL_HI
-    TST_SDA
-    jeq 1f   
+    READBIT  
     bset %d2, %d0            | contains SCL (6)
-1:
-    SCL_LO
-    SCL_HI
-    TST_SDA
-    jeq 1f  
+    READBIT
     ori.b #0b00100000, %d0   
-1:
-    SCL_LO
-    SCL_HI
-    TST_SDA
-    jeq 1f   
+    READBIT
     ori.b #0b00010000, %d0   
-1:
-    SCL_LO
-    SCL_HI
-    TST_SDA
-    jeq 1f    
+    READBIT    
     ori.b #0b00001000, %d0   
-1:
-    SCL_LO
-    SCL_HI
-    TST_SDA
-    jeq 1f    
+    READBIT
     ori.b #0b00000100, %d0   
-1:
-    SCL_LO
-    SCL_HI
-    TST_SDA
-    jeq 1f    
+    READBIT
     ori.b #0b00000010, %d0   
-1:
-    SCL_LO
-    SCL_HI
-    TST_SDA
-    jeq 1f   
+    READBIT 
     ori.b #0b00000001, %d0   
 1:
     SCL_LO
@@ -203,17 +202,27 @@
 .macro SEND_ACK
     SDA_LO
     SCL_HI
+    DELAY_IF_SLOW
     SCL_LO
 .endm
 
 .macro SEND_NACK    
     SDA_HI
     SCL_HI
+    DELAY_IF_SLOW
     SCL_LO
     SDA_LO
 .endm
+ 
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| void i2c_init() 
+| initializes i2c bus. Effectively optional.
 
-
+i2c_init:
+    jsr i2c_stop_cond
+    move.b #0, (curr_slave)
+    rts
+    
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | void i2c_start_cond()
 | emits a stop then a start condition on the i2c bus
@@ -316,6 +325,8 @@ i2c_reg_read:
     WRITE_BYTE
     
     I2C_STOP
+    DELAY_IF_SLOW
+    DELAY_IF_SLOW
     I2C_START
     
     move.b %d3, %d0             | current slave address
@@ -437,13 +448,3 @@ _w_exit:
 ON_XMIT_FAILED
     moveq #0, %d0               | return failure
     jbra _w_exit
-    
-|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-| void i2c_init() 
-| initializes i2c bus. Effectively optional.
-
-i2c_init:
-    jsr i2c_stop_cond
-    move.b #0, (curr_slave)
-    rts
-    
