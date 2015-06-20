@@ -67,8 +67,8 @@
 
 .set USER_STACK_SIZE, 4096
 
-.set TICK_INTERVAL, 7
-.set TICK_TIMER_VAL, 129
+.set TICK_INTERVAL, 6
+.set TICK_TIMER_VAL, 120
 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | macros

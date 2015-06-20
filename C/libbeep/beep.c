@@ -31,7 +31,7 @@ void beep_start(uint16_t freq) {
 		val = 0x6;
 	} 
 	
-	uint8_t del = (3686400 / psc) / freq;
+	uint8_t del = (4000000 / psc) / freq;
 	
 	 // there's no point using the /200 prescaler to hit values below this, they sound like shit. so, prevent an overflow if they are presented.
 	if (freq < 150)

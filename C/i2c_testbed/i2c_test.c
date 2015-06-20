@@ -85,6 +85,9 @@ ISR(integrate) {
     bclr_a(GPDR, 1);
 }
 
+#define INTEGRATE_TICK 167
+// 1000 ms / tick freq
+
 void integrate_readout() {
 
     __vectors.user[MFP_INT + MFP_TIMERD - USER_ISR_START] = &integrate;
@@ -92,13 +95,7 @@ void integrate_readout() {
 	VR = MFP_INT;
 	TCDCR &= 0xF0; // disable timer D
 	
-	//TDDR = 129;	 // ~142.86 hz
-	//TCDCR |= 0x7;  // set prescaler of 200
-	
-	//TDDR = 184;	 // ~100 hz
-	//TCDCR |= 0x7;  // set prescaler of 200
-	
-	TDDR = 129;      // ~1000 hz
+	TDDR = 120;      // 166.6 hz
 	TCDCR |= 0x7;    // set prescaler of 50
 	
 	IERB |= INTR_TIMR_D;
@@ -149,7 +146,7 @@ int main() {
     
  
     //partial_read();
-    full_read();
+    //full_read();
     integrate_readout();
 }
 

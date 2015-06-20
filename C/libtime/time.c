@@ -8,7 +8,7 @@ extern void millis_count(void);
 #define INTR_TIMR_D (1 << 4)
 
 volatile uint32_t millis() {
-    return millis_counter * 1;
+    return millis_counter;
 }
 
 void millis_start() {
@@ -16,15 +16,9 @@ void millis_start() {
 	
 	VR = MFP_INT;
 	TCDCR &= 0xF0; // disable timer D
-	
-	//TDDR = 129;	 // ~142.86 hz
-	//TCDCR |= 0x7;  // set prescaler of 200
-	
-	//TDDR = 184;	 // ~100 hz
-	//TCDCR |= 0x7;  // set prescaler of 200
-	
-	TDDR = 230;      // ~1000 hz
-	TCDCR |= 0x3;    // set prescaler of 50
+
+	TDDR = 80;       // 1000 hz
+	TCDCR |= 0x4;    // set prescaler of 50
 	
 	IERB |= INTR_TIMR_D;
 	IMRB |= INTR_TIMR_D;
@@ -35,3 +29,4 @@ void millis_start() {
 void millis_stop() {
 	IMRB &= ~INTR_TIMR_D; // mask the interrupt
 }
+
