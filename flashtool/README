@@ -1,1 +1,2 @@
 This is the driver program for writing an image to the flash ROM, outside of the 68008.
+Used in conjunction with flashtool-sketch
