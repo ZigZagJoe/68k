@@ -18,11 +18,11 @@ int main(int argc, char** argv) {
 	uint8_t d = 0;
 	uint8_t inc = 4;
 	
-	while(true) {
+	//while(true) {
 	   // for (int i = 0 ; i < 1; i++)
-	        putc(c,stdout);
-	    c+= 2;
-	}
+	//        putc(c,stdout);
+	 //   c+= 2;
+	//}
 	
 	uint8_t v = 0;
 	
