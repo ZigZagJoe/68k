@@ -148,7 +148,7 @@ int main (int argc, char ** argv) {
     bool srec = false;
     
     // should allow setting of this
-    int BAUD_RATE = 50000;
+    int BAUD_RATE = 10000000 / 10 / 16;
     
     uint32_t addr = 0;
     uint32_t len = 256;
