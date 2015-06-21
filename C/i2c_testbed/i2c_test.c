@@ -131,7 +131,8 @@ int main() {
 
     printf("Init i2c\n");
     i2c_init(); //!< initialize twi interface
-    i2c_set_slave(0x68);
+    
+    /*i2c_set_slave(0x68);
     
      if (!i2c_reg_writebyte(PWR_MGMT_1, 0))   // reset gyro
         printf("Error: failed to reset MPU6050\n");
@@ -146,8 +147,44 @@ int main() {
     
  
     //partial_read();
-    //full_read();
-    integrate_readout();
+    full_read();
+    integrate_readout();*/
+    
+    i2c_set_slave(0x6F); /* rtc */
+    
+     int8_t all_regs[6]  ;  
+    
+    while(true) {
+        bset_a(GPDR, 1);
+        int code = i2c_reg_read(&all_regs, 0, 6);
+        if (!code) printf("read error\n");
+        
+        if (!(all_regs[0] & 128)) { // osc is not running
+            if (!i2c_reg_writebyte(0, 128)) {
+                printf("Error turning on RTC\n");
+            } else
+                printf("Turned on RTC osc\n");
+        }
+        
+        bclr_a(GPDR, 1);
+        
+        for (int i = 0; i < 16; i++) putc(8);
+         
+        putc(((all_regs[2] >> 4) & 0x7) + '0'); // hours tens
+        putc(((all_regs[2]) & 0xF) + '0'); // hours ones
+        putc(':');
+        putc(((all_regs[1] >> 4) & 0x7) + '0'); // minutes tens
+        putc(((all_regs[1]) & 0xF) + '0'); // minutes ones
+        putc(':');
+        putc(((all_regs[0] >> 4) & 0x7) + '0'); // seconds tens
+        putc(((all_regs[0]) & 0xF) + '0'); // seconds ones
+        //putc('\n');
+        
+       
+        
+        serial_wait();
+    }
+    
 }
 
 void leave_critical() {
