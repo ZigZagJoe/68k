@@ -114,6 +114,50 @@ void integrate_readout() {
     }
 }
  
+#define MCP7940_ADDR 0x6F
+#define MCPREG_TIME 0
+#define MCPREG_CONTROL 0x8
+#define MCPREG_OSCTRIM 0x9
+#define MCPREG_ALARM0 0xA
+#define MCPREG_ALARM1 0x11
+#define MCPREG_PWRDNST 0x18
+#define MCPREG_PWRUPST 0x1c
+#define MCPREG_RAM 0x20
+
+typedef struct {
+    /* reg 0 - RTCSEC */
+    bool OSCPWR : 1;
+    uint8_t sec : 7;
+    
+    /* reg 1 - RTCMIN */
+    bool : 1;
+    uint8_t min : 7;
+    
+    /* reg 2 - RTCHOUR */
+    bool : 1;
+    bool h12 : 1;
+    uint8_t hr : 6;
+    
+    /* reg 3 - RTCWKDAY */
+    bool : 2;
+    bool OSCRUN : 1;
+    bool PWRFAIL : 1;
+    bool VBATEN : 1;
+    uint8_t wkday : 3;
+    
+    /* reg 4 - RTCDATE */
+    bool : 2;
+    uint8_t day : 6;
+    
+    /* reg 5 - RTCMTH */
+    bool : 2;
+    bool LPYR : 1;
+    uint8_t mth : 5;
+    
+    /* reg 6 - RTCYEAR */
+    uint8_t yr : 8;
+} mcp7940_time_bcd;
+
 //void lzfx_decompress(int a,int b, int c, int d) {}
 int main() {
    // TIL311 = 0x01;
@@ -150,16 +194,31 @@ int main() {
     full_read();
     integrate_readout();*/
     
-    i2c_set_slave(0x6F); /* rtc */
+    i2c_set_slave(MCP7940_ADDR); /* rtc */
     
-     int8_t all_regs[6]  ;  
+    mcp7940_time_bcd time;  
+   /* i2c_reg_read(&time, 0, sizeof(time));
+    
+    time.min = 0x46;
+    time.sec = 0x0;
+    time.hr = 0x22;
+    time.mth = 0x6;
+    time.yr = 0x15;
+    time.day = 0x21;
+    
+    i2c_reg_write(&time, 0, sizeof(time));*/
     
     while(true) {
         bset_a(GPDR, 1);
-        int code = i2c_reg_read(&all_regs, 0, 6);
-        if (!code) printf("read error\n");
         
-        if (!(all_regs[0] & 128)) { // osc is not running
+        int code = i2c_reg_read(&time, 0, sizeof(time));
+        
+        if (!code) {
+            printf("Read error!\n");
+            continue;
+        }
+        
+        if (!time.OSCPWR) { // osc is not running
             if (!i2c_reg_writebyte(0, 128)) {
                 printf("Error turning on RTC\n");
             } else
@@ -168,24 +227,13 @@ int main() {
         
         bclr_a(GPDR, 1);
         
-        for (int i = 0; i < 16; i++) putc(8);
+        for (int i = 0; i < 33; i++) putc(8);
          
-        putc(((all_regs[2] >> 4) & 0x7) + '0'); // hours tens
-        putc(((all_regs[2]) & 0xF) + '0'); // hours ones
-        putc(':');
-        putc(((all_regs[1] >> 4) & 0x7) + '0'); // minutes tens
-        putc(((all_regs[1]) & 0xF) + '0'); // minutes ones
-        putc(':');
-        putc(((all_regs[0] >> 4) & 0x7) + '0'); // seconds tens
-        putc(((all_regs[0]) & 0xF) + '0'); // seconds ones
-        //putc('\n');
-        
-       
-        
-        serial_wait();
+        printf ("%2x:%02x:%02x %2x/%02x/%02x",time.hr,time.min,time.sec,time.mth, time.day, time.yr);
     }
     
 }
+
 
 void leave_critical() {
 
