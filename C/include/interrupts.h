@@ -45,18 +45,6 @@ typedef struct __attribute__((packed)) {
 // invoke a trap vector
 #define _TRAP(x) __asm volatile("trap %0\n":: "i"(x));
 
-extern void exception_address_err(void);
-extern void exception_bus_error(void);
-extern void exception_illegal_inst(void);
-extern void exception_bad_isr(void);
-extern void exception_spurious(void);
-extern void exception_trap(void);
-extern void exception_generic(void);
-extern void exception_privilege(void);
-
-// sets up addr, bus, illegal inst, bad isr, spurious int, trap 0 exceptions
-__attribute__ ((deprecated)) void default_interrupts();
-
 // user mode soft reset (calls _soft_reset via trap 14)
 void soft_reset();
 
