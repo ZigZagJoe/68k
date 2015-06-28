@@ -42,11 +42,13 @@ init_vectors:
     move.w #255, %d1
     
 load_vec:
-    move.l #exception_handler, (%a0)
-    move.b %d0, (%a0)
+    move.l #exception_handler, (%a0)  | store the address of the single handler
+    move.b %d0, (%a0)                 | write the vector # into the uppermost byte
+    
     addq.l #4, %a0
     addq.b #1, %d0
     dbra %d1, load_vec
+    
     rts
     
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -421,8 +423,8 @@ _VEC_06:        .byte 0xCC;.string "CHK"
 _VEC_07:        .byte 0x7B;.string "TRAPV"
 _VEC_08:        .byte 0xA1;.string "Privilege Violation"
 _VEC_09:        .byte 0x7E;.string "Trace"
-_VEC_10:        .byte 0xE0;.string "Line 1010"
-_VEC_11:        .byte 0xE1;.string "Line 1111"
+_VEC_10:        .byte 0xE1;.string "Line 1010"
+_VEC_11:        .byte 0xE2;.string "Line 1111"
 _VEC_USER:      .byte 0xAA;.string "User"
 _VEC_TRAP:      .byte 0x7A;.string "Trap"
 _VEC_AUTOVEC:   .byte 0xA7;.string "Autovector"
