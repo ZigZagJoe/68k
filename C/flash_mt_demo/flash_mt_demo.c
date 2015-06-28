@@ -12,18 +12,6 @@
 #include <kernel.h>
 #include <beep.h>
 
-void putc_lcd(void*p, char ch) {
-	lcd_data(ch);
-}
-
-void lcd_printf(char *fmt, ...)
-{
-    va_list va;
-    va_start(va,fmt);
-    tfp_format(0,&putc_lcd,fmt,va);
-    va_end(va);
-}
-
 void task_echo() {
 	printf("ECHO TASK (ID %d) started.\n", CURRENT_TASK_ID);
 
