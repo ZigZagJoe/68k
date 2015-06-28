@@ -9,6 +9,7 @@
 #include <lcd.h>
 #include <time.h>
 #include "i2c.h"
+#include <binary.h>
 
 #include "MPU6050.h"
 
@@ -194,11 +195,82 @@ int main() {
     full_read();
     integrate_readout();*/
     
-    i2c_set_slave(MCP7940_ADDR); /* rtc */
+   // adc_test();
+    //clock_test();
+    
+    printf("i2c bus scan:\n");
+    for (uint8_t i = 0; i < 128; i++) {
+        i2c_set_slave(i);
+        if (i2c_poll_addr()) 
+            printf("Device found at addr %d\n", i);
+    }
+    
+    i2c_set_slave(B1010000);
+
+  
+    while(true);
+}
+
+/* this is not reliable, requires more work */
+void eeprom_test() {
+    srand();
+   
+    uint8_t buff_w[34];
+    uint16_t *addr = &buff_w;
+    uint8_t *buff_r = &buff_w[2];
+    
+    memset(&buff_w,0xFE,34);
+    
+    *addr = 0;
+    
+    while(true) {
+        for (int i = 0; i < 31; i++ )
+            buff_r[i] = rand8();
+            
+        printf("To write:");
+        mem_dump(buff_r, 32);
+        
+  
+        if (!i2c_bulk_write(buff_w,34))
+            printf("error writing page\n");
+           
+        uint16_t c = 0; 
+        while(!i2c_poll_addr()) c++;
+        printf("Write completed in %d\n",c);
+           
+        i2c_bulk_write(addr,2);
+        
+        if (!i2c_bulk_read(buff_r, 32)) 
+            printf("error reading page\n");
+        
+        printf("Read from %d:\n", *addr);
+        mem_dump(buff_r, 32);
+        
+        DELAY_MS(200);
+        //i2c_bulk_write(buff_w, 34);
+        
+    }
+}
+
+void adc_test() {
+ i2c_set_slave(B1001101);
+    
+    while(true) {
+        uint16_t v;
+        if (i2c_bulk_read(&v, 2))
+            printf("%d\n",v);
+    
+    }
+    
+}
+
+void clock_test() {
+  i2c_set_slave(MCP7940_ADDR); /* rtc */
     
     mcp7940_time_bcd time;  
    /* i2c_reg_read(&time, 0, sizeof(time));
     
+    time.OSCPWR = 1;
     time.min = 0x46;
     time.sec = 0x0;
     time.hr = 0x22;
@@ -230,8 +302,7 @@ int main() {
         for (int i = 0; i < 33; i++) putc(8);
          
         printf ("%2x:%02x:%02x %2x/%02x/%02x",time.hr,time.min,time.sec,time.mth, time.day, time.yr);
-    }
-    
+    }   
 }
 
 
