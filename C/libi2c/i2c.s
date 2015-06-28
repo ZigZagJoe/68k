@@ -23,6 +23,8 @@
 .global i2c_bulk_read
 .global i2c_reg_read
 .global i2c_reg_write
+.global i2c_poll_addr
+.global i2c_send_addr
 
 .extern curr_slave
 
@@ -279,7 +281,65 @@ i2c_read_byte:
 
     move.l (%sp)+, %d2
     rts
+  
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| tests if a device is responding to this address
+| bool i2c_poll_addr()
+| returns bool success (ack)/fail (nack)
+
+i2c_poll_addr:
+    move.l %d2, -(%sp)
     
+    SETUP_REGS
+    
+    I2C_START
+    
+    move.b (curr_slave), %d0  | current slave address
+    ori.b #1, %d0             | set LSB 1 = read
+    WRITE_BYTE
+    
+    moveq #1, %d0
+    
+ON_XMIT_FAILED
+
+    I2C_STOP
+    
+    move.l (%sp)+, %d2
+    rts
+    
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| tests if a device is responding to this address
+| bool i2c_send_addr(bool read)
+| returns bool success (ack)/fail (nack)
+
+i2c_send_addr:
+    move.l %d2, -(%sp)
+    
+    SETUP_REGS
+    
+    I2C_START
+    
+    move.b (curr_slave), %d0  | current slave address
+    
+    tst.b (11, %sp)           | read?
+    jeq 2f
+     
+    ori.b #1, %d0             | set LSB 1 = read
+
+2:
+    WRITE_BYTE
+    
+    moveq #1, %d0
+    move.l (%sp)+, %d2
+    rts
+    
+ON_XMIT_FAILED
+
+    I2C_STOP
+    
+    move.l (%sp)+, %d2
+    rts
+         
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 | writes a single byte to the i2c bus
 | uint8_t i2c_write_byte(uint8_t byte)

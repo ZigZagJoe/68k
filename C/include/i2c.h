@@ -13,6 +13,12 @@ void i2c_set_slave(uint8_t addr);
 void i2c_start_cond();
 void i2c_stop_cond();
 
+// test if device is responding to its address
+bool i2c_poll_addr();
+
+// sends device addr, does not set stop cond unless device did not ack
+bool i2c_send_addr(bool read);
+
 // basic r/w functions
 // these do not emit a start/stop condition!
 uint8_t i2c_write_byte(uint8_t byte);
@@ -29,5 +35,7 @@ uint8_t i2c_bulk_write(uint8_t *addr, uint16_t count) ;
 // single byte register r/w
 uint8_t i2c_reg_readbyte(uint8_t reg);
 uint8_t i2c_reg_writebyte(uint8_t reg, uint8_t value);
+
+
 
 #endif /* I2C_ASM_H */
