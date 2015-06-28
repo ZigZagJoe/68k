@@ -74,7 +74,7 @@ uint32_t get_random_seed() {
         }  
     }
     
-    *(uint32_t*)RAND_BASE = crc ^ millis();
+    *(uint32_t*)RAND_BASE = crc;
     
     return crc;
 }
